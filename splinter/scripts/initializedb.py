@@ -10,7 +10,7 @@ from pyramid.paster import (
     )
 
 from ..models import (
-    DBSession,
+    session,
     MyModel,
     Base,
     )
@@ -30,8 +30,8 @@ def main(argv=sys.argv):
     setup_logging(config_uri)
     settings = get_appsettings(config_uri)
     engine = engine_from_config(settings, 'sqlalchemy.')
-    DBSession.configure(bind=engine)
+    session.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
         model = MyModel(name='one', value=1)
-        DBSession.add(model)
+        session.add(model)
