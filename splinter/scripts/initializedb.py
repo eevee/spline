@@ -11,7 +11,6 @@ from pyramid.paster import (
 
 from ..models import (
     session,
-    MyModel,
     Base,
     )
 
@@ -32,6 +31,4 @@ def main(argv=sys.argv):
     engine = engine_from_config(settings, 'sqlalchemy.')
     session.configure(bind=engine)
     Base.metadata.create_all(engine)
-    with transaction.manager:
-        model = MyModel(name='one', value=1)
-        session.add(model)
+    #with transaction.manager:
