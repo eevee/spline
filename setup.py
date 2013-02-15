@@ -37,7 +37,7 @@ setup(name='splinter',
       install_requires=requires,
       entry_points="""\
       [paste.app_factory]
-      main = splinter:main
+      main = splinter.app:main
       [console_scripts]
       initialize_splinter_db = splinter.scripts.initializedb:main
       """,
