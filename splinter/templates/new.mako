@@ -5,27 +5,31 @@
 <h1>Paste a thing</h1>
 
 <form action="${request.route_url('paste')}" method="POST">
-    <textarea name="content" rows="20" cols="200"></textarea>
+    <textarea name="content" rows="24" cols="80"></textarea>
 
-    <hr>
-<fieldset>
+    <fieldset>
+        <legend>meta</legend>
 
-    <label>You</label>
-    ##<input type="text" name="author" value="${guessed_name}">
-    <input type="text" name="author" value="">
+        <dl class="horizontal">
+            <dt><label>You</label></dt>
+            <dd><input type="text" name="author" value=""></dd>
+        ##<input type="text" name="author" value="${guessed_name}">
 
-    <label>Title</label>
-    <input type="text" name="title" value="">
+            <dt><label>Title</label></dt>
+            <dd><input type="text" name="title" value=""></dd>
 
-    <label>Syntax</label>
-    <select name="syntax">
-        <option value="[auto]" selected>Auto</option>
-        <option value="[none]">None</option>
-        % for lex_name, lex_aliases, lex_filetypes, lex_mimetypes in lexers:
-        <option value="${lex_aliases[0]}">${lex_name}</option>
-        % endfor
-    </select>
+            <dt><label>Syntax</label></dt>
+            <dd>
+                <select name="syntax">
+                    <option value="[auto]" selected>Auto</option>
+                    <option value="[none]">None</option>
+                    % for lex_name, lex_aliases, lex_filetypes, lex_mimetypes in lexers:
+                    <option value="${lex_aliases[0]}">${lex_name}</option>
+                    % endfor
+                </select>
+            </dd>
 
-    <button type="submit">Paste</button>
-</fieldset>
+            <dd><button type="submit">Paste</button></dd>
+        </dl>
+    </fieldset>
 </form>

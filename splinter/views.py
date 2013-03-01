@@ -69,3 +69,19 @@ def search(request):
     results = Paste.search(request.GET['q'])
 
     return dict(results=results)
+
+
+
+### Events
+
+from pyramid.events import BeforeRender, subscriber
+
+# TODO need this to play more friendly with others
+@subscriber(BeforeRender)
+def add_ye_globals(event):
+    pastes = session.query(Paste) \
+        .order_by(Paste.id.desc()) \
+        .limit(20)
+
+    event['recent_pastes'] = pastes
+

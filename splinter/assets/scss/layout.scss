@@ -1,0 +1,103 @@
+body {
+    background: white url(/static/images/debut_light.png) top left repeat;
+}
+
+body > header {
+    margin: 0 0 1em;
+    padding: 0.33em;
+
+    background: hsl(0, 60%, 40%);
+    background: url(/static/images/debut_dark.png) #333;
+    color: #eee;
+    border-bottom: 1px solid hsl(0, 60%, 30%);
+    box-shadow:
+        inset 0 2em 3em -2em rgba(white, 0.2),
+        0 0 3px black;
+
+    > nav > ul {
+        > li {
+            display: inline-block;
+        }
+    }
+
+    a {
+        color: #eef;
+        &:visited {
+            color: #fef;
+        }
+    }
+}
+
+body > nav {
+    float: left;
+    width: 20%;
+    margin: 0 1em;
+    padding: 0 0 2em;
+
+    // well?
+    /*
+    border-radius: 0.5em;
+    background: #f8f8f8;
+    border: 1px solid #ccc;
+    box-shadow: inset 0 0 2px #ddd;
+    */
+
+    border-right: 1px solid hsl(215, 30%, 80%);
+
+    > ul > li {
+        line-height: 1.33;
+
+        > a {
+            display: block;
+            padding: 0.25em;
+            text-decoration: none;
+
+            border-right: 2px solid transparent;
+
+            &:hover {
+                background: hsla(215, 60%, 90%, 0.4);
+                border-right-color: hsl(215, 30%, 80%);
+            }
+        }
+
+        &.-header {
+            padding: 1em 0.25em 0.25em;
+
+            ~ li > a {
+                padding-left: 1.25em;
+            }
+        }
+    }
+}
+
+body > .main {
+    overflow: hidden;  // float context hack TODO remove me  :(
+
+
+}
+
+
+// XXX lol
+textarea {
+    -moz-box-sizing: border-box:
+    box-sizing: border-box:
+    width: 100%;
+}
+
+
+// -----------------------------------------------------------------------------
+// general styling
+
+a {
+    color: hsl(210, 70%, 50%);
+    &:hover {
+        color: hsl(210, 70%, 35%);
+    }
+
+    &:visited {
+        color: hsl(255, 70%, 60%);
+        &:hover {
+            color: hsl(255, 70%, 50%);
+        }
+    }
+}

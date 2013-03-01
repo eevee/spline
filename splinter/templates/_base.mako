@@ -2,16 +2,22 @@
 <html class="no-js" lang="en">
 <head>
   <meta charset="utf-8">
-  <title><%block name="title">splinter</%block></title>
+  <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='archetype')}">
+  <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='layout')}">
+  <title><%block name="title">somewhere</%block> - splinter</title>
 </head>
 <body>
     <header>
         <nav>
-            <a class="brand" href="${request.route_url('home')}">home</a>
+            <ul>
+                <li><a class="brand" href="${request.route_url('home')}">home</a></li>
 
-            <form action="${request.route_url('search')}" method="GET">
-                <input type="search" name="q" placeholder="Find a paste">
-            </form>
+                <li>
+                    <form action="${request.route_url('search')}" method="GET">
+                        <input type="search" name="q" placeholder="Find a paste">
+                    </form>
+                </li>
+            </ul>
         </nav>
     </header>
 
@@ -24,9 +30,8 @@
                 <a href="${request.route_url('paste')}">browse</a>
             </li>
 
-            <li class="nav-header">Recent pastes</li>
-            ##% for paste in recent_pastes:
-            % for paste in []:
+            <li class="-header">Recent pastes</li>
+            % for paste in recent_pastes:
             <li>
                 <a href="${request.route_url('view', id=paste.id)}">
                     ${paste.nice_title}, by ${paste.nice_author}
@@ -36,9 +41,7 @@
         </ul>
     </nav>
 
-    <hr>
-
-    <div>
+    <div class="main">
 
         ${next.body()}
 
