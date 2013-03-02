@@ -30,5 +30,5 @@ def main(argv=sys.argv):
     settings = get_appsettings(config_uri)
     engine = engine_from_config(settings, 'sqlalchemy.')
     session.configure(bind=engine)
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine, checkfirst=True)
     #with transaction.manager:

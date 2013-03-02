@@ -5,6 +5,7 @@ from sqlalchemy import (
     )
 
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import func
 
 from sqlalchemy.orm import (
     scoped_session,
@@ -19,7 +20,7 @@ Base = declarative_base()
 
 class Paste(Base):
     __tablename__ = 'pastes'
-    id = Column(Integer, nullable=False, primary_key=True)
+    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
     author = Column(Text, nullable=False)
     title = Column(Text, nullable=False)
     syntax = Column(Text, nullable=False)
@@ -129,3 +130,15 @@ def setup_fulltext(event, schema_item, bind):
     """)
 
 Paste.__table__.append_ddl_listener('after-create', setup_fulltext)
+
+
+
+
+
+### Core stuff
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+    name = Column(Text, nullable=False, unique=True, index=True)
