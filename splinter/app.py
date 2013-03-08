@@ -33,14 +33,14 @@ def main(global_config, **settings):
     config.add_route('home', '/')
     config.add_route('__core__.login', '/@@login')
 
-    # Routes for the PASTEBIN specifically
-    config.add_route('paste', '/pastes')
-    config.add_route('view', '/pastes/{id:\d+}')
-    config.add_route('search', '/pastes/search')
 
     # Routes for LOVES specifically
     config.add_route('love.list', '/loves')
     config.add_route('love.express', '/loves/express')
 
     config.scan('splinter.views')
+
+    # Plugin loading
+    config.include('splinter_pastebin', route_prefix='/pastes')
+
     return config.make_wsgi_app()

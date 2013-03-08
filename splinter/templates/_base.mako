@@ -11,6 +11,7 @@
         <nav>
             <ul>
                 <li><a class="brand" href="${request.route_url('home')}">home</a></li>
+                <li><a href="${request.route_url('paste')}">pastes</a></li>
                 <li><a href="${request.route_url('love.list')}">love</a></li>
 
                 <li>
@@ -29,26 +30,6 @@
             </ul>
         </nav>
     </header>
-
-    <nav>
-        <ul>
-            <li>
-                <a href="${request.route_url('home')}">home</a>
-            </li>
-            <li>
-                <a href="${request.route_url('paste')}">browse</a>
-            </li>
-
-            <li class="-header">Recent pastes</li>
-            % for paste in recent_pastes:
-            <li>
-                <a href="${request.route_url('view', id=paste.id)}">
-                    ${paste.nice_title}, by ${paste.nice_author}
-                </a>
-            </li>
-            % endfor
-        </ul>
-    </nav>
 
     <div class="main">
 
