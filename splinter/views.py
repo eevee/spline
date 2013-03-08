@@ -2,10 +2,11 @@ import pygments
 import pygments.formatters
 import pygments.lexers
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.security import Authenticated
 from pyramid.view import view_config
 from sqlalchemy.orm.exc import NoResultFound
 
-from .models import Paste, User, session
+from .models import Love, Paste, User, session
 
 
 @view_config(route_name='home', renderer='/new.mako')
@@ -128,3 +129,39 @@ def add_ye_more_globals(event):
         # TODO what if this fails!  auto-forget?
         user = session.query(User).get(userid)
         event['user'] = user
+
+
+
+### Love stuff
+
+# TODO: permission=Authenticated?  on both of these
+@view_config(route_name='love.express', request_method='GET', renderer='/love/express.mako')
+def express_love(request):
+    return dict()
+
+@view_config(route_name='love.express', request_method='POST')
+def express_love__do(request):
+    # TODO real form handling thx
+
+    # TODO make this a request prop
+    from pyramid.security import authenticated_userid
+    source = session.query(User).get(authenticated_userid(request))
+    # TODO error handling lol
+    target = session.query(User).filter_by(name=request.POST['target']).one()
+
+    session.add(Love(
+        source=source,
+        target=target,
+        comment=request.POST['comment'],
+    ))
+
+    return HTTPSeeOther(request.route_url('love.list'))
+
+
+@view_config(route_name='love.list', request_method='GET', renderer='/love/list.mako')
+def list_love(request):
+    loves = session.query(Love).order_by(Love.timestamp.desc())
+    return dict(
+        loves=loves,
+    )
+

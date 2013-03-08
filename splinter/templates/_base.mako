@@ -11,6 +11,7 @@
         <nav>
             <ul>
                 <li><a class="brand" href="${request.route_url('home')}">home</a></li>
+                <li><a href="${request.route_url('love.list')}">love</a></li>
 
                 <li>
                     <form action="${request.route_url('search')}" method="GET">

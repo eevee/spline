@@ -1,15 +1,22 @@
+import datetime
+
+import pytz
 from sqlalchemy import (
     Column,
     Integer,
-    Text,
+    Unicode,
+    UnicodeText,
+    ForeignKey,
     )
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import func
+from sqlalchemy import types
 
 from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
+    relationship,
     )
 
 from zope.sqlalchemy import ZopeTransactionExtension
@@ -17,14 +24,31 @@ from zope.sqlalchemy import ZopeTransactionExtension
 session = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
+class TZDateTime(types.TypeDecorator):
+    impl = types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return value.astimezone(pytz.utc).replace(tzinfo=None)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return value.replace(tzinfo=pytz.utc)
+
+def now():
+    """Default value for time columns."""
+    return datetime.datetime.now(pytz.utc)
+
 
 class Paste(Base):
     __tablename__ = 'pastes'
     id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    author = Column(Text, nullable=False)
-    title = Column(Text, nullable=False)
-    syntax = Column(Text, nullable=False)
-    content = Column(Text, nullable=False)
+    author = Column(UnicodeText, nullable=False)
+    title = Column(UnicodeText, nullable=False)
+    syntax = Column(UnicodeText, nullable=False)
+    content = Column(UnicodeText, nullable=False)
 
     @property
     def nice_syntax(self):
@@ -87,7 +111,7 @@ class Paste(Base):
                 'MaxFragments=5,FragmentDelimiter=|||,'
                     'StartSel="<span class=""highlight"">",'
                     'StopSel="</span>",',
-                type_=Text))
+                type_=UnicodeText))
 
         # This is very similar to above, only instead of using fragments, we
         # pass the option HighlightAll=TRUE which means the whole field will be
@@ -99,7 +123,7 @@ class Paste(Base):
                 'HighlightAll=TRUE,'
                     'StartSel="<span class=""highlight"">",'
                     'StopSel="</span>"',
-                type_=Text))
+                type_=UnicodeText))
 
         # This calls ts_rank_cd with the search_vector and the query and gives
         # a ranking to each row. We order by this descending. Again, the :terms
@@ -141,4 +165,26 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    name = Column(Text, nullable=False, unique=True, index=True)
+    name = Column(UnicodeText, nullable=False, unique=True, index=True)
+
+
+
+### Love stuff
+
+class Love(Base):
+    __tablename__ = 'loves'
+
+    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+    timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
+    source_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    target_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    comment = Column(UnicodeText, nullable=False)
+
+    source = relationship(User,
+        foreign_keys=[source_user_id],
+        primaryjoin=(source_user_id == User.id),
+        backref='loves_expressed')
+    target = relationship(User,
+        foreign_keys=[target_user_id],
+        primaryjoin=(target_user_id == User.id),
+        backref='loves_received')

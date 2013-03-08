@@ -38,5 +38,9 @@ def main(global_config, **settings):
     config.add_route('view', '/pastes/{id:\d+}')
     config.add_route('search', '/pastes/search')
 
+    # Routes for LOVES specifically
+    config.add_route('love.list', '/loves')
+    config.add_route('love.express', '/loves/express')
+
     config.scan('splinter.views')
     return config.make_wsgi_app()
