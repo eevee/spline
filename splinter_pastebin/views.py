@@ -4,8 +4,8 @@ import pygments.lexers
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
-from splinter.models import Paste
 from splinter.models import session
+from splinter_pastebin.models import Paste
 
 
 @view_config(route_name='home', renderer='splinter_pastebin:templates/new.mako')

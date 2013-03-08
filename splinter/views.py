@@ -3,7 +3,8 @@ from pyramid.security import Authenticated
 from pyramid.view import view_config
 from sqlalchemy.orm.exc import NoResultFound
 
-from .models import Love, Paste, User, session
+from .models import Love, User, session
+from splinter_pastebin.models import Paste
 
 
 @view_config(route_name='pastebin.search', renderer='/search-results.mako')
@@ -11,23 +12,6 @@ def search(request):
     results = Paste.search(request.GET['q'])
 
     return dict(results=results)
-
-
-
-### Events
-
-from pyramid.events import BeforeRender, subscriber
-
-# TODO need this to play more friendly with others
-@subscriber(BeforeRender)
-def add_ye_globals(event):
-    pastes = session.query(Paste) \
-        .order_by(Paste.id.desc()) \
-        .limit(20)
-
-    event['recent_pastes'] = pastes
-
-
 
 
 
@@ -60,6 +44,7 @@ def login__do(request):
 
 
 # TODO how on earth do i scope template vars
+from pyramid.events import BeforeRender, subscriber
 @subscriber(BeforeRender)
 def add_ye_more_globals(event):
     from pyramid.security import authenticated_userid
