@@ -15,7 +15,7 @@ def home(request):
         lexers=pygments.lexers.get_all_lexers(),
     )
 
-@view_config(route_name='paste', request_method='POST')
+@view_config(route_name='pastebin.list', request_method='POST')
 def do_paste(request):
     syntax = request.POST['syntax']
     if syntax == '[none]':
@@ -38,7 +38,7 @@ def do_paste(request):
     return HTTPSeeOther(location=request.route_url('view', id=paste.id))
 
 
-@view_config(route_name='paste', renderer='splinter_pastebin:templates/list.mako')
+@view_config(route_name='pastebin.list', renderer='splinter_pastebin:templates/list.mako')
 def list_paste(request):
     pastes = session.query(Paste) \
         .order_by(Paste.id.desc()) \
@@ -47,7 +47,7 @@ def list_paste(request):
     return dict(pastes=pastes)
 
 
-@view_config(route_name='view', renderer='splinter_pastebin:templates/view.mako')
+@view_config(route_name='pastebin.view', renderer='splinter_pastebin:templates/view.mako')
 def view(request):
     paste = session.query(Paste) \
         .filter(Paste.id == request.matchdict['id']) \

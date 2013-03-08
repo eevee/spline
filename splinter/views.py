@@ -6,7 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from .models import Love, Paste, User, session
 
 
-@view_config(route_name='search', renderer='/search-results.mako')
+@view_config(route_name='pastebin.search', renderer='/search-results.mako')
 def search(request):
     results = Paste.search(request.GET['q'])
 
