@@ -34,13 +34,10 @@ def main(global_config, **settings):
     config.add_route('__core__.login', '/@@login')
 
 
-    # Routes for LOVES specifically
-    config.add_route('love.list', '/loves')
-    config.add_route('love.express', '/loves/express')
-
     config.scan('splinter.views')
 
     # Plugin loading
     config.include('splinter_pastebin', route_prefix='/pastes')
+    config.include('splinter_love', route_prefix='/loves')
 
     return config.make_wsgi_app()

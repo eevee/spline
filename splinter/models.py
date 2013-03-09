@@ -4,20 +4,16 @@ import pytz
 from sqlalchemy import (
     Column,
     Integer,
-    Unicode,
     UnicodeText,
-    ForeignKey,
-    )
+)
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import func
 from sqlalchemy import types
 
 from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
-    relationship,
-    )
+)
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
@@ -51,25 +47,3 @@ class User(Base):
 
     id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
     name = Column(UnicodeText, nullable=False, unique=True, index=True)
-
-
-
-### Love stuff
-
-class Love(Base):
-    __tablename__ = 'loves'
-
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
-    source_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    target_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    comment = Column(UnicodeText, nullable=False)
-
-    source = relationship(User,
-        foreign_keys=[source_user_id],
-        primaryjoin=(source_user_id == User.id),
-        backref='loves_expressed')
-    target = relationship(User,
-        foreign_keys=[target_user_id],
-        primaryjoin=(target_user_id == User.id),
-        backref='loves_received')
