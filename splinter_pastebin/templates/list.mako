@@ -2,10 +2,16 @@
 
 <%block name="title">recent pastes</%block>
 
-<ol>
-    % for paste in pastes:
-    <li>
-        <p><a href="${request.route_url('pastebin.view', id=paste.id)}">${paste.title or 'Untitled'} by ${paste.author or u'Anonymous Coward'}</a></p>
-    </li>
-    % endfor
-</ol>
+<section>
+    <table class="pretty-table">
+        <thead>
+        </thead>
+        <tbody>
+            % for paste in pastes:
+            <tr>
+                <td><a href="${request.route_url('pastebin.view', id=paste.id)}">${paste.title or 'Untitled'} by ${paste.nice_author}</a></td>
+            </tr>
+            % endfor
+        </tbody>
+    </table>
+</section>

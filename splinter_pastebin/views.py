@@ -26,11 +26,20 @@ def do_paste(request):
     elif syntax.startswith('['):
         raise ValueError
 
+    content = request.POST['content']
+    lines = content.count('\n')
+    if content[-1] != '\n':
+        lines += 1
+
+    # TODO make this a request prop
+
     paste = Paste(
-        author=request.POST.get('author', ''),
+        author_id=authenticated_userid(request),
         title=request.POST.get('title', ''),
         syntax=syntax,
-        content=request.POST['content'],
+        content=content,
+        size=len(content),
+        lines=lines,
     )
     session.add(paste)
     session.flush()

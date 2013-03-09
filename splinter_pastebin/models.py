@@ -1,20 +1,29 @@
 from sqlalchemy import func
 from sqlalchemy import (
     Column,
+    ForeignKey,
     Integer,
+    Unicode,
     UnicodeText,
 )
+from sqlalchemy.orm import relationship
 
-from splinter.models import Base, session
+from splinter.models import Base, User, session
+from splinter.models import TZDateTime, now
 
 
 class Paste(Base):
     __tablename__ = 'pastes'
     id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    author = Column(UnicodeText, nullable=False)
-    title = Column(UnicodeText, nullable=False)
-    syntax = Column(UnicodeText, nullable=False)
+    timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
+    author_id = Column(Integer, ForeignKey(User.id), nullable=True)
+    title = Column(Unicode, nullable=False)
+    syntax = Column(Unicode, nullable=False)
     content = Column(UnicodeText, nullable=False)
+    size = Column(Integer, nullable=False)
+    lines = Column(Integer, nullable=False)
+
+    author = relationship(User, backref='pastes')
 
     @property
     def nice_syntax(self):
@@ -35,7 +44,7 @@ class Paste(Base):
         if not self.author:
             return u"anon"
 
-        return self.author
+        return self.author.name
 
     # TODO this sucks and doesn't belong here and etc but whatever.
     @classmethod
