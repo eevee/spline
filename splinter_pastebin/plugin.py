@@ -4,6 +4,7 @@ def includeme(config):
 
     # Routing
     config.add_route('pastebin.list', '/')
+    config.add_route('pastebin.new', '/new')
     config.add_route('pastebin.view', '/{id:\d+}')
     config.add_route('pastebin.search', '/search')
 

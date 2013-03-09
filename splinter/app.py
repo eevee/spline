@@ -30,7 +30,7 @@ def main(global_config, **settings):
     config.add_view(route_name='pyscss', view='pyramid_scss.controller.get_scss', renderer='scss', request_method='GET')
 
     # Routes
-    config.add_route('home', '/')
+    config.add_route('__core__.home', '/')
     config.add_route('__core__.login', '/@@login')
 
 

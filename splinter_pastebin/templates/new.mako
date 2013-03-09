@@ -4,7 +4,7 @@
 
 <h1>Paste a thing</h1>
 
-<form action="${request.route_url('pastebin.list')}" method="POST">
+<form action="${request.route_url('pastebin.new')}" method="POST">
     <textarea name="content" rows="24" cols="80"></textarea>
 
     <fieldset>

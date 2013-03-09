@@ -8,14 +8,14 @@ from splinter.models import session
 from splinter_pastebin.models import Paste
 
 
-@view_config(route_name='home', renderer='splinter_pastebin:templates/new.mako')
+@view_config(route_name='pastebin.new', renderer='splinter_pastebin:templates/new.mako')
 def home(request):
     return dict(
         #guessed_name=ipmap.get(request.remote_addr, ''),
         lexers=pygments.lexers.get_all_lexers(),
     )
 
-@view_config(route_name='pastebin.list', request_method='POST')
+@view_config(route_name='pastebin.new', request_method='POST')
 def do_paste(request):
     syntax = request.POST['syntax']
     if syntax == '[none]':

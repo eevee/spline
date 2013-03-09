@@ -15,6 +15,10 @@ def search(request):
 
 ### Core stuff
 
+@view_config(route_name='__core__.home', request_method='GET', renderer='/home.mako')
+def home(request):
+    return dict()
+
 @view_config(route_name='__core__.login', request_method='GET', renderer='/login.mako')
 def login(request):
     return dict()
