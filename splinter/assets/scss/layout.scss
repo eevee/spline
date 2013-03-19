@@ -73,7 +73,10 @@ body > nav {
 body > .main {
     overflow: hidden;  // float context hack TODO remove me  :(
 
-
+    > section {
+        margin-left: 1em;
+        margin-right: 1em;
+    }
 }
 
 
