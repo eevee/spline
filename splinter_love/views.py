@@ -14,9 +14,7 @@ def express_love(request):
 def express_love__do(request):
     # TODO real form handling thx
 
-    # TODO make this a request prop
-    from pyramid.security import authenticated_userid
-    source = session.query(User).get(authenticated_userid(request))
+    source = request.user
     # TODO error handling lol
     target = session.query(User).filter_by(name=request.POST['target']).one()
 

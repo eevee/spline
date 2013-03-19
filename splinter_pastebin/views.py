@@ -31,10 +31,8 @@ def do_paste(request):
     if content[-1] != '\n':
         lines += 1
 
-    # TODO make this a request prop
-
     paste = Paste(
-        author_id=authenticated_userid(request),
+        author=request.user,
         title=request.POST.get('title', ''),
         syntax=syntax,
         content=content,
@@ -44,7 +42,7 @@ def do_paste(request):
     session.add(paste)
     session.flush()
 
-    return HTTPSeeOther(location=request.route_url('view', id=paste.id))
+    return HTTPSeeOther(location=request.route_url('pastebin.view', id=paste.id))
 
 
 @view_config(route_name='pastebin.list', renderer='splinter_pastebin:templates/list.mako')

@@ -1,10 +1,25 @@
 from pyramid.authentication import SessionAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
+from pyramid.security import authenticated_userid
 import pyramid_beaker
 from sqlalchemy import engine_from_config
+from sqlalchemy.orm.exc import NoResultFound
 
-from splinter.models import session
+from splinter.models import User, session
+
+def get_user(request):
+    userid = authenticated_userid(request)
+
+    if userid is None:
+        return None
+
+    try:
+        return session.query(User).get(userid)
+    except NoResultFound:
+        # TODO should this forget who you are if you don't exist?
+        return None
+
 
 def main(global_config, **settings):
     engine = engine_from_config(settings, 'sqlalchemy.')
@@ -21,6 +36,7 @@ def main(global_config, **settings):
     # Auth
     config.set_authentication_policy(SessionAuthenticationPolicy(prefix='__core__.auth.'))
     config.set_authorization_policy(ACLAuthorizationPolicy())
+    config.add_request_method(get_user, 'user', reify=True)
 
     # Static assets
     config.add_static_view('static', 'assets', cache_max_age=3600)

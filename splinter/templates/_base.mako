@@ -21,8 +21,8 @@
                 </li>
 
                 <li>
-                    % if user:
-                        hey ${user.name}, sup
+                    % if request.user:
+                        hey ${request.user.name}, sup
                     % else:
                         <a href="${request.route_url('__core__.login')}">log in</a>
                     % endif

@@ -40,20 +40,6 @@ def login__do(request):
 
     if True:
         headers = remember(request, user.id)
-        return HTTPSeeOther(request.route_url('home'), headers=headers)
+        return HTTPSeeOther(request.route_url('__core__.home'), headers=headers)
     else:
         raise HTTPForbidden
-
-
-# TODO how on earth do i scope template vars
-from pyramid.events import BeforeRender, subscriber
-@subscriber(BeforeRender)
-def add_ye_more_globals(event):
-    from pyramid.security import authenticated_userid
-    userid = authenticated_userid(event['request'])
-
-    if userid:
-        # TODO what if this fails!  auto-forget?
-        user = session.query(User).get(userid)
-        event['user'] = user
-
