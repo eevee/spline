@@ -1,6 +1,6 @@
 <%inherit file="/_base.mako"/>
 
-<%block name="title">recent pastes</%block>
+<%block name="title">pastes</%block>
 
 <section>
     <table class="pretty-table">

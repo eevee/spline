@@ -79,6 +79,14 @@ body > .main {
     }
 }
 
+// TODO should this only apply to pastebin contents?
+pre {
+    margin: 1em 0;
+    padding: 0.33em;
+    white-space: pre-wrap;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 4px #ccc;
+}
 
 // XXX lol
 textarea {

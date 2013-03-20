@@ -1,13 +1,21 @@
 <%inherit file="/_base.mako"/>
 
-<%block name="title">viewing: ${paste.nice_title}</%block>
+<%block name="title">paste: ${paste.nice_title}</%block>
+
+<%! import pygments.formatters %>
+<style>${pygments.formatters.HtmlFormatter().get_style_defs('.highlight')}</style>
 
 <section>
-    <h2>${paste.nice_title}</h2>
-    <% import pygments.formatters %>
-    <style>${pygments.formatters.HtmlFormatter().get_style_defs('.highlight')}</style>
+    <h1>${paste.nice_title}</h1>
+    <p>Pasted by ${paste.nice_author} on ${paste.timestamp}</p>
+    <p>
+        % if paste.syntax:
+        Formatted as ${paste.syntax}
+        % else:
+        Unformatted
+        % endif
+        · ${paste.lines} lines, ${paste.size} bytes
+    </p>
 
     ${pretty_content | n}
-
-    <p>brought to you by ${paste.nice_author}</p>
 </section>
