@@ -14,15 +14,15 @@
                 <li><a href="${request.route_url('pastebin.list')}">pastes</a></li>
                 <li><a href="${request.route_url('love.list')}">love</a></li>
 
-                <li>
+                <li class="nav-search">
                     <form action="${request.route_url('pastebin.search')}" method="GET">
-                        <input type="search" name="q" placeholder="Find a paste">
+                        <input type="search" name="q" placeholder="Search">
                     </form>
                 </li>
 
-                <li>
+                <li class="nav-auth">
                     % if request.user:
-                        hey ${request.user.name}, sup
+                        <span class="not-a-link">hey ${request.user.name}, sup</span>
                     % else:
                         <a href="${request.route_url('__core__.login')}">log in</a>
                     % endif
