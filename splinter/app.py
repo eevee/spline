@@ -55,5 +55,6 @@ def main(global_config, **settings):
     # Plugin loading
     config.include('splinter_pastebin', route_prefix='/pastes')
     config.include('splinter_love', route_prefix='/loves')
+    config.include('splinter_qdb', route_prefix='/qdb')
 
     return config.make_wsgi_app()

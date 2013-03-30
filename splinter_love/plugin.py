@@ -1,4 +1,3 @@
-
 def includeme(config):
     """Pyramid's inclusion hook."""
 

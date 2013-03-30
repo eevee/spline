@@ -6,7 +6,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-
 from splinter.models import Base, User
 from splinter.models import TZDateTime, now
 

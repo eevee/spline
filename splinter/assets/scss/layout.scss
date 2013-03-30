@@ -33,8 +33,7 @@ body > header {
             > a,
             > .not-a-link {
                 display: block;
-                margin: 0 0.5em;
-                padding: 0.33em 0.5em;
+                padding: 0.33em 1em;
                 line-height: 1.5;
             }
             > a:hover {
@@ -110,10 +109,11 @@ body > .main {
 // TODO should this only apply to pastebin contents?
 pre {
     margin: 1em 0;
-    padding: 0.33em;
+    padding: 0.75em;
     white-space: pre-wrap;
-    border: 1px solid #ddd;
-    box-shadow: 0 0 4px #ccc;
+    border: 1px solid #999;
+    background: white;
+    box-shadow: 0 0 3px #ccc;
 }
 
 // XXX lol

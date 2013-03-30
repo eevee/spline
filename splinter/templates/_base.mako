@@ -13,6 +13,7 @@
                 <li><a class="brand" href="${request.route_url('__core__.home')}">home</a></li>
                 <li><a href="${request.route_url('pastebin.list')}">pastes</a></li>
                 <li><a href="${request.route_url('love.list')}">love</a></li>
+                <li><a href="${request.route_url('qdb.list')}">qdb</a></li>
 
                 <li class="nav-search">
                     <form action="${request.route_url('pastebin.search')}" method="GET">
