@@ -1,4 +1,5 @@
 <%inherit file="/_base.mako" />
+<%namespace name="lib" file="_lib.mako" />
 
 <%block name="title">quote db</%block>
 
@@ -7,16 +8,7 @@
 
     <ul>
         % for quote in quotes:
-        <li>
-            <pre>${quote.content}</pre>
-            <p>
-                kudos ${quote.poster.name}
-                % if quote.comment:
-                    — “${quote.comment}”
-                % endif
-            </p>
-            <p>${quote.timestamp}</p>
-        </li>
+        <li>${lib.render_quote(quote)}</li>
         % endfor
     </ul>
 </section>
