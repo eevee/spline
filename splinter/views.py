@@ -2,6 +2,7 @@ from pyramid.view import view_config
 from sqlalchemy.orm.exc import NoResultFound
 
 from .models import User, session
+from splinter.events import FrontPageActivity
 from splinter_pastebin.models import Paste
 
 
@@ -17,7 +18,10 @@ def search(request):
 
 @view_config(route_name='__core__.home', request_method='GET', renderer='/home.mako')
 def home(request):
-    return dict()
+    event = FrontPageActivity()
+    request.registry.notify(event)
+
+    return dict(activity=event.sorted_activity)
 
 @view_config(route_name='__core__.login', request_method='GET', renderer='/login.mako')
 def login(request):
