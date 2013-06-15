@@ -1,3 +1,12 @@
+// -----------------------------------------------------------------------------
+// config
+
+$border-color: #e8e8e8;
+$container-bg: #fcfcfc;
+
+// -----------------------------------------------------------------------------
+// main layout
+
 body {
     background: white url(/static/images/debut_light.png) top left repeat;
 }
@@ -107,7 +116,7 @@ body > .main {
 }
 
 // TODO should this only apply to pastebin contents?
-pre {
+pre.pastebin {
     margin: 1em 0;
     padding: 0.75em;
     white-space: pre-wrap;
@@ -146,4 +155,51 @@ input[type=search] {
     padding-left: 0.5em;
     padding-right: 0.5em;
     border-radius: 1em;
+}
+
+// -----------------------------------------------------------------------------
+// widgets
+
+.activity-feed {
+    border: 1px solid $border-color;
+
+    li {
+        background: $container-bg;
+
+        border-top: 1px solid $border-color;
+
+        &:first-child {
+            border-top: none;
+        }
+
+        .-header {
+            padding: 0.5em;
+            background: #f0f0f0;
+
+        }
+        .-timestamp {
+            float: right;
+        }
+        .-title {
+            float: right;
+            margin-right: 2em;
+            font-family: serif;
+
+            &:before {
+                content: "“";
+            }
+            &:after {
+                content: "”";
+            }
+        }
+        .-body {
+            padding: 1em;
+
+            pre {
+                white-space: pre-wrap;
+                border-left: 3px solid $border-color;
+                padding-left: 0.5em;
+            }
+        }
+    }
 }

@@ -3,9 +3,9 @@
 <%block name="title">home</%block>
 
 <section>
-    <p>hello!</p>
+    <h1>Recent activity</h1>
 
-    <ol>
+    <ol class="activity-feed">
         % for activitum in activity:
         <li>
             <% activitum.renderer.implementation().get_def(activitum.renderer.defname).render_context(context, activitum.source) %>

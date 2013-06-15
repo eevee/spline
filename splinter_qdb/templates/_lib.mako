@@ -1,8 +1,21 @@
+<%namespace name="libcore" file="splinter:templates/_lib.mako" />
+
 ################################################################################
 ## Splinter API
 
 <%def name="render_activity(quote)">
-${render_quote(quote)}
+<div class="-header">
+    <div class="-timestamp"><a href="${request.route_url('qdb.view', id=quote.id)}">${libcore.timestamp(quote.timestamp)}</a></div>
+  % if quote.comment:
+    <div class="-title">${quote.comment}</div>
+  % endif
+    <div class="-user">
+        ${libcore.user(quote.poster)} added a quote
+    </div>
+</div>
+<div class="-body">
+    <pre>${quote.content}</pre>
+</div>
 </%def>
 
 ################################################################################
@@ -15,5 +28,4 @@ ${render_quote(quote)}
             — “${quote.comment}”
         % endif
     </p>
-    <p>${quote.timestamp}</p>
 </%def>
