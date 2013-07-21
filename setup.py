@@ -10,10 +10,14 @@ requires = [
     'pyramid',
     'SQLAlchemy',
     'transaction',
-    'pyramid_tm',
+    'pyramid_beaker',
     'pyramid_debugtoolbar',
+    'pyramid_scss',
+    'pyramid_tm',
+    'pytz',
     'zope.sqlalchemy',
     'waitress',
+    'whoosh',
     ]
 
 setup(name='splinter',
