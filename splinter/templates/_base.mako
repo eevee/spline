@@ -16,7 +16,7 @@
                 <li><a href="${request.route_url('qdb.list')}">qdb</a></li>
 
                 <li class="nav-search">
-                    <form action="${request.route_url('pastebin.search')}" method="GET">
+                    <form action="${request.route_url('__core__.search')}" method="GET">
                         <input type="search" name="q" placeholder="Search">
                     </form>
                 </li>

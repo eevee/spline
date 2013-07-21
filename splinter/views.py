@@ -6,14 +6,6 @@ from splinter.events import FrontPageActivity
 from splinter_pastebin.models import Paste
 
 
-@view_config(route_name='pastebin.search', renderer='/search-results.mako')
-def search(request):
-    results = Paste.search(request.GET['q'])
-
-    return dict(results=results)
-
-
-
 ### Core stuff
 
 @view_config(route_name='__core__.home', request_method='GET', renderer='/home.mako')
@@ -47,3 +39,49 @@ def login__do(request):
         return HTTPSeeOther(request.route_url('__core__.home'), headers=headers)
     else:
         raise HTTPForbidden
+
+
+### Search
+
+@view_config(route_name='__core__.search', renderer='/search-results.mako')
+def search(request):
+    raw_query = request.GET['q']
+
+    from whoosh.index import create_in, open_dir
+    from whoosh.fields import ID, DATETIME, TEXT, Schema
+    from whoosh.qparser import QueryParser
+
+    schema = Schema(
+        id=ID(stored=True),
+        type=ID(stored=True),
+        creator_id=ID(stored=True),
+        timestamp=DATETIME(),
+        # TODO what about stuff with multiple contents
+        # TODO what about pastebin which should really use a source-code analyzer
+        content=TEXT(),
+    )
+
+    #ix = create_in('data/whoosh-index/', schema)
+    #writer = ix.writer()
+    # TODO cannot guarantee this dir exists
+    ix = open_dir(request.registry.settings['splinter.search.whoosh.path'])
+
+    from sqlalchemy import create_engine
+    from splinter.models import session
+    #session.bind = create_engine('postgresql:///splinter?host=/nail/home/amunroe/var/run')
+
+    from splinter_pastebin.models import Paste
+
+    query_parser = QueryParser('content', schema=schema)
+    whoosh_query = query_parser.parse(raw_query)
+
+    with ix.searcher() as searcher:
+        results = searcher.search(whoosh_query, limit=10)
+        num_results = len(results)
+        results = [repr(res) for res in results]
+
+    return dict(
+        whoosh_results=results,
+        whoosh_results_count=num_results,
+    )
+

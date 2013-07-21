@@ -1,19 +1,16 @@
 <%inherit file="/_base.mako" />
 
-<%block name="title">find pastes</%block>
+<%block name="title">Search</%block>
 
 <style> .highlight { font-weight: bold; } </style>
 
 <section>
-    <p>Found ${len(results)}.</p>
+    <p>Found ${whoosh_results_count}.</p>
 
     <ul>
-        % for paste, fragments, title in results:
+        % for result in whoosh_results:
         <li>
-            <p><a href="${request.route_url('view', id=paste.id)}">${paste.nice_title} by ${paste.nice_author}</a></p>
-            % for frag in fragments:
-                <p>… ${frag | n} …</p>
-            % endfor
+            ${repr(result)}
         </li>
         % endfor
     </ul>

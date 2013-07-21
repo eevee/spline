@@ -48,6 +48,7 @@ def main(global_config, **settings):
     # Routes
     config.add_route('__core__.home', '/')
     config.add_route('__core__.login', '/@@login')
+    config.add_route('__core__.search', '/@@search')
 
 
     config.scan('splinter.views')
