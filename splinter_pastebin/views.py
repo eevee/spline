@@ -10,9 +10,21 @@ from splinter_pastebin.models import Paste
 
 @view_config(route_name='pastebin.new', renderer='splinter_pastebin:templates/new.mako')
 def home(request):
+    # Fetch all the lexers.  We only need a map of alias => name to build the
+    # form, so grab those.  Using a set helps when Pygments has duplicate
+    # lexers (that claim to own different file or MIME types), which is a thing
+    # that happens apparently.
+    lexerset = set()
+    for name, aliases, filetypes, mimetypes in pygments.lexers.get_all_lexers():
+        lexerset.add((name, aliases[0]))
+
+    # Sort by name
+    lexers = list(lexerset)
+    lexers.sort(key=lambda lexer: lexer[0].lower())
+
     return dict(
         #guessed_name=ipmap.get(request.remote_addr, ''),
-        lexers=pygments.lexers.get_all_lexers(),
+        lexers=lexers,
     )
 
 @view_config(route_name='pastebin.new', request_method='POST')

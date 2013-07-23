@@ -24,8 +24,9 @@
                     <select name="syntax">
                         <option value="[auto]" selected>Auto</option>
                         <option value="[none]">None</option>
-                        % for lex_name, lex_aliases, lex_filetypes, lex_mimetypes in lexers:
-                        <option value="${lex_aliases[0]}">${lex_name}</option>
+                        <option disabled></option>
+                        % for name, alias in lexers:
+                        <option value="${alias}">${name}</option>
                         % endfor
                     </select>
                 </dd>
