@@ -203,3 +203,26 @@ input[type=search] {
         }
     }
 }
+
+
+/// TODO this is precisely the sort of thing that should live in archetype
+table.table-pretty {
+    > tbody {
+        > tr {
+            // TODO standardize on grays
+            border-bottom: 1px solid #e0e0e0;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &:nth-child(2n) {
+                background: rgba(#808080, 0.1);
+            }
+
+            &:hover {
+                background: hsla(225, 80%, 60%, 0.1);
+            }
+        }
+    }
+}
