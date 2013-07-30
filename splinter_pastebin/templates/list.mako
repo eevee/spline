@@ -12,9 +12,7 @@
 <section>
     <h1>Recent pastes</h1>
 
-    <table class="table-pretty">
-        <thead>
-        </thead>
+    <table class="table table-striped table-hover">
         <tbody>
             % for paste in pastes:
             <tr>

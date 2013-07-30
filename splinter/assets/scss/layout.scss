@@ -23,6 +23,10 @@ body > header {
         0 0 3px black;
 
     > nav > ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
         // TODO float containment
         > li {
             display: inline-block;
@@ -161,6 +165,9 @@ input[type=search] {
 // widgets
 
 .activity-feed {
+    margin: 0;
+    padding: 0;
+    list-style: none;
     border: 1px solid $border-color;
 
     li {
