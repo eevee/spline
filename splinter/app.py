@@ -40,6 +40,7 @@ def main(global_config, **settings):
 
     # Static assets
     config.add_static_view('static', 'assets', cache_max_age=3600)
+    config.add_static_view('filestore', '../data/filestore', cache_max_age=3600)
     # Sass compilation
     config.include('pyramid_scss')
     config.add_route('pyscss', '/css/{css_path:[^/]+}.css')
@@ -57,5 +58,6 @@ def main(global_config, **settings):
     config.include('splinter_pastebin', route_prefix='/pastes')
     config.include('splinter_love', route_prefix='/loves')
     config.include('splinter_qdb', route_prefix='/qdb')
+    config.include('splinter_comic', route_prefix='/comic')
 
     return config.make_wsgi_app()

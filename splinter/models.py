@@ -38,6 +38,9 @@ def now():
     return datetime.datetime.now(pytz.utc)
 
 
+# Pseudo-types, to be fleshed out later
+Prose = UnicodeText
+
 
 
 ### Core stuff
