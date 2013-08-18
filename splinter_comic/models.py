@@ -18,3 +18,5 @@ class ComicPage(Base):
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     file = Column(UnicodeText, nullable=False)
     comment = Column(Prose, nullable=False)
+
+    author = relationship(User, backref='comic_pages')

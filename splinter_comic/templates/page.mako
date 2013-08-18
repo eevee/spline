@@ -17,10 +17,23 @@
 <section>
     <h1>My Sweet Comic</h1>
     
-    % for page in pages:
     <div class="comic-page">
+        <div class="comic-page-controls">
+            % if prev_page:
+                <a href="${request.route_url('comic.page', id=prev_page.id)}">«</a>
+            % else:
+                «
+            % endif
+
+            ·
+
+            % if next_page:
+                <a href="${request.route_url('comic.page', id=next_page.id)}">»</a>
+            % else:
+                »
+            % endif
+        </div>
         <img src="${request.static_url('splinter:../data/filestore/' + page.file)}"
             class="comic-page-image">
     </div>
-    % endfor
 </section>
