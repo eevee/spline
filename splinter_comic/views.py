@@ -65,6 +65,22 @@ def comic_page(context, request):
 
 
 @view_config(
+    route_name='comic.archive',
+    request_method='GET',
+    renderer='splinter_comic:templates/archive.mako')
+def comic_archive(context, request):
+    pages = session.query(ComicPage).order_by(ComicPage.timestamp.asc())
+
+    # TODO: chapters.  how will these possibly work?  do i need to require that
+    # they cover distinct consecutive spans of pages?  what if the author never
+    # creates any chapters?
+
+    return dict(
+        pages=pages,
+    )
+
+
+@view_config(
     route_name='comic.upload',
     request_method='GET',
     renderer='splinter_comic:templates/upload.mako')

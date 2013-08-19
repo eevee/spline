@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 def format_datetime(dt):
     return dt.strftime("%a %b %d, %Y @ %H:%M")
 
+def format_date(dt):
+    return dt.strftime("%a %b %d, %Y")
+
 
 _BYTE_MAGNITUDES = [
     ('B', 'B'),

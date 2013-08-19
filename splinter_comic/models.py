@@ -17,8 +17,15 @@ class ComicPage(Base):
     id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    chapter_id = Column(Integer, ForeignKey('comic_chapters.id'), nullable=True)
     file = Column(UnicodeText, nullable=False)
     title = Column(Unicode, nullable=False)
     comment = Column(Prose, nullable=False)
 
     author = relationship(User, backref='comic_pages')
+
+class ComicChapter(Base):
+    __tablename__ = 'comic_chapters'
+
+    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+    title = Column(Unicode, nullable=False)
