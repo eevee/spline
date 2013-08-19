@@ -4,5 +4,6 @@ def includeme(config):
     # Routing
     config.add_route('comic.most-recent', '/')
     config.add_route('comic.page', '/page/{id:\d+}/')
+    config.add_route('comic.upload', '/upload/')
 
     config.scan('splinter_comic')

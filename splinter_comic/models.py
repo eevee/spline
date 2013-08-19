@@ -2,6 +2,7 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Integer,
+    Unicode,
     UnicodeText,
 )
 from sqlalchemy.orm import relationship
@@ -17,6 +18,7 @@ class ComicPage(Base):
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     file = Column(UnicodeText, nullable=False)
+    title = Column(Unicode, nullable=False)
     comment = Column(Prose, nullable=False)
 
     author = relationship(User, backref='comic_pages')

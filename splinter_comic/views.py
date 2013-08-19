@@ -1,3 +1,9 @@
+import os
+import os.path
+import shutil
+from tempfile import NamedTemporaryFile
+
+from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
 from splinter.models import session
@@ -56,3 +62,45 @@ def comic_page(context, request):
         prev_page=prev_page,
         next_page=next_page,
     )
+
+
+@view_config(
+    route_name='comic.upload',
+    request_method='GET',
+    renderer='splinter_comic:templates/upload.mako')
+def comic_upload(context, request):
+    return {}
+
+
+@view_config(
+    route_name='comic.upload',
+    request_method='POST')
+def comic_upload_do(context, request):
+    # TODO validation and all that boring stuff
+    fh = request.POST['file'].file
+
+    with NamedTemporaryFile(delete=False) as tmp:
+        shutil.copyfileobj(fh, tmp)
+
+    # TODO wire into transaction so the file gets deleted on rollback
+    # TODO better picking of filenames
+    # TODO ripe for being broken out into a lib
+    os.rename(tmp.name, os.path.join(os.path.dirname(__file__), '../data/filestore/', os.path.basename(tmp.name)))
+
+    page = ComicPage(
+        file=os.path.basename(tmp.name),
+
+        # TODO
+        author_user_id=1,
+
+        # TODO
+        chapter_id=None,
+
+        # TODO
+        title=u'',
+        comment=u'',
+    )
+    session.add(page)
+    session.flush()
+
+    return HTTPSeeOther(location=request.route_url('comic.page', id=page.id))

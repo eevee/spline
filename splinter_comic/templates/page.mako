@@ -16,6 +16,9 @@
 
 <section>
     <h1>My Sweet Comic</h1>
+    % if page.title:
+    <h2>${page.title}</h2>
+    % endif
     
     <div class="comic-page">
         <div class="comic-page-controls">
