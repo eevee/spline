@@ -23,7 +23,7 @@
     <div class="comic-page">
         <div class="comic-page-controls">
             % if prev_page:
-                <a href="${request.route_url('comic.page', id=prev_page.id)}">«</a>
+                <a href="${request.route_url('comic.page', prev_page)}">«</a>
             % else:
                 «
             % endif
@@ -31,7 +31,7 @@
             ·
 
             % if next_page:
-                <a href="${request.route_url('comic.page', id=next_page.id)}">»</a>
+                <a href="${request.route_url('comic.page', next_page)}">»</a>
             % else:
                 »
             % endif

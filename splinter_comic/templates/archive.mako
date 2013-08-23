@@ -8,7 +8,7 @@
 
     <ul>
       % for page in pages:
-        <li><a href="${request.route_url('comic.page', id=page.id)}">
+        <li><a href="${request.route_url('comic.page', page)}">
             ${format_date(page.timestamp)} ${page.title}
         </a></li>
       % endfor

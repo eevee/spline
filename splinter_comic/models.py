@@ -10,21 +10,27 @@ from sqlalchemy.orm import relationship
 
 from splinter.models import Base, User
 from splinter.models import Prose, TZDateTime, now
+from splinter.models.columns import SlugColumn
+from splinter.models.columns import SurrogateKeyColumn
+from splinter.models.columns import TitleColumn
 
 
 class Comic(Base):
     __tablename__ = 'comics'
 
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    title = Column(Unicode, nullable=False)
+    id = SurrogateKeyColumn()
+    title = TitleColumn()
+    title_slug = SlugColumn(title)
 
 
 class ComicChapter(Base):
     __tablename__ = 'comic_chapters'
 
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+    id = SurrogateKeyColumn()
     comic_id = Column(Integer, ForeignKey(Comic.id), nullable=False)
-    title = Column(Unicode, nullable=False)
+    title = TitleColumn()
+    # TODO these slugs need to be unique /per comic/
+    #title_slug = SlugColumn(title)
 
     comic = relationship(Comic, backref='chapters')
 
@@ -32,12 +38,14 @@ class ComicChapter(Base):
 class ComicPage(Base):
     __tablename__ = 'comic_pages'
 
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+    id = SurrogateKeyColumn()
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=True)
+    chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
     file = Column(UnicodeText, nullable=False)
-    title = Column(Unicode, nullable=False)
+    title = TitleColumn()
+    # TODO these slugs need to be unique /per comic/
+    #title_slug = SlugColumn(title)
     comment = Column(Prose, nullable=False)
 
     author = relationship(User, backref='comic_pages')
