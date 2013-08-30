@@ -3,6 +3,7 @@ import os.path
 import shutil
 from tempfile import NamedTemporaryFile
 
+from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
@@ -90,6 +91,10 @@ def comic_archive(comic, request):
     request_method='GET',
     renderer='splinter_comic:templates/upload.mako')
 def comic_upload(comic, request):
+    # TODO permissions
+    if not request.user:
+        return HTTPForbidden()
+
     return {}
 
 
@@ -97,6 +102,10 @@ def comic_upload(comic, request):
     route_name='comic.upload',
     request_method='POST')
 def comic_upload_do(comic, request):
+    # TODO permissions
+    if not request.user:
+        return HTTPForbidden()
+
     # TODO validation and all that boring stuff
     fh = request.POST['file'].file
 
@@ -121,11 +130,8 @@ def comic_upload_do(comic, request):
 
     page = ComicPage(
         file=os.path.basename(tmp.name),
-
-        # TODO
-        author_user_id=1,
-
         chapter=last_chapter,
+        author=request.user,
 
         # TODO
         title=u'',
