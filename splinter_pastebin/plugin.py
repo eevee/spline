@@ -1,6 +1,7 @@
 from pyramid.events import subscriber
 
 from splinter.events import FrontPageActivity
+from splinter.events import BuildMenu
 from splinter_pastebin.models import Paste
 
 
@@ -8,6 +9,11 @@ from splinter_pastebin.models import Paste
 def find_activity(event):
     event.activity_from_database(
         Paste, 'splinter_pastebin:templates/_lib#render_activity.mako')
+
+
+@subscriber(BuildMenu)
+def build_menu(event):
+    event.add_item("pastes", 'pastebin.list')
 
 
 def includeme(config):

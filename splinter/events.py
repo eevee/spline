@@ -7,6 +7,22 @@ from pyramid.renderers import get_renderer
 
 from splinter.models import session
 
+
+class BuildMenu(object):
+    """Event that asks plugins to build the primary menu."""
+
+    def __init__(self, request):
+        self.request = request
+
+        self.menu_items = []
+
+    def add_item(self, label, route_name):
+        self.menu_items.append((label, route_name))
+
+    def __iter__(self):
+        return iter(self.menu_items)
+
+
 MAX_ACTIVITY_COUNT = 30
 #MAX_ACTIVITY_TIME = ...
 

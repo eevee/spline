@@ -11,9 +11,11 @@
         <nav>
             <ul>
                 <li><a class="brand" href="${request.route_url('__core__.home')}">home</a></li>
-                <li><a href="${request.route_url('pastebin.list')}">pastes</a></li>
                 <li><a href="${request.route_url('love.list')}">love</a></li>
                 <li><a href="${request.route_url('qdb.list')}">qdb</a></li>
+                % for label, route_name in splinter_menu:
+                <li><a href="${request.route_url(route_name)}">${label}</a></li>
+                % endfor
 
                 <li class="nav-search">
                     <form action="${request.route_url('__core__.search')}" method="GET">
@@ -28,6 +30,11 @@
                         <a href="${request.route_url('__core__.login')}">log in</a>
                     % endif
                 </li>
+            </ul>
+            <ul>
+                <li><a>two</a></li>
+                <li><a>three</a></li>
+                <li><a>four</a></li>
             </ul>
         </nav>
     </header>

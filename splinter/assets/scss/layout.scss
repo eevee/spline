@@ -55,6 +55,11 @@ body > header {
                 background: hsla(225, 70%, 70%, 0.5);
             }
         }
+
+        + ul {
+            border-top: 1px solid black;
+            background: rgba(white, 0.2);
+        }
     }
 
     a {

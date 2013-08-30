@@ -1,11 +1,13 @@
 from pyramid.authentication import SessionAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
+from pyramid.events import BeforeRender
 from pyramid.security import authenticated_userid
 import pyramid_beaker
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm.exc import NoResultFound
 
+from splinter.events import BuildMenu
 from splinter.models import User, session
 
 def get_user(request):
@@ -19,6 +21,15 @@ def get_user(request):
     except NoResultFound:
         # TODO should this forget who you are if you don't exist?
         return None
+
+
+def inject_template_vars(event):
+    request = event['request']
+
+    # Query plugins for what goes on the menu
+    menu = BuildMenu(request)
+    request.registry.notify(menu)
+    event['splinter_menu'] = menu
 
 
 def main(global_config, **settings):
@@ -37,6 +48,9 @@ def main(global_config, **settings):
     config.set_authentication_policy(SessionAuthenticationPolicy(prefix='__core__.auth.'))
     config.set_authorization_policy(ACLAuthorizationPolicy())
     config.add_request_method(get_user, 'user', reify=True)
+
+    # Events
+    config.add_subscriber(inject_template_vars, BeforeRender)
 
     # Static assets
     config.add_static_view('static', 'assets', cache_max_age=3600)
