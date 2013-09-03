@@ -8,7 +8,9 @@ def includeme(config):
     # TODO what goes on / now?
     drc = DatabaseRouteConnector('comic_id', Comic.id)
     config.add_route('comic.most-recent', '/{comic_id:\d+}/', **drc.kwargs)
-    config.add_route('comic.upload', '/{comic_id:\d+}/upload/', **drc.kwargs)
+    config.add_route('comic.admin', '/{comic_id:\d+}/admin/', **drc.kwargs)
+    config.add_route('comic.save-queue', '/{comic_id:\d+}/admin/queue/', **drc.kwargs)
+    config.add_route('comic.upload', '/{comic_id:\d+}/admin/upload/', **drc.kwargs)
     config.add_route('comic.archive', '/{comic_id:\d+}/archive/', **drc.kwargs)
 
     drc2 = drc.derive('page_id', ComicPage.id, relchain=(ComicPage.chapter, ComicChapter.comic))

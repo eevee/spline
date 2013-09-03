@@ -1,3 +1,7 @@
+from future_builtins import zip
+
+from datetime import date
+from datetime import timedelta
 import os
 import os.path
 import shutil
@@ -10,6 +14,7 @@ from pyramid.view import view_config
 from splinter.models import session
 from splinter_comic.models import ComicChapter
 from splinter_comic.models import ComicPage
+from splinter_comic.models import current_publication_date
 
 
 def get_prev_next_page(page):
@@ -87,15 +92,111 @@ def comic_archive(comic, request):
 
 
 @view_config(
-    route_name='comic.upload',
+    route_name='comic.admin',
     request_method='GET',
-    renderer='splinter_comic:templates/upload.mako')
-def comic_upload(comic, request):
+    renderer='splinter_comic:templates/admin.mako')
+def comic_admin(comic, request):
     # TODO permissions
     if not request.user:
         return HTTPForbidden()
 
-    return {}
+    queued_q = (
+        session.query(ComicPage)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic == comic)
+        .filter(ComicPage.is_queued)
+    )
+
+    last_queued, queue_next_date = _get_last_queued_date(comic)
+    num_queued = queued_q.count()
+    return dict(
+        comic=comic,
+        num_queued=num_queued,
+        last_queued=last_queued,
+        queue_next_date=queue_next_date
+    )
+
+
+# TODO this is crap
+def _get_last_queued_date(comic):
+    queued_q = (
+        session.query(ComicPage)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic == comic)
+        .filter(ComicPage.is_queued)
+    )
+
+    last_queued = queued_q.order_by(ComicPage.date_published.desc()).first()
+
+    if last_queued:
+        queue_end_date = last_queued.date_published
+    else:
+        queue_end_date = current_publication_date()
+    if queue_end_date == date.max:
+        queue_next_date = None
+    else:
+        weekdays = [int(wd) for wd in comic.config_queue]
+        queue_next_date = next(_generate_queue_dates(weekdays, start=queue_end_date))
+
+    return last_queued, queue_next_date
+
+def _generate_queue_dates(days_of_week, start=None):
+    if not days_of_week:
+        # Special case: an empty queue means to freeze the queue, which is
+        # easily done in practice by dating everything into the far future
+        while True:
+            yield date.max
+
+    days_of_week = set(days_of_week)
+    delta = timedelta(days=1)
+
+    if start is None:
+        d = current_publication_date()
+    else:
+        d = start
+
+    dow = d.weekday()
+
+    # NB: Never consider today as part of the queue
+    while True:
+        d += delta
+        dow = (dow + 1) % 7
+
+        if dow in days_of_week:
+            yield d
+
+
+@view_config(
+    route_name='comic.save-queue',
+    request_method='POST')
+def comic_queue_do(comic, request):
+    # TODO permissions
+    if not request.user:
+        return HTTPForbidden()
+
+    # TODO this would be easier with a real validator.
+    weekdays = []
+    for wd in request.POST.getall('weekday'):
+        if wd in '0123456':
+            weekdays.append(int(wd))
+
+    queued = (
+        session.query(ComicPage)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic == comic)
+        .filter(ComicPage.is_queued)
+        .order_by(ComicPage.order.asc())
+        .all()
+    )
+
+    new_dates = _generate_queue_dates(weekdays)
+    for page, new_date in zip(queued, new_dates):
+        page.date_published = new_date
+
+    comic.config_queue = ''.join(str(wd) for wd in sorted(weekdays))
+
+    # TODO flash message?
+    return HTTPSeeOther(location=request.route_url('comic.admin', comic))
 
 
 @view_config(
@@ -128,16 +229,24 @@ def comic_upload_do(comic, request):
         .scalar()
     )
 
+    when = request.POST['when']
+    if when == 'now':
+        date_published = current_publication_date()
+    elif when == 'queue':
+        last_queued, queue_next_date = _get_last_queued_date(comic)
+        date_published = queue_next_date
+
     page = ComicPage(
         file=os.path.basename(tmp.name),
         chapter=last_chapter,
         author=request.user,
+        date_published=date_published,
 
-        # TODO
-        title=u'',
-        comment=u'',
+        # TODO more validation here too
+        title=request.POST['title'],
+        comment=request.POST['comment'],
     )
     session.add(page)
     session.flush()
 
-    return HTTPSeeOther(location=request.route_url('comic.page', id=page.id))
+    return HTTPSeeOther(location=request.route_url('comic.page', page))
