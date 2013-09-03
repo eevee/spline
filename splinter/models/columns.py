@@ -18,7 +18,11 @@ def make_slug(column):
         title_slug = SlugColumn(title)
     """
     def impl(context):
-        return to_slug(context.current_parameters[column.name])
+        if column.name in context.current_parameters:
+            return to_slug(context.current_parameters[column.name])
+        else:
+            # TODO this is certainly not right  :(
+            return u''
     return impl
 
 
