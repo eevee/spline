@@ -8,10 +8,10 @@
 </head>
 <body>
     <header>
-        <nav>
-            <ul>
+        <nav class="navbar">
+            <ul class="global-nav">
                 <li><a class="brand" href="${request.route_url('__core__.home')}">home</a></li>
-                <li><a href="${request.route_url('love.list')}">love</a></li>
+                <li><a href="${request.route_url('love.list')}" class="-you-are-here">love</a></li>
                 <li><a href="${request.route_url('qdb.list')}">qdb</a></li>
                 % for label, route_name in splinter_menu:
                 <li><a href="${request.route_url(route_name)}">${label}</a></li>
@@ -31,12 +31,13 @@
                     % endif
                 </li>
             </ul>
-            <ul>
-                <li><a>two</a></li>
-                <li><a>three</a></li>
-                <li><a>four</a></li>
+            <ul class="section-nav">
+                <%block name="section_nav"></%block>
             </ul>
         </nav>
+
+        <%block name="header"></%block>
+        <%block name="subheader"></%block>
     </header>
 
     <div class="main">

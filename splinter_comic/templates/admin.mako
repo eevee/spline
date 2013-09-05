@@ -7,6 +7,10 @@
 %>
 <%inherit file="splinter:templates/_base.mako" />
 
+<%block name="title">Admin - ${comic.title}</%block>
+<%block name="header"><h1>${comic.title}</h1></%block>
+<%block name="subheader"><h2>Admin</h2></%block>
+
 <section>
     <h1>Queue</h1>
 
@@ -73,9 +77,9 @@
                         </span>
                     </label>
                 </dd>
-
-                <dd><button type="submit">Upload and add to queue</button></dd>
             </dl>
+
+            <footer><button type="submit">Upload and add to queue</button></footer>
         </fieldset>
     </form>
 </section>
