@@ -8,6 +8,7 @@ import shutil
 from tempfile import NamedTemporaryFile
 
 from pyramid.httpexceptions import HTTPForbidden
+from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
@@ -17,7 +18,7 @@ from splinter_comic.models import ComicPage
 from splinter_comic.models import current_publication_date
 
 
-def get_prev_next_page(page):
+def get_prev_next_page(page, include_queued):
     prev_page = (
         session.query(ComicPage)
         .filter(ComicPage.chapter_id == page.chapter_id)
@@ -33,6 +34,9 @@ def get_prev_next_page(page):
         .first()
     )
 
+    if next_page.is_queued and not include_queued:
+        next_page = None
+
     return prev_page, next_page
 
 @view_config(
@@ -44,11 +48,15 @@ def comic_most_recent(comic, request):
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic == comic)
+        # "Most recent" never includes the queue
+        .filter(~ ComicPage.is_queued)
         .order_by(ComicPage.timestamp.desc())
         .first()
     )
 
-    prev_page, next_page = get_prev_next_page(page)
+    # TODO permissions
+    include_queued = bool(request.user)
+    prev_page, next_page = get_prev_next_page(page, include_queued)
 
     return dict(
         comic=page.comic,
@@ -62,7 +70,14 @@ def comic_most_recent(comic, request):
     request_method='GET',
     renderer='splinter_comic:templates/page.mako')
 def comic_page(page, request):
-    prev_page, next_page = get_prev_next_page(page)
+    # TODO permissions
+    if page.is_queued and not request.user:
+        # 404 instead of 403 to prevent snooping
+        return HTTPNotFound()
+
+    # TODO permissions
+    include_queued = bool(request.user)
+    prev_page, next_page = get_prev_next_page(page, include_queued)
 
     return dict(
         comic=page.comic,
@@ -77,12 +92,21 @@ def comic_page(page, request):
     request_method='GET',
     renderer='splinter_comic:templates/archive.mako')
 def comic_archive(comic, request):
-    pages = (
+    q = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic == comic)
-        .order_by(ComicPage.timestamp.asc())
+        .order_by(ComicPage.order.desc())
     )
+
+    normal_pages = q.filter(~ ComicPage.is_queued)
+
+    # TODO permissions
+    # TODO collapse to one query
+    if request.user:
+        queued_pages = q.filter(ComicPage.is_queued)
+    else:
+        queued_pages = None
 
     # TODO: chapters.  how will these possibly work?  do i need to require that
     # they cover distinct consecutive spans of pages?  what if the author never
@@ -90,7 +114,8 @@ def comic_archive(comic, request):
 
     return dict(
         comic=comic,
-        pages=pages,
+        pages=normal_pages,
+        queue=queued_pages,
     )
 
 
