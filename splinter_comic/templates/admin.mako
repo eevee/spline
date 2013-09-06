@@ -5,10 +5,9 @@
     from splinter.format import format_date
     from splinter_comic.models import current_publication_date
 %>
-<%inherit file="splinter:templates/_base.mako" />
+<%inherit file="splinter_comic:templates/_base.mako" />
 
-<%block name="title">Admin - ${comic.title}</%block>
-<%block name="header"><h1>${comic.title}</h1></%block>
+<%block name="title">Administrate ${comic.title}</%block>
 <%block name="subheader"><h2>Admin</h2></%block>
 
 <section>

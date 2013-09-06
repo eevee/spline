@@ -51,6 +51,7 @@ def comic_most_recent(comic, request):
     prev_page, next_page = get_prev_next_page(page)
 
     return dict(
+        comic=page.comic,
         page=page,
         prev_page=prev_page,
         next_page=next_page,
@@ -64,6 +65,7 @@ def comic_page(page, request):
     prev_page, next_page = get_prev_next_page(page)
 
     return dict(
+        comic=page.comic,
         page=page,
         prev_page=prev_page,
         next_page=next_page,
@@ -87,6 +89,7 @@ def comic_archive(comic, request):
     # creates any chapters?
 
     return dict(
+        comic=comic,
         pages=pages,
     )
 

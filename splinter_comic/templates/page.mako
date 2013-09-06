@@ -1,7 +1,14 @@
 <%!
     from splinter.format import format_date
 %>
-<%inherit file="splinter:templates/_base.mako" />
+<%inherit file="splinter_comic:templates/_base.mako" />
+
+<%block name="title">
+    % if page.title:
+    ${page.title} -
+    % endif
+    ${comic.title} page for ${format_date(page.date_published)}
+</%block>
 
 <style type="text/css">
     .comic-page {
@@ -12,6 +19,11 @@
         margin: 1em auto;
         font-size: 2em;
     }
+    .comic-page-controls a {
+        text-decoration: none;
+        line-height: 1;
+        display: inline-block;
+    }
     .comic-page-image {
         background: white;
         padding: 3px;
@@ -21,12 +33,8 @@
 </style>
 
 <section>
-    <h1>My Sweet Comic</h1>
-    % if page.title:
-    <h2>${page.title}</h2>
-    % endif
-    
     <div class="comic-page">
+        <h3>${page.title}</h3>
         ${draw_comic_controls(prev_page, page, next_page)}
 
         <img src="${request.static_url('splinter:../data/filestore/' + page.file)}"
@@ -49,22 +57,19 @@
 <%def name="draw_comic_controls(prev_page, page, next_page)">
         <div class="comic-page-controls">
             % if prev_page:
-                <a href="${request.route_url('comic.page', prev_page)}">◂</a>
+                <a href="${request.route_url('comic.page', prev_page)}">◀</a>
             % else:
-                ◃
+                ◁
             % endif
 
             ·
             ${format_date(page.date_published)}
-            % if page.title:
-            ${page.title}
-            % endif
             ·
 
             % if next_page:
-                <a href="${request.route_url('comic.page', next_page)}">▸</a>
+                <a href="${request.route_url('comic.page', next_page)}">▶</a>
             % else:
-                ▹
+                ▷
             % endif
         </div>
 </%def>
