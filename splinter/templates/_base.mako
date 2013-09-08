@@ -11,8 +11,6 @@
         <nav class="navbar">
             <ul class="global-nav">
                 <li><a class="brand" href="${request.route_url('__core__.home')}">home</a></li>
-                <li><a href="${request.route_url('love.list')}" class="-you-are-here">love</a></li>
-                <li><a href="${request.route_url('qdb.list')}">qdb</a></li>
                 % for label, route_name in splinter_menu:
                 <li><a href="${request.route_url(route_name)}">${label}</a></li>
                 % endfor
