@@ -47,8 +47,7 @@ class ComicChapter(Base):
     id = SurrogateKeyColumn()
     comic_id = Column(Integer, ForeignKey(Comic.id), nullable=False)
     title = TitleColumn()
-    # TODO these slugs need to be unique /per comic/
-    #title_slug = SlugColumn(title)
+    title_slug = SlugColumn(title)
 
     comic = relationship(Comic, backref='chapters')
 
@@ -63,8 +62,7 @@ class ComicPage(Base):
     chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
     file = Column(UnicodeText, nullable=False)
     title = TitleColumn()
-    # TODO these slugs need to be unique /per comic/
-    #title_slug = SlugColumn(title)
+    title_slug = SlugColumn(title)
     comment = Column(Prose, nullable=False)
 
     author = relationship(User, backref='comic_pages')

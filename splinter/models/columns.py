@@ -1,29 +1,11 @@
+from sqlalchemy.event import listen
 from sqlalchemy.schema import Column
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.types import Integer
 from sqlalchemy.types import Unicode
 
+from splinter.models.meta import DeferredTableProp
 from splinter.routing import to_slug
-
-
-def make_slug(column):
-    """Automatically generates a slug from another column on INSERT or UPDATE.  Use like so:
-
-        title = Column(Unicode, ...)
-        title_slug = Column(Unicode, default=make_slug(title), onupdate=make_slug(title))
-
-    Of course, you can also just do this:
-
-        title = TitleColumn()
-        title_slug = SlugColumn(title)
-    """
-    def impl(context):
-        if column.name in context.current_parameters:
-            return to_slug(context.current_parameters[column.name])
-        else:
-            # TODO this is certainly not right  :(
-            return u''
-    return impl
 
 
 def _make_column(explicit_args, explicit_kwargs, *default_args, **default_kwargs):
@@ -61,10 +43,33 @@ def TitleColumn(*args, **kwargs):
         nullable=False)
 
 
-def SlugColumn(title_column, *args, **kwargs):
-    return _make_column(
-        args, kwargs,
-        Unicode,
-        nullable=False,
-        default=make_slug(title_column),
-        onupdate=make_slug(title_column))
+class SlugColumn(DeferredTableProp):
+    """Create a "slug" column automatically populated from another column's
+    value.
+
+    Note that the slug IS NOT updated when the other column is changed --
+    presumably this column is being used in a URL, and implicitly changing URLs
+    is super rude.
+    """
+    def __init__(self, title_column, *args, **kwargs):
+        self.title_column = title_column
+        self.args = args
+        self.kwargs = kwargs
+
+    def pre_create(self, key, partial_class):
+        """Build a pretty typical text column to hold the slug."""
+        return _make_column(
+            self.args, self.kwargs,
+            Unicode,
+            nullable=False)
+
+    def post_create(self, key, model_class):
+        """Set an attribute listener on the class to update the slug when the
+        title column is changed.
+        """
+        name_attr = getattr(model_class, self.title_column.key)
+
+        def set_slug(target, value, oldvalue, initiator):
+            setattr(target, key, to_slug(value))
+
+        listen(name_attr, 'set', set_slug)

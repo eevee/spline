@@ -17,8 +17,10 @@ from sqlalchemy.orm import (
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
+from splinter.models.meta import SplinterDeclarativeMeta
+
 session = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base()
+Base = declarative_base(metaclass=SplinterDeclarativeMeta)
 
 class TZDateTime(types.TypeDecorator):
     impl = types.DateTime

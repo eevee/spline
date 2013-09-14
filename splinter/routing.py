@@ -14,7 +14,7 @@ import re
 # ASCII.  It can be changed at any time, because slugs are (supposed to be...)
 # stored alongside their respective titles, and so this function is only called
 # when a title is first assigned.
-SLUG_RE = re.compile(ur'[\x20-\x2f\x3a-\x40\x5b-\x5f\x7b-\x7f]+')
+SLUG_RE = re.compile(ur'[^a-zA-Z0-9]+')
 def to_slug(title):
     """Given a page (or whatever) title, return a URL-friendly slug."""
     slug = (
