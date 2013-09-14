@@ -31,7 +31,8 @@ class Comic(Base):
 
     id = SurrogateKeyColumn()
     title = TitleColumn()
-    title_slug = SlugColumn(title)
+    # This one needs to be unique because it's used alone in URLs
+    title_slug = SlugColumn(title, unique=True)
 
     # String of digits, 0 through 6, listing the weekdays on which queued pages
     # are published.  Not actually used for the queue system; only remembers

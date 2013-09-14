@@ -18,7 +18,7 @@ SLUG_RE = re.compile(ur'[^a-zA-Z0-9]+')
 def to_slug(title):
     """Given a page (or whatever) title, return a URL-friendly slug."""
     slug = (
-        SLUG_RE.sub(title, u'-')
+        SLUG_RE.sub(u'-', title)
         .strip(u'-')
         .lower()
     )
@@ -48,11 +48,11 @@ def _guess_relationship(child, parent):
         .format(child.__name__, parent.__name__))
 
 
-# TODO more docs
-# TODO support slightly more complex stuff like floof's '13-slug'?
 # TODO maybe grab the config object and do the adding itself, so the caller
 # code is a little less repetitive and ugly
 # TODO i would still like deriving to work with `with`
+# TODO this should probably just accept a prefix ('/foos/{foo_id}') since
+# that's almost universally how it will be used
 class DatabaseRouteConnector(object):
     """Happy mapping between Pyramid routing and SQLA schemata.
 
@@ -69,9 +69,10 @@ class DatabaseRouteConnector(object):
         request.route_url('foo_view', foo_object)
     """
 
-    def __init__(self, marker, column, parent=None, relchain=None):
+    def __init__(self, marker, column, slug=None, parent=None, relchain=None):
         self.marker = marker
         self.column = column
+        self.slug_column = slug
 
         assert bool(parent) == bool(relchain)
         self.parent = parent
@@ -88,7 +89,7 @@ class DatabaseRouteConnector(object):
             factory=self.root_factory,
         )
 
-    def derive(self, marker, column, relchain=None):
+    def derive(self, marker, column, slug=None, relchain=None):
         """Derive a new connector that chains to this one.  Use for
         hierarchical URLs, where both a parent object and some child object
         exist in the route.
@@ -96,24 +97,17 @@ class DatabaseRouteConnector(object):
         if not relchain:
             relchain = (_guess_relationship(column.class_, self.table),)
 
-        return type(self)(marker, column, parent=self, relchain=relchain)
-
-    def add_ancestor_clauses(self, query, matchdict):
-        relchain = ()
-        current = self
-        while current:
-            for rel in relchain:
-                query = query.join(rel)
-
-            if current.marker in matchdict:
-                query = query.filter(current.column == matchdict[current.marker])
-
-            relchain = current.relchain
-            current = current.parent
-
-        return query
+        return type(self)(
+            marker,
+            column,
+            slug=slug,
+            parent=self,
+            relchain=relchain)
 
     def pregenerator(self, request, elements, kw):
+        """Turn an ORM object passed positionally to route_url into the
+        appropriate set of keywords for building a URL.
+        """
         if not elements or not isinstance(elements[0], self.table):
             if elements:
                 got = repr(elements[0])
@@ -133,7 +127,13 @@ class DatabaseRouteConnector(object):
             for rel in relchain:
                 row = rel.__get__(row, type(row))
 
-            kw[current.marker] = current.column.__get__(row, type(row))
+            # Append the slug, if any
+            ident = unicode(current.column.__get__(row, type(row)))
+            if current.slug_column:
+                slug = unicode(current.slug_column.__get__(row, type(row)))
+                if slug:
+                    ident += u'-' + slug
+            kw[current.marker] = ident
 
             relchain = current.relchain
             current = current.parent
@@ -141,16 +141,39 @@ class DatabaseRouteConnector(object):
         return elements[1:], kw
 
     def root_factory(self, request):
-        table = self.column.class_
+        """Given a request with a matched URL, produce the object referred to
+        by that URL.
 
-        q = (
-            session.query(table)
-            .filter(self.column == request.matchdict[self.marker])
-        )
-        q = self.add_ancestor_clauses(q, request.matchdict)
+        Raise a 404 if no such object exists.
+        """
+        table = self.column.class_
+        query = session.query(table)
+
+        relchain = ()
+        current = self
+        while current:
+            for rel in relchain:
+                query = query.join(rel)
+
+            if current.marker in request.matchdict:
+                ident = request.matchdict[current.marker]
+                if current.slug_column:
+                    # Split the "real" identifier from the slug
+                    ident, _, _ = ident.partition(u'-')
+                    # TODO redirect if any slug doesn't match the db
+                    # TODO come to think of it...  contains_eager?
+
+                query = query.filter(current.column == ident)
+            elif current is self:
+                # Missing the identifier for the most specific model, which...
+                # don't make sense
+                raise HTTPNotFound()
+
+            relchain = current.relchain
+            current = current.parent
 
         try:
-            row = q.one()
+            row = query.one()
         except NoResultFound:
             # Note that MultipleResultsFound isn't caught, because that should
             # not be *possible* and indicates a programming error
