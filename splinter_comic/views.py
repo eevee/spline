@@ -34,7 +34,7 @@ def get_prev_next_page(page, include_queued):
         .first()
     )
 
-    if next_page.is_queued and not include_queued:
+    if next_page and next_page.is_queued and not include_queued:
         next_page = None
 
     return prev_page, next_page

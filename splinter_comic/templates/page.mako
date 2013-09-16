@@ -15,61 +15,91 @@
         margin: 1em auto;
         text-align: center;
     }
-    .comic-page-controls {
-        margin: 1em auto;
-        font-size: 2em;
+    .comic-page h3 {
+        font-size: 1.5em;
+        margin: 0;
+        font-family: serif;
+        font-weight: normal;
     }
-    .comic-page-controls a {
-        text-decoration: none;
+    .comic-page-controls {
+        width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    .comic-page-controls .-prev,
+    .comic-page-controls .-next {
+        font-size: 2em;
         line-height: 1;
         display: inline-block;
+        color: #999;
+    }
+    .comic-page-controls .-prev {
+        float: left;
+    }
+    .comic-page-controls .-next {
+        float: right;
+    }
+    .comic-page-controls .-prev a,
+    .comic-page-controls .-next a {
+        text-decoration: none;
+    }
+    .comic-page-controls .-date {
+        xline-height: 2;
     }
     .comic-page-image {
         background: white;
+        margin: 1em;
         padding: 3px;
         border: 1px solid #606060;
         box-shadow: 0 1px 3px #808080;
     }
 </style>
 
-<section>
-    <div class="comic-page">
-        <h3>${page.title}</h3>
-        ${draw_comic_controls(prev_page, page, next_page)}
+<section class="comic-page">
+    ${draw_comic_controls(prev_page, page, next_page)}
 
-        <img src="${request.static_url('splinter:../data/filestore/' + page.file)}"
-            class="comic-page-image">
+    <img src="${request.static_url('splinter:../data/filestore/' + page.file)}"
+        class="comic-page-image">
 
-        ${draw_comic_controls(prev_page, page, next_page)}
+    ${draw_comic_controls(prev_page, page, next_page)}
+</section>
 
-        <div class="media-block">
-            <header>
-                <h1>${page.author.name}</h1>
-            </header>
+<section class="media-block">
+    <header>
+        <h1>${page.title or u'Untitled'}</h1>
+        <h3>${page.author.name} says:</h3>
+    </header>
 
-            ${page.comment}
-        </div>
-
-    </div>
+    % if page.comment:
+        <p>${page.comment}</p>
+    % else:
+        <p><em>No commentary for this page yet...</em></p>
+    % endif
 </section>
 
 
 <%def name="draw_comic_controls(prev_page, page, next_page)">
         <div class="comic-page-controls">
-            % if prev_page:
-                <a href="${request.route_url('comic.page', prev_page)}">◀</a>
-            % else:
-                ◁
-            % endif
+            <div class="-prev">
+              % if prev_page:
+                <a href="${request.route_url('comic.page', prev_page)}">◀ back</a>
+              % else:
+                ◁ back
+              % endif
+            </div>
 
-            ·
-            ${format_date(page.date_published)}
-            ·
+            <div class="-next">
+              % if next_page:
+                <a href="${request.route_url('comic.page', next_page)}">next ▶</a>
+              % else:
+                next ▷
+              % endif
+            </div>
 
-            % if next_page:
-                <a href="${request.route_url('comic.page', next_page)}">▶</a>
-            % else:
-                ▷
-            % endif
+            <div class="-date">
+                ${format_date(page.date_published)}
+                <br>
+                Chapter: ${page.chapter.title}
+            </div>
         </div>
 </%def>
