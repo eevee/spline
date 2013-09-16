@@ -178,36 +178,24 @@ input[type=search] {
     margin: 0;
     padding: 0;
     list-style: none;
-    border: 1px solid $border-color;
 
     li {
         background: $container-bg;
 
-        border-top: 1px solid $border-color;
-
-        &:first-child {
-            border-top: none;
-        }
+        margin: 1em 0;
+        box-shadow: 1px 1px 2px #ccc;
 
         .-header {
             padding: 0.5em;
-            background: #f0f0f0;
-
+            background: white;
         }
         .-timestamp {
+            font-size: 0.8em;
             float: right;
         }
         .-title {
-            float: right;
-            margin-right: 2em;
+            font-size: 1.2em;
             font-family: serif;
-
-            &:before {
-                content: "“";
-            }
-            &:after {
-                content: "”";
-            }
         }
         .-body {
             padding: 1em;
