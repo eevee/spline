@@ -1,9 +1,10 @@
+from pyramid.renderers import render_to_response
+from pyramid.response import Response
 from pyramid.view import view_config
 from sqlalchemy.orm.exc import NoResultFound
 
 from .models import User, session
 from splinter.events import FrontPageActivity
-from splinter_pastebin.models import Paste
 
 
 ### Core stuff
@@ -85,3 +86,25 @@ def search(request):
         whoosh_results_count=num_results,
     )
 
+
+### Search
+
+@view_config(route_name='__core__.search', renderer='/search-results.mako')
+def search(request):
+    raw_query = request.GET['q']
+
+
+### Special
+
+@view_config(context=Exception)
+def exception_handler(request):
+    try:
+        response = render_to_response(
+            '/error.mako', {}, request=request)
+    except Exception:
+        response = Response(
+            "Whoops, sorry.  Something is HILARIOUSLY wrong.",
+            content_type='text/plain; charset=utf8')
+
+    response.status_int = 500
+    return response
