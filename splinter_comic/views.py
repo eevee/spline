@@ -10,6 +10,7 @@ from tempfile import NamedTemporaryFile
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 
 from splinter.models import session
@@ -19,6 +20,9 @@ from splinter_comic.models import current_publication_date
 
 
 def get_prev_next_page(page, include_queued):
+    if not page:
+        return None, None
+
     prev_page = (
         session.query(ComicPage)
         .filter(ComicPage.chapter_id == page.chapter_id)
@@ -39,10 +43,10 @@ def get_prev_next_page(page, include_queued):
 
     return prev_page, next_page
 
+
 @view_config(
     route_name='comic.most-recent',
-    request_method='GET',
-    renderer='splinter_comic:templates/page.mako')
+    request_method='GET')
 def comic_most_recent(comic, request):
     page = (
         session.query(ComicPage)
@@ -58,12 +62,21 @@ def comic_most_recent(comic, request):
     include_queued = bool(request.user)
     prev_page, next_page = get_prev_next_page(page, include_queued)
 
-    return dict(
-        comic=page.comic,
+    ns = dict(
+        comic=comic,
         page=page,
         prev_page=prev_page,
         next_page=next_page,
     )
+
+    # TODO sometime maybe the landing page will be a little more interesting
+    # and this can go away
+    if page:
+        renderer = 'splinter_comic:templates/page.mako'
+    else:
+        renderer = 'splinter_comic:templates/comic-landing.mako'
+
+    return render_to_response(renderer, ns, request=request)
 
 @view_config(
     route_name='comic.page',
