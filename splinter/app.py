@@ -69,9 +69,8 @@ def main(global_config, **settings):
     config.scan('splinter.views')
 
     # Plugin loading
-    config.include('splinter_pastebin', route_prefix='/pastes')
-    config.include('splinter_love', route_prefix='/loves')
-    config.include('splinter_qdb', route_prefix='/qdb')
-    config.include('splinter_comic', route_prefix='/comic')
+    for plugins in settings.get('splinter.plugins', '').strip().split():
+        plugin, route_prefix = plugins.split(':', 1)
+        config.include(plugin, route_prefix=route_prefix)
 
     return config.make_wsgi_app()
