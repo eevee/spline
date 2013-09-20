@@ -15,19 +15,19 @@
                 <li><a href="${request.route_url(route_name, *args, **kwargs)}">${label}</a></li>
                 % endfor
 
-                <li class="nav-search">
-                    <form action="${request.route_url('__core__.search')}" method="GET">
-                        <input type="search" name="q" placeholder="Search">
-                    </form>
-                </li>
+                ##<li class="nav-search">
+                ##    <form action="${request.route_url('__core__.search')}" method="GET">
+                ##        <input type="search" name="q" placeholder="Search">
+                ##    </form>
+                ##</li>
 
-                <li class="nav-auth">
-                    % if request.user:
-                        <span class="not-a-link">hey ${request.user.name}, sup</span>
-                    % else:
-                        <a href="${request.route_url('__core__.login')}">log in</a>
-                    % endif
-                </li>
+                ##<li class="nav-auth">
+                ##    % if request.user:
+                ##        <span class="not-a-link">hey ${request.user.name}, sup</span>
+                ##    % else:
+                ##        <a href="${request.route_url('__core__.login')}">log in</a>
+                ##    % endif
+                ##</li>
             </ul>
             <ul class="section-nav">
                 <%block name="section_nav"></%block>
