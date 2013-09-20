@@ -1,8 +1,21 @@
 // -----------------------------------------------------------------------------
 // config
 
+// primary colors
+$header-bg: hsl(225, 30%, 50%);
+$link-color: hsl(210, 70%, 50%);
+$link-visited-color: hsl(255, 70%, 60%);
+
+// detail colors (largely grays)
 $border-color: #e8e8e8;
 $container-bg: #fcfcfc;
+
+
+// temp overrides
+$header-bg: lighten(#580140, 10%);
+$link-color: #913152;
+$link-visited-color: #a64763;
+
 
 // -----------------------------------------------------------------------------
 // main layout
@@ -18,14 +31,12 @@ body > header {
     position: relative;
     margin: 0 0 1em;
 
-    background: url(/static/images/debut_light.png) fixed #333;
-    background: hsl(225, 30%, 50%);
+    background: $header-bg;
 
     > h1 {
         font-size: 2em;
         margin: 0;
         padding: 0.5em;
-        color: hsl(225, 50%, 95%);
         color: white;
         font-weight: normal;
     }
@@ -33,7 +44,7 @@ body > header {
         font-size: 1.33em;
         margin: 0;
         padding: 0.75em;
-        color: hsl(225, 50%, 85%);
+        color: scale-color($header-bg, $saturation: 30%, $lightness: 70%);
         font-weight: normal;
     }
     > h1 + h2 {
@@ -151,15 +162,15 @@ textarea {
 // general styling
 
 a {
-    color: hsl(210, 70%, 50%);
+    color: $link-color;
     &:hover {
-        color: hsl(210, 70%, 35%);
+        color: scale-color($link-color, $lightness: -30%);
     }
 
     &:visited {
-        color: hsl(255, 70%, 60%);
+        color: $link-visited-color;
         &:hover {
-            color: hsl(255, 70%, 50%);
+            color: scale-color($link-visited-color, $lightness: -30%);
         }
     }
 }
