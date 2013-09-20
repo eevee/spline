@@ -28,6 +28,14 @@ def find_activity(event):
         timestamp_accessor=operator.attrgetter('date_published'))
 
 
+@subscriber(BuildMenu)
+def build_menu(event):
+    # TODO can these be...  cached?  but then how would it be busted.
+    # TODO order?
+    for comic in session.query(Comic):
+        event.add_item(comic.title, 'comic.most-recent', comic)
+
+
 def includeme(config):
     """Pyramid's inclusion hook."""
 

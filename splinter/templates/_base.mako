@@ -11,8 +11,8 @@
         <nav class="navbar">
             <ul class="global-nav">
                 <li><a class="brand" href="${request.route_url('__core__.home')}">home</a></li>
-                % for label, route_name in splinter_menu:
-                <li><a href="${request.route_url(route_name)}">${label}</a></li>
+                % for label, route_name, args, kwargs in splinter_menu:
+                <li><a href="${request.route_url(route_name, *args, **kwargs)}">${label}</a></li>
                 % endfor
 
                 <li class="nav-search">

@@ -16,8 +16,8 @@ class BuildMenu(object):
 
         self.menu_items = []
 
-    def add_item(self, label, route_name):
-        self.menu_items.append((label, route_name))
+    def add_item(self, label, route_name, *args, **kwargs):
+        self.menu_items.append((label, route_name, args, kwargs))
 
     def __iter__(self):
         return iter(self.menu_items)
