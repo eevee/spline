@@ -1,3 +1,4 @@
+import logging
 from pyramid.renderers import render_to_response
 from pyramid.response import Response
 from pyramid.view import view_config
@@ -6,6 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from .models import User, session
 from splinter.events import FrontPageActivity
 
+log = logging.getLogger(__name__)
 
 ### Core stuff
 
@@ -97,7 +99,9 @@ def search(request):
 ### Special
 
 @view_config(context=Exception)
-def exception_handler(request):
+def exception_handler(context, request):
+    log.exception(context)
+
     try:
         response = render_to_response(
             '/error.mako', {}, request=request)
