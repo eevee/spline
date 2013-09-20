@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='archetype')}">
   <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='layout')}">
-  <title><%block name="title">somewhere</%block> - splinter</title>
+  <title><%block name="title">somewhere</%block> - ${request.registry.settings.get('splinter.site_title', 'splinter')}</title>
 </head>
 <body>
     <header>
