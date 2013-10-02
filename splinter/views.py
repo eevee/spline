@@ -1,6 +1,7 @@
 import logging
 from pyramid.renderers import render_to_response
 from pyramid.response import Response
+from pyramid.view import notfound_view_config
 from pyramid.view import view_config
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -112,3 +113,11 @@ def exception_handler(context, request):
 
     response.status_int = 500
     return response
+
+
+@notfound_view_config(append_slash=True, renderer='/error404.mako')
+def four_oh_four_handler(context, request):
+    request.response.status_int = 404
+    return dict(
+        status=404,
+    )
