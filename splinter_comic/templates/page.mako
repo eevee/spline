@@ -10,6 +10,12 @@
     ${comic.title} page for ${format_date(page.date_published)}
 </%block>
 
+<%block name="subheader">
+  % if page.title:
+    <h2>${page.title}</h2>
+  % endif
+</%block>
+
 <style type="text/css">
     .comic-page {
         margin: 1em auto;
@@ -64,18 +70,12 @@
     ${draw_comic_controls(prev_page, page, next_page)}
 </section>
 
+% if page.comment:
 <section class="media-block">
-    <header>
-        <h1>${page.title or u'Untitled'}</h1>
-        <h3>${page.author.name} says:</h3>
-    </header>
-
-    % if page.comment:
-        <p>${page.comment}</p>
-    % else:
-        <p><em>No commentary for this page yet...</em></p>
-    % endif
+    <p>${page.comment}</p>
+    —<em>${page.author.name}</em>
 </section>
+% endif
 
 
 <%def name="draw_comic_controls(prev_page, page, next_page)">
