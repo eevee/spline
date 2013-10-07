@@ -12,6 +12,8 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
+from splinter.feature.core import feature_adapter
+from splinter.feature.feed import IFeedItem
 from splinter.models import Base, User
 from splinter.models import Prose, TZDateTime, now
 from splinter.models.columns import SlugColumn
@@ -88,3 +90,18 @@ class ComicPage(Base):
     @hybrid_property
     def is_queued(self):
         return self.date_published > current_publication_date()
+
+
+@feature_adapter(ComicPage, IFeedItem)
+class ComicPage_FeedItem(object):
+    def __init__(self, page):
+        self.page = page
+
+    @property
+    def timestamp(self):
+        # TODO well.
+        return self.page.date_published
+
+    @property
+    def title(self):
+        return self.page.title

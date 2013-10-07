@@ -1,31 +1,31 @@
 import operator
 
-from sqlalchemy.orm import eagerload_all
 from pyramid.events import subscriber
 
 from splinter.events import FrontPageActivity
 from splinter.events import BuildMenu
+from splinter.feature.feed import Feed
 from splinter.models import session
 from splinter.routing import DatabaseRouteConnector
+from splinter_comic.logic import get_recent_pages
 from splinter_comic.models import Comic, ComicChapter, ComicPage
 
 
 @subscriber(FrontPageActivity)
 def find_activity(event):
-    # TODO this needs date filter, limiting
-    query = (
-        session.query(ComicPage)
-        .filter(~ ComicPage.is_queued)
-        .order_by(ComicPage.order.desc())
-        .limit(event.max_count)
-        .options(
-            eagerload_all(ComicPage.chapter, ComicChapter.comic)
-        )
-    )
+    # TODO this needs date filter
+    pages = get_recent_pages()
     event.add_activity(
-        query,
+        pages[:event.max_count],
         'splinter_comic:templates/_lib#render_activity.mako',
         timestamp_accessor=operator.attrgetter('date_published'))
+
+
+@subscriber(Feed)
+def populate_feed(event):
+    # TODO this needs date filter, limiting
+    pages = get_recent_pages()
+    event.add_feed_items(*pages)
 
 
 @subscriber(BuildMenu)

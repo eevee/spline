@@ -64,9 +64,11 @@ def main(global_config, **settings):
     config.add_route('__core__.home', '/')
     config.add_route('__core__.login', '/@@login')
     config.add_route('__core__.search', '/@@search')
+    config.add_route('__core__.feed', '/@@feed')
 
 
     config.scan('splinter.views')
+    config.scan('splinter.feature')
 
     # Plugin loading
     for plugins in settings.get('splinter.plugins', '').strip().split():
