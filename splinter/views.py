@@ -130,6 +130,9 @@ def four_oh_four_handler(context, request):
 @view_config(route_name='__core__.feed', request_method='GET')
 def feed(request):
     from splinter.feature.feed import Feed
-    feed = Feed(request.registry)
+    feed = Feed(
+        request=request,
+        title=request.registry.settings['splinter.site_title'],
+    )
     feed.populate_from_subscribers()
     return feed

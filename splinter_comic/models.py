@@ -14,6 +14,7 @@ from sqlalchemy.orm import relationship
 
 from splinter.feature.core import feature_adapter
 from splinter.feature.feed import IFeedItem
+from splinter.format import format_date
 from splinter.models import Base, User
 from splinter.models import Prose, TZDateTime, now
 from splinter.models.columns import SlugColumn
@@ -104,4 +105,8 @@ class ComicPage_FeedItem(object):
 
     @property
     def title(self):
-        return self.page.title
+        ret = u"New {0} comic for {1}".format(
+            self.page.comic.title, format_date(self.page.date_published))
+        if self.page.title:
+            ret += u": " + self.page.title
+        return ret
