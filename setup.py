@@ -20,9 +20,9 @@ requires = [
     'whoosh',
     ]
 
-setup(name='splinter',
+setup(name='spline',
       version='0.0',
-      description='splinter',
+      description='spline',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
         "Programming Language :: Python",
@@ -37,12 +37,12 @@ setup(name='splinter',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      test_suite='splinter',
+      test_suite='spline',
       install_requires=requires,
       entry_points="""\
       [paste.app_factory]
-      main = splinter.app:main
+      main = spline.app:main
       [console_scripts]
-      initialize_splinter_db = splinter.scripts.initializedb:main
+      initialize_spline_db = spline.scripts.initializedb:main
       """,
       )
