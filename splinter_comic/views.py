@@ -267,7 +267,7 @@ def comic_upload_do(comic, request):
         .filter(ComicChapter.comic == comic)
         # XXX order by id is bad
         .order_by(ComicChapter.id.asc())
-        .scalar()
+        .first()
     )
 
     when = request.POST['when']
