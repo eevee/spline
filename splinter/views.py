@@ -7,6 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .models import User, session
 from splinter.events import FrontPageActivity
+from splinter.events import FrontPageLayout
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +18,13 @@ def home(request):
     event = FrontPageActivity()
     request.registry.notify(event)
 
-    return dict(activity=event.sorted_activity)
+    layout = FrontPageLayout()
+    request.registry.notify(layout)
+
+    return dict(
+        activity=event.sorted_activity,
+        layout=layout,
+    )
 
 @view_config(route_name='__core__.login', request_method='GET', renderer='/login.mako')
 def login(request):

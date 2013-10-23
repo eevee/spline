@@ -1,4 +1,5 @@
 <%namespace name="libcore" file="splinter:templates/_lib.mako" />
+<%! import splinter.format as libformat %>
 
 <%def name="render_activity(page)">
 <div class="-header">
@@ -12,4 +13,28 @@
         posted by ${libcore.user(page.author)}
     </div>
 </div>
+</%def>
+
+<%def name="front_page_block(block)">
+<section class="block">
+    <header>
+        ${block.latest_page.comic.title}
+    </header>
+    <div class="block-body media">
+        <img src="${request.static_url('splinter:../data/filestore/' + block.chapter_cover_page.file)}"
+            class="media-inset image-capped">
+
+        <div class="media-body">
+            <p>Current comic chapter is “${block.latest_page.chapter.title}”.</p>
+
+            <p>Latest update is page ${block.latest_page.id}, posted ${libformat.format_date(block.latest_page.date_published)}!</p>
+
+            <ul>
+                <li><a href="${request.route_url('comic.page', block.chapter_cover_page)}">Read this chapter from the beginning</a></li>
+                <li><a href="${request.route_url('comic.page', block.comic_first_page)}">Read this comic from the beginning</li>
+                <li><a href="${request.route_url('comic.archive', block.latest_page.comic)}">Browse the archive</a></li>
+            </ul>
+        </div>
+    </div>
+</section>
 </%def>

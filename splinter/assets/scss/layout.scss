@@ -1,3 +1,5 @@
+@import "vendor/flex";
+
 // -----------------------------------------------------------------------------
 // config
 
@@ -183,6 +185,15 @@ input[type=search] {
 }
 
 // -----------------------------------------------------------------------------
+// utility classes
+
+// Image that's client-side resized (down only!) to a reasonable size
+.image-capped {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+// -----------------------------------------------------------------------------
 // widgets
 
 .activity-feed {
@@ -218,6 +229,41 @@ input[type=search] {
             }
         }
     }
+}
+
+
+// Generic (media?) block with possibly a header, and maybe a sprite or avatar
+// or whatever later
+.block {
+    margin: 1em;
+    padding: 0.5em;
+
+    background: $container-bg;
+    background: white url(/static/images/textured_paper.png) top left repeat;
+    border: 1px solid #ccc;
+        box-shadow: 1px 1px 2px #ccc;
+
+    > header {
+        margin: -0.5em -0.5em 0.5em;
+        padding: 0.5em;
+
+        background: gray;
+        background: linear-gradient(rgba(#ccc, 0.1), rgba(#ccc, 0.2));
+        background: #f0f0f0 url(/static/images/textured_paper.png) top left repeat;
+    }
+
+}
+
+
+// Ye media object, of course.  But with flexbox!
+.media {
+    @include flexbox;
+}
+.media-inset {
+    margin-right: 1em;
+}
+.media-body {
+    @include flex(1);
 }
 
 

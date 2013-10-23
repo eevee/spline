@@ -13,3 +13,9 @@
         % endfor
     </ol>
 </section>
+
+<%namespace name="librendering" module="splinter.display.rendering" />
+
+% for block in layout.blocks:
+    ${librendering.render_with_context(block.renderer, block)}
+% endfor

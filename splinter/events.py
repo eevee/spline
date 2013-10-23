@@ -75,3 +75,10 @@ class FrontPageActivity(object):
         # already-sorted items.  or maybe that's overthinking.
         self.activity.sort(key=operator.attrgetter('timestamp'), reverse=True)
         return self.activity[:self.max_count]
+
+
+class FrontPageLayout(object):
+    def __init__(self):
+        self.blocks = []
+
+

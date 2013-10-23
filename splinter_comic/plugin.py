@@ -1,24 +1,50 @@
-import operator
+from collections import namedtuple
 
 from pyramid.events import subscriber
 
-from splinter.events import FrontPageActivity
+from splinter.events import FrontPageLayout
 from splinter.events import BuildMenu
 from splinter.feature.feed import Feed
 from splinter.models import session
 from splinter.routing import DatabaseRouteConnector
 from splinter_comic.logic import get_recent_pages
+from splinter_comic.logic import get_latest_page_per_comic
+from splinter_comic.logic import get_first_pages_for_chapters
+from splinter_comic.logic import get_first_pages_for_comics
 from splinter_comic.models import Comic, ComicChapter, ComicPage
 
 
-@subscriber(FrontPageActivity)
-def find_activity(event):
-    # TODO this needs date filter
-    pages = get_recent_pages()
-    event.add_activity(
-        pages[:event.max_count],
-        'splinter_comic:templates/_lib#render_activity.mako',
-        timestamp_accessor=operator.attrgetter('date_published'))
+FrontPageBlock = namedtuple('FrontPageBlock', [
+    'renderer',
+    'latest_page',
+    'chapter_cover_page',
+    'comic_first_page',
+])
+
+@subscriber(FrontPageLayout)
+def offer_blocks(event):
+    # TODO does this need a date filter too?  do something else if it's too
+    # old...?
+    latest_pages = get_latest_page_per_comic()
+
+    first_pages = get_first_pages_for_chapters(page.chapter for page in latest_pages)
+    chapter_to_first_page = dict(
+        (page.chapter, page)
+        for page in first_pages)
+
+    first_pages = get_first_pages_for_comics(page.comic for page in latest_pages)
+    comic_to_first_page = dict(
+        (page.comic, page)
+        for page in first_pages)
+
+    for page in latest_pages:
+        block = FrontPageBlock(
+            renderer='splinter_comic:templates/_lib#front_page_block.mako',
+            latest_page=page,
+            chapter_cover_page=chapter_to_first_page[page.chapter],
+            comic_first_page=comic_to_first_page[page.comic],
+        )
+        event.blocks.append(block)
 
 
 @subscriber(Feed)
