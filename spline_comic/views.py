@@ -1,7 +1,5 @@
 from future_builtins import zip
 
-from datetime import date
-from datetime import datetime
 from datetime import timedelta
 import os
 import os.path
@@ -13,8 +11,6 @@ from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
-import pytz
-import tzlocal
 
 from spline.models import now
 from spline.models import session
@@ -29,14 +25,16 @@ def get_prev_next_page(page, include_queued):
 
     prev_page = (
         session.query(ComicPage)
-        .filter(ComicPage.chapter_id == page.chapter_id)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic_id == page.comic.id)
         .filter(ComicPage.timestamp < page.timestamp)
         .order_by(ComicPage.timestamp.desc())
         .first()
     )
     next_page = (
         session.query(ComicPage)
-        .filter(ComicPage.chapter_id == page.chapter_id)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic_id == page.comic.id)
         .filter(ComicPage.timestamp > page.timestamp)
         .order_by(ComicPage.timestamp.asc())
         .first()
