@@ -1,8 +1,9 @@
 from datetime import datetime
 
+import tzlocal
+import pytz
 from sqlalchemy import (
     Column,
-    Date,
     ForeignKey,
     Integer,
     Unicode,
@@ -22,11 +23,8 @@ from spline.models.columns import SurrogateKeyColumn
 from spline.models.columns import TitleColumn
 
 
-def current_publication_date():
-    """Return a date object for "today", from the point of view of the queue
-    system.
-    """
-    return datetime.utcnow().date()
+# Special sentinel time used for queued comics when the queue is disabled
+END_OF_TIME = pytz.utc.localize(datetime.max)
 
 
 class Comic(Base):
@@ -43,6 +41,27 @@ class Comic(Base):
     # TODO make a quick custom type or wrapper or whatever that makes this a
     # set in python-land
     config_queue = Column(Unicode, nullable=False, default=u'')
+
+    # Time zone to use for figuring out when "midnight" is, for queue purposes
+    # TODO how should this be scoped?  per-comic?  per-comic inheriting from a
+    # global default?  per-site?  ?????
+    config_timezone = Column(Unicode, nullable=True)
+
+    @property
+    def timezone(self):
+        if self.config_timezone in pytz.all_timezones_set:
+            tz = pytz.timezone(self.config_timezone)
+        else:
+            tz = tzlocal.get_localzone()
+
+    @property
+    def current_publication_date(self):
+        """Return "today" localized to this comic's timezone and with the time
+        set to midnight.  This is the time at which a new comic is published,
+        from the publisher's perspective.
+        """
+        return datetime.now(self.timezone).replace(
+            hour=0, minute=0, second=0, microsecond=0)
 
 
 class ComicChapter(Base):
@@ -61,7 +80,7 @@ class ComicPage(Base):
 
     id = SurrogateKeyColumn()
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
-    date_published = Column(Date, nullable=False, index=True)
+    date_published = Column(TZDateTime, nullable=False, index=True)
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
     file = Column(UnicodeText, nullable=False)
@@ -85,12 +104,10 @@ class ComicPage(Base):
     # just those that are published in the future.  Changing the queue dates
     # merely rewrites the publication dates for all the queued items.  If the
     # queue is disabled entirely, queued items all have their publication date
-    # set to date.max.
-    # TODO: currently the notion of "today" is based on UTC; unclear if this
-    # should be changed to the author's time zone, or what
+    # set to END_OF_TIME.
     @hybrid_property
     def is_queued(self):
-        return self.date_published > current_publication_date()
+        return self.date_published > now()
 
 
 @feature_adapter(ComicPage, IFeedItem)

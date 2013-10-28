@@ -1,6 +1,7 @@
 from future_builtins import zip
 
 from datetime import date
+from datetime import datetime
 from datetime import timedelta
 import os
 import os.path
@@ -12,11 +13,14 @@ from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
+import pytz
+import tzlocal
 
+from spline.models import now
 from spline.models import session
 from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
-from spline_comic.models import current_publication_date
+from spline_comic.models import END_OF_TIME
 
 
 def get_prev_next_page(page, include_queued):
@@ -172,8 +176,8 @@ def _get_last_queued_date(comic):
     if last_queued:
         queue_end_date = last_queued.date_published
     else:
-        queue_end_date = current_publication_date()
-    if queue_end_date == date.max:
+        queue_end_date = comic.current_publication_date
+    if queue_end_date == END_OF_TIME:
         queue_next_date = None
     else:
         weekdays = [int(wd) for wd in comic.config_queue]
@@ -181,21 +185,17 @@ def _get_last_queued_date(comic):
 
     return last_queued, queue_next_date
 
-def _generate_queue_dates(days_of_week, start=None):
+def _generate_queue_dates(days_of_week, start):
     if not days_of_week:
         # Special case: an empty queue means to freeze the queue, which is
         # easily done in practice by dating everything into the far future
         while True:
-            yield date.max
+            yield END_OF_TIME
 
     days_of_week = set(days_of_week)
     delta = timedelta(days=1)
 
-    if start is None:
-        d = current_publication_date()
-    else:
-        d = start
-
+    d = start
     dow = d.weekday()
 
     # NB: Never consider today as part of the queue
@@ -230,7 +230,7 @@ def comic_queue_do(comic, request):
         .all()
     )
 
-    new_dates = _generate_queue_dates(weekdays)
+    new_dates = _generate_queue_dates(weekdays, start=comic.current_publication_date)
     for page, new_date in zip(queued, new_dates):
         page.date_published = new_date
 
@@ -272,7 +272,7 @@ def comic_upload_do(comic, request):
 
     when = request.POST['when']
     if when == 'now':
-        date_published = current_publication_date()
+        date_published = now()
     elif when == 'queue':
         last_queued, queue_next_date = _get_last_queued_date(comic)
         date_published = queue_next_date

@@ -15,6 +15,7 @@ requires = [
     'pyramid_scss',
     'pyramid_tm',
     'pytz',
+    'tzlocal',
     'zope.sqlalchemy',
     'waitress',
     'whoosh',
