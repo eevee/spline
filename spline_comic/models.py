@@ -50,9 +50,9 @@ class Comic(Base):
     @property
     def timezone(self):
         if self.config_timezone in pytz.all_timezones_set:
-            tz = pytz.timezone(self.config_timezone)
+            return pytz.timezone(self.config_timezone)
         else:
-            tz = tzlocal.get_localzone()
+            return tzlocal.get_localzone()
 
     @property
     def current_publication_date(self):
