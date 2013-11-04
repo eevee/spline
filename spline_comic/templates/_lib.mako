@@ -27,7 +27,7 @@
         <div class="media-body">
             <p>Current comic chapter is “${block.latest_page.chapter.title}”.</p>
 
-            <p>Latest update is page ${block.latest_page.id}, posted ${libformat.format_date(block.latest_page.date_published)}!</p>
+            <p>Latest update is page ${block.latest_page.page_number}, posted ${libformat.format_date(block.latest_page.date_published)}!</p>
 
             <ul>
                 <li><a href="${request.route_url('comic.page', block.chapter_cover_page)}">Read this chapter from the beginning</a></li>

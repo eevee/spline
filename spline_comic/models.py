@@ -8,6 +8,7 @@ from sqlalchemy import (
     Integer,
     Unicode,
     UnicodeText,
+    UniqueConstraint,
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -83,21 +84,27 @@ class ComicPage(Base):
     date_published = Column(TZDateTime, nullable=False, index=True)
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
+
+    # In theory, sequential with no gaps.  We try our best.
+    page_number = Column(Integer, nullable=False)
+    # Unambiguous ordering of every single page ever.  Doesn't really matter
+    # between comics, but we can't easily UNIQUE with a comic since there's no
+    # FK in this table, so whatever.
+    order = Column(Integer, nullable=False)
+
     file = Column(UnicodeText, nullable=False)
     title = TitleColumn()
     title_slug = SlugColumn(title)
     comment = Column(Prose, nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint(page_number, chapter_id, deferrable=True),
+        UniqueConstraint(order, deferrable=True),
+    )
+
     author = relationship(User, backref='comic_pages')
     chapter = relationship(ComicChapter, backref='pages')
     comic = association_proxy('chapter', 'comic')
-
-    @hybrid_property
-    def order(self):
-        # Some value that indicates the ordering of comics.  This should
-        # maaaybe be its own column later, but for now this expresses the
-        # intent in a query
-        return self.timestamp
 
     # Some words on how queuing works:
     # As little non-essential state is stored as possible.  Queued pages are

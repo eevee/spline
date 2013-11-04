@@ -6,6 +6,7 @@ import os.path
 import shutil
 from tempfile import NamedTemporaryFile
 
+from sqlalchemy import func
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
@@ -27,16 +28,16 @@ def get_prev_next_page(page, include_queued):
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic_id == page.comic.id)
-        .filter(ComicPage.timestamp < page.timestamp)
-        .order_by(ComicPage.timestamp.desc())
+        .filter(ComicPage.order < page.order)
+        .order_by(ComicPage.order.desc())
         .first()
     )
     next_page = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic_id == page.comic.id)
-        .filter(ComicPage.timestamp > page.timestamp)
-        .order_by(ComicPage.timestamp.asc())
+        .filter(ComicPage.order > page.order)
+        .order_by(ComicPage.order.asc())
         .first()
     )
 
@@ -56,7 +57,7 @@ def comic_most_recent(comic, request):
         .filter(ComicChapter.comic == comic)
         # "Most recent" never includes the queue
         .filter(~ ComicPage.is_queued)
-        .order_by(ComicPage.timestamp.desc())
+        .order_by(ComicPage.order.desc())
         .first()
     )
 
@@ -275,11 +276,51 @@ def comic_upload_do(comic, request):
         last_queued, queue_next_date = _get_last_queued_date(comic)
         date_published = queue_next_date
 
+    # Fetch next page number and ordering.  Also need to shift everyone else
+    # forwards by one if this is bumping the queue.  Blurgh.
+    max_order, = (
+        session.query(func.max(ComicPage.order))
+        .filter(ComicPage.date_published <= date_published)
+        .first()
+    )
+    if max_order is None:
+        max_order = 0
+    next_order = max_order + 1
+
+    (
+        session.query(ComicPage)
+        .filter(ComicPage.order >= next_order)
+        .update({ComicPage.order: ComicPage.order + 1})
+    )
+
+
+    max_page_number, = (
+        session.query(func.max(ComicPage.page_number))
+        .with_parent(last_chapter)
+        .filter(ComicPage.date_published <= date_published)
+        .first()
+    )
+    if max_page_number is None:
+        max_page_number = 0
+    next_page_number = max_page_number + 1
+
+    (
+        session.query(ComicPage)
+        .with_parent(last_chapter)
+        .filter(ComicPage.page_number >= next_page_number)
+        .update({ComicPage.page_number: ComicPage.page_number + 1})
+    )
+
+
+
     page = ComicPage(
         file=os.path.basename(tmp.name),
         chapter=last_chapter,
         author=request.user,
         date_published=date_published,
+
+        order=next_order,
+        page_number=next_page_number,
 
         # TODO more validation here too
         title=request.POST['title'],

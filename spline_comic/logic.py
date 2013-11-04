@@ -25,7 +25,6 @@ def get_latest_page_per_comic():
     latest_pages_subq = (
         session.query(
             Comic.id.label('comic_id'),
-            # TODO this doesn't really work if order isn't unique
             func.max(ComicPage.order).label('latest_page_order'),
         )
         .select_from(ComicPage)
@@ -63,7 +62,8 @@ def get_first_pages_for_chapters(chapters):
             # TODO this doesn't really work if order isn't unique
             func.min(ComicPage.order).label('first_page_order'),
         )
-        .select_from(ComicChapter)
+        .select_from(ComicPage)
+        .join(ComicPage.chapter)
         .join(ComicChapter.comic)
         .filter(~ ComicPage.is_queued)
         .group_by(ComicChapter.id)
@@ -89,7 +89,6 @@ def get_first_pages_for_comics(comics):
     first_pages_subq = (
         session.query(
             Comic.id.label('comic_id'),
-            # TODO this doesn't really work if order isn't unique
             func.min(ComicPage.order).label('first_page_order'),
         )
         .select_from(ComicPage)
