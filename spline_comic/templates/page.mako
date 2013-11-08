@@ -99,7 +99,7 @@
             <div class="-date">
                 ${format_date(page.date_published)}
                 <br>
-                Chapter: ${page.chapter.title}
+                <a href="${request.route_url('comic.archive', page.comic)}#chapter-${page.chapter.title_slug}">${page.chapter.title}</a>, page ${page.page_number}
             </div>
         </div>
 </%def>

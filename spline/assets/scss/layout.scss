@@ -12,6 +12,7 @@ $link-visited-color: hsl(255, 70%, 60%);
 $border-color: #e8e8e8;
 $container-bg: #fcfcfc;
 
+$privileged-color: hsl(45, 90%, 75%);
 
 // temp overrides
 $header-bg: lighten(#580140, 10%);
@@ -286,5 +287,51 @@ table.table-pretty {
                 background: hsla(225, 80%, 60%, 0.1);
             }
         }
+    }
+}
+
+.unheader {
+    font-size: 1rem;
+    margin-left: 1em;
+    font-weight: normal;
+    color: #444;
+}
+
+// -----------------------------------------------------------------------------
+// comic stuff that shouldn't live here at all
+
+/*ol*/.comic-page-grid {
+    list-style-type: none;
+    font-size: 1.5em;
+    margin: 0;
+    padding: 0;
+
+    > li {
+        display: inline-block;
+
+        > a {
+            display: block;
+            margin: 0.5em;
+            height: 2.5em;
+            width: 2.5em;
+            line-height: 2.5em;
+            vertical-align: middle;
+            text-align: center;
+
+            background: white;
+            border: 1px solid #e8e8e8;
+
+            &:visited {
+                border-style: dotted;
+            }
+            &:hover {
+                background: #fcfcfc;
+            }
+        }
+
+        &.privileged > a {
+            box-shadow: 0 0 0 2px $privileged-color;
+        }
+
     }
 }

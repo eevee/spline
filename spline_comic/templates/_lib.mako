@@ -25,14 +25,25 @@
             class="media-inset image-capped">
 
         <div class="media-body">
-            <p>Current comic chapter is “${block.latest_page.chapter.title}”.</p>
-
-            <p>Latest update is page ${block.latest_page.page_number}, posted ${libformat.format_date(block.latest_page.date_published)}!</p>
+            <%
+                page = block.latest_page
+                chapter = page.chapter
+            %>
+            <p>
+                Posted ${libformat.format_date(page.date_published)}:
+                <a href="${request.route_url('comic.page', page)}">
+                    “${chapter.title}”, page ${page.page_number}
+                    % if page.title:
+                        (${page.title})
+                    % endif
+                </a>
+            </p>
 
             <ul>
                 <li><a href="${request.route_url('comic.page', block.chapter_cover_page)}">Read this chapter from the beginning</a></li>
-                <li><a href="${request.route_url('comic.page', block.comic_first_page)}">Read this comic from the beginning</li>
-                <li><a href="${request.route_url('comic.archive', block.latest_page.comic)}">Browse the archive</a></li>
+                <li><a href="${request.route_url('comic.archive', page.comic)}#chapter-${chapter.title_slug}">Browse this chapter in the archive</a></li>
+                <li><a href="${request.route_url('comic.page', block.comic_first_page)}">Read the entire comic from the beginning</li>
+                <li><a href="${request.route_url('comic.archive', page.comic)}">Browse the entire archive</a></li>
             </ul>
         </div>
     </div>

@@ -7,6 +7,7 @@ import shutil
 from tempfile import NamedTemporaryFile
 
 from sqlalchemy import func
+from sqlalchemy.orm import contains_eager
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
@@ -112,26 +113,24 @@ def comic_archive(comic, request):
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic == comic)
-        .order_by(ComicPage.order.desc())
+        .order_by(ComicPage.order.asc())
+        .options(contains_eager(ComicPage.chapter))
     )
 
-    normal_pages = q.filter(~ ComicPage.is_queued)
+    if not request.user:
+        # TODO permissions
+        q = q.filter(~ ComicPage.is_queued)
 
-    # TODO permissions
-    # TODO collapse to one query
-    if request.user:
-        queued_pages = q.filter(ComicPage.is_queued)
-    else:
-        queued_pages = None
-
-    # TODO: chapters.  how will these possibly work?  do i need to require that
-    # they cover distinct consecutive spans of pages?  what if the author never
-    # creates any chapters?
+    pages_by_chapter = {}
+    for page in q:
+        pages_by_chapter.setdefault(page.chapter, []).append(page)
+    chapters = list(pages_by_chapter.keys())
+    chapters.sort(key=lambda chapter: chapter.id)
 
     return dict(
         comic=comic,
-        pages=normal_pages,
-        queue=queued_pages,
+        pages_by_chapter=pages_by_chapter,
+        chapters=chapters,
     )
 
 
