@@ -134,3 +134,6 @@ class ComicPage_FeedItem(object):
         if self.page.title:
             ret += u": " + self.page.title
         return ret
+
+    def generate_url(self, request):
+        return request.route_url('comic.page', self.page)

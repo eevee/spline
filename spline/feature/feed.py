@@ -34,20 +34,20 @@ class Feed(object):
     def generate_atom(self):
         items = self.items()
 
+        # TODO path_qs may not be right if the endpoint takes args (for some
+        # reason)...  maybe overrideable?
+        feed_url = self.request.application_url + self.request.path_qs
+
         # TODO: mark the document with an xml:lang
         root = atom_el.feed(
             # Required
-            atom_el.id("TODO"),
+            atom_el.id(feed_url),
             atom_el.title(self.title),
             atom_el.updated(items[0].timestamp.isoformat()),
 
             # Recommended
             #atom_el.author("..."),
-            atom_el.link(
-                rel="self",
-                # TODO path_qs may not be right if the endpoint takes args (for
-                # some reason)...  maybe overrideable?
-                href=self.request.application_url + self.request.path_qs),
+            atom_el.link(rel="self", href=feed_url),
 
             # Optional
             #atom_el.category("..."),
@@ -60,10 +60,10 @@ class Feed(object):
         )
 
         for item in items:
+            url = item.generate_url(self.request)
             root.append(atom_el.entry(
                 # Required
-                # TODO link requires that resource_url works
-                atom_el.id("TODO"),
+                atom_el.id(url),
                 atom_el.title(item.title),
                 atom_el.updated(item.timestamp.isoformat()),
 
@@ -71,8 +71,7 @@ class Feed(object):
                 # TODO author is REQUIRED if the whole feed lacks one!
                 #atom_el.author("TODO"),
                 #atom_el.content("TODO"),
-                # TODO link requires that resource_url works
-                #atom_el.link("TODO"),
+                atom_el.link(rel="alternate", href=url),
                 #atom_el.summary("TODO"),
 
                 # Optional
@@ -100,6 +99,11 @@ class Feed(object):
 class IFeedItem(zi.Interface):
     timestamp = zi.Attribute("timestamp")
     title = zi.Attribute("title")
+
+    # TODO it would be super cool if this would default to resource_url (and
+    # that actually worked!)
+    def generate_url(self, request):
+        """Return a URL to this item."""
 
 
 @response_adapter(Feed)

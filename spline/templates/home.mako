@@ -2,6 +2,11 @@
 
 <%block name="title">home</%block>
 
+## TODO un-hardcode this
+<%block name="head_extra">
+    <link rel="alternate" type="application/atom+xml" href="/@@feed">
+</%block>
+
 <section>
     <h1>Recent activity</h1>
 
