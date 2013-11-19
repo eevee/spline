@@ -48,6 +48,22 @@
                 <dt>Title</dt>
                 <dd><input type="text" name="title"></dd>
 
+                <dt>Chapter</dt>
+                <dd>
+                    <ul>
+                      % for chapter in chapters:
+                        <li><label>
+                            <input type="radio" name="chapter" value="${chapter.id}"
+                                % if loop.first:
+                                checked
+                                % endif
+                            >
+                            <span class="checked-label">${chapter.title}</span>
+                        </label></li>
+                      % endfor
+                    </ul>
+                </dd>
+
                 <dt>Commentary</dt>
                 <dd><textarea name="comment"></textarea></dd>
 

@@ -152,11 +152,21 @@ def comic_admin(comic, request):
 
     last_queued, queue_next_date = _get_last_queued_date(comic)
     num_queued = queued_q.count()
+
+    chapters = (
+        session.query(ComicChapter)
+        .with_parent(comic)
+        # TODO should actually order by latest addition...  or maybe first?
+        .order_by(ComicChapter.id.desc())
+        .all()
+    )
+
     return dict(
         comic=comic,
+        chapters=chapters,
         num_queued=num_queued,
         last_queued=last_queued,
-        queue_next_date=queue_next_date
+        queue_next_date=queue_next_date,
     )
 
 
@@ -257,15 +267,10 @@ def comic_upload_do(comic, request):
     # TODO ripe for being broken out into a lib
     os.rename(tmp.name, os.path.join(os.path.dirname(__file__), '../data/filestore/', os.path.basename(tmp.name)))
 
-    # TODO yeah no.
-    # ...well actually this might be a good idea to keep weird chapter churn
-    # down initially, until i figure out how else that'll work
     last_chapter = (
         session.query(ComicChapter)
-        .filter(ComicChapter.comic == comic)
-        # XXX order by id is bad
-        .order_by(ComicChapter.id.asc())
-        .first()
+        .filter(ComicChapter.id == int(request.POST['chapter']))
+        .one()
     )
 
     when = request.POST['when']
