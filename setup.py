@@ -10,6 +10,8 @@ requires = [
     'pyramid',
     'SQLAlchemy',
     'transaction',
+    'lxml',
+    'mako>=0.7.0',
     'pyramid_beaker',
     'pyramid_debugtoolbar',
     'pyramid_scss',
