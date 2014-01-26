@@ -76,4 +76,7 @@ def main(global_config, **settings):
         plugin, route_prefix = plugins.split(':', 1)
         config.include(plugin, route_prefix=route_prefix)
 
+    # Final catch-all route to defer to the wiki
+    config.add_route('__core__.wiki', '/*path')
+
     return config.make_wsgi_app()
