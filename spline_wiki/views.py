@@ -51,7 +51,7 @@ def wiki_view(page, request):
 def wiki_edit(page, request):
     # TODO what if it's not writable?  should we check that now?
     if page.exists:
-        raw_content = page.data
+        raw_content = page.read()
     else:
         raw_content = u''
 
