@@ -41,6 +41,11 @@ def main(global_config, **settings):
 
     config = Configurator(settings=settings)
 
+    # Logging
+    # TODO neeed to somehow specify whether this is debug land or not; want
+    # sane defaults but not always the same
+    config.include('spline.lib.logging')
+
     # Sessions
     config.include(pyramid_beaker)
     config.set_session_factory(session_factory)
