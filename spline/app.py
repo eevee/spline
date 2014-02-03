@@ -34,12 +34,39 @@ def inject_template_vars(event):
 
 
 def main(global_config, **settings):
+    # Built-in core settings we have to have.  These are part of the app
+    # propert and it makes zero sense for either a deployer or a developer to
+    # ever change them.
+    # TODO is this where this kind of thing should go?  seems, y'know, clunky
+    settings.update({
+        'pyramid.default_locale_name': u'en',
+        'mako.directories': ['spline:templates'],
+        'mako.strict_undefined': True,
+
+        # These are reversed in debug mode
+        # TODO scss should really be built and served directly in production
+        'scss.compress': True,
+        'scss.cache': True,
+    })
+
+    debug = settings.get('spline.debug')
+    if debug:
+        settings.update({
+            'pyramid.reload_templates': True,
+            'scss.compress': False,
+            'scss.cache': False,
+        })
+
     engine = engine_from_config(settings, 'sqlalchemy.')
     session.configure(bind=engine)
 
     session_factory = pyramid_beaker.session_factory_from_settings(settings)
 
     config = Configurator(settings=settings)
+    if debug:
+        # TODO only if importable?
+        config.include('pyramid_debugtoolbar')
+    config.include('pyramid_tm')
 
     # Logging
     # TODO neeed to somehow specify whether this is debug land or not; want
