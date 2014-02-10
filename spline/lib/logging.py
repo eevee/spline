@@ -5,8 +5,7 @@ import logging
 import sys
 import traceback
 
-from colorama import Fore, Back, Style
-from colorama.ansitowin32 import AnsiToWin32
+from colorama import AnsiToWin32, Back, Fore, Style
 
 
 class MaybeColoredStreamHandler(logging.StreamHandler):
