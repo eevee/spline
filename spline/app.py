@@ -1,3 +1,5 @@
+import os
+
 from pyramid.authentication import SessionAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
@@ -9,6 +11,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from spline.events import BuildMenu
 from spline.models import User, session
+
 
 def get_user(request):
     userid = authenticated_userid(request)
@@ -43,15 +46,46 @@ def main(global_config, **settings):
         'mako.directories': ['spline:templates'],
         'mako.strict_undefined': True,
 
+        # TODO: should not need to hardcode a weird archetype path here  :)
+        # TODO i am not thrilled that only a string works here
+        'scss.asset_path':
+            'spline:assets/scss\n' +
+            os.path.join(os.getcwd(), '../archetype.git/scss'),
+
+
         # These are reversed in debug mode
         # TODO scss should really be built and served directly in production
         'scss.compress': True,
         'scss.cache': True,
     })
 
+    # Prefill some paths for stuff stored on disk.
+    # TODO this is pretty grody  :)
+    # TODO this should be a little more organized and enforce that the
+    # directories exist and are writable by us -- or at least that the datadir
+    # itself is?
+    datadir = settings['spline.datadir']
+    settings.update({
+        'spline.search.whoosh.path': os.path.join(datadir, 'whoosh-index'),
+        'spline.wiki.root': os.path.join(datadir, 'wiki'),
+
+        # TODO this is all going away, i think.  lol CHANGEME.  what is that
+        # even for?
+        'session.type': 'file',
+        'session.data_dir': os.path.join(datadir, 'sessions/data'),
+        'session.lock_dir': os.path.join(datadir, 'sessions/lock'),
+        'session.secret': 'CHANGEME',
+        'session.cookie_on_exception': True,
+    })
+
     debug = settings.get('spline.debug')
     if debug:
         settings.update({
+            # TODO maybe i want to turn these on...  why didn't i?
+            'pyramid.debug_authorization': False,
+            'pyramid.debug_notfound': False,
+            'pyramid.debug_routematch': False,
+
             'pyramid.reload_templates': True,
             'scss.compress': False,
             'scss.cache': False,
@@ -104,7 +138,9 @@ def main(global_config, **settings):
     config.scan('spline.feature')
 
     # Plugin loading
-    for plugins in settings.get('spline.plugins', '').strip().split():
+    # TODO this could totally be inside the app proper, as long as i know how
+    # to restart myself.  mamayo problem?
+    for plugins in settings.get('spline.plugins', ()):
         plugin, route_prefix = plugins.split(':', 1)
         config.include(plugin, route_prefix=route_prefix)
 
