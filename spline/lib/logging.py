@@ -50,7 +50,21 @@ class StrFormatFormatter(object):
 
     def format(self, record):
         record_dict = self.record_to_dict(record)
-        return self.fmt.format(record, **record_dict)
+        ret = self.fmt.format(record, **record_dict)
+
+        if record.exc_info:
+            # Cache the traceback, like logging does (as it's constant)
+            if not record.exc_text:
+                record.exc_text = self.format_exception(record.exc_info)
+        if record.exc_text:
+            if ret[-1:] != "\n":
+                ret += "\n"
+
+            # TODO logging catches UnicodeError here and tries to re-encode
+            # with the filesystem encoding.  but tbh fuck it?
+            ret += record.exc_text
+
+        return ret
 
     def record_to_dict(self, record):
         # The stdlib actually steals from record.__dict__ which is totes gross;
@@ -74,8 +88,8 @@ class StrFormatFormatter(object):
             threadName=record.threadName,
         )
 
-    def formatException(self, exc_info):
-        return traceback.format_exception(*exc_info)
+    def format_exception(self, exc_info):
+        return ''.join(traceback.format_exception(*exc_info)).rstrip('\n')
 
 
 class ColorString(object):
@@ -88,6 +102,7 @@ class ColorString(object):
         return self.start + self.middle.__format__(fmt) + self.end
 
 
+# TODO i have no idea how this should interact with unicodes
 class ColorFormatter(StrFormatFormatter):
     def __init__(self, *args, **kwargs):
         super(ColorFormatter, self).__init__(*args, **kwargs)
@@ -119,6 +134,12 @@ class ColorFormatter(StrFormatFormatter):
             start = self.record_colors.get(record_key, '')
 
         return ColorString(start, record_value, Style.RESET_ALL)
+
+    def format_exception(self, exc_info):
+        exc_text = super(ColorFormatter, self).format_exception(exc_info)
+        # TODO customize color?
+        # TODO color header, lines, source, exception differently?
+        return Fore.RED + exc_text + Style.RESET_ALL
 
 
 def autoconfigure():
