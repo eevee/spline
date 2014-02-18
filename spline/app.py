@@ -102,6 +102,8 @@ def main(global_config, **settings):
         config.include('pyramid_debugtoolbar')
     config.include('pyramid_tm')
 
+    config.include('pyramid_mako')
+
     # Logging
     # TODO neeed to somehow specify whether this is debug land or not; want
     # sane defaults but not always the same

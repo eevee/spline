@@ -3,7 +3,11 @@ from pyramid.httpexceptions import HTTPNotFound
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import class_mapper
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm.properties import PropertyLoader
+try:
+    from sqlalchemy.orm.properties import ColumnProperty
+except ImportError:
+    # < 0.9
+    from sqlalchemy.orm.properties import PropertyLoader as ColumnProperty
 
 from spline.models import session
 
@@ -14,7 +18,7 @@ import re
 # ASCII.  It can be changed at any time, because slugs are (supposed to be...)
 # stored alongside their respective titles, and so this function is only called
 # when a title is first assigned.
-SLUG_RE = re.compile(ur'[^a-zA-Z0-9]+')
+SLUG_RE = re.compile(u'[^a-zA-Z0-9]+')
 def to_slug(title):
     """Given a page (or whatever) title, return a URL-friendly slug."""
     slug = (
@@ -40,7 +44,7 @@ def _guess_relationship(child, parent):
     parent_mapper = class_mapper(parent)
 
     for prop in child_mapper.iterate_properties:
-        if isinstance(prop, PropertyLoader) and prop.mapper is parent_mapper:
+        if isinstance(prop, ColumnProperty) and prop.mapper is parent_mapper:
             return prop
 
     raise InvalidRequestError(
@@ -128,9 +132,9 @@ class DatabaseRouteConnector(object):
                 row = rel.__get__(row, type(row))
 
             # Append the slug, if any
-            ident = unicode(current.column.__get__(row, type(row)))
+            ident = str(current.column.__get__(row, type(row)))
             if current.slug_column:
-                slug = unicode(current.slug_column.__get__(row, type(row)))
+                slug = str(current.slug_column.__get__(row, type(row)))
                 if slug:
                     ident += u'-' + slug
             kw[current.marker] = ident

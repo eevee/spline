@@ -1,5 +1,3 @@
-from future_builtins import zip
-
 from datetime import timedelta
 import os
 import os.path
