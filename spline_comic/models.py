@@ -117,6 +117,15 @@ class ComicPage(Base):
         return self.date_published > now()
 
 
+class ComicPageTranscript(Base):
+    __tablename__ = 'comic_page_transcripts'
+
+    page_id = Column(ForeignKey(ComicPage.id), primary_key=True, nullable=False)
+    language = Column(Unicode(2), primary_key=True, nullable=False)
+    # TODO meld this into wiki, i guess, somehow...???
+    transcript = Column(UnicodeText, nullable=False)
+
+
 @feature_adapter(ComicPage, IFeedItem)
 class ComicPage_FeedItem(object):
     def __init__(self, page):
