@@ -43,7 +43,7 @@ def login__do(request):
     try:
         user = session.query(User).filter_by(name=username).one()
     except NoResultFound:
-        raise HTTPForbidden(message="you don't have an account chief")
+        raise HTTPForbidden(detail="you don't have an account chief")
 
     if True:
         headers = remember(request, user.id)
