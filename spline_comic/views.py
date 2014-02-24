@@ -1,4 +1,5 @@
 from datetime import timedelta
+import hashlib
 import os
 import os.path
 import shutil
@@ -255,15 +256,16 @@ def comic_upload_do(comic, request):
         return HTTPForbidden()
 
     # TODO validation and all that boring stuff
-    fh = request.POST['file'].file
+    file_upload = request.POST['file']
+    fh = file_upload.file
 
-    with NamedTemporaryFile(delete=False) as tmp:
-        shutil.copyfileobj(fh, tmp)
+    from spline.feature.filestore import IStorage
+    storage = request.registry.queryUtility(IStorage)
+
+    _, ext = os.path.splitext(file_upload.filename)
+    filename = storage.store(fh, ext)
 
     # TODO wire into transaction so the file gets deleted on rollback
-    # TODO better picking of filenames
-    # TODO ripe for being broken out into a lib
-    os.rename(tmp.name, os.path.join(os.path.dirname(__file__), '../data/filestore/', os.path.basename(tmp.name)))
 
     last_chapter = (
         session.query(ComicChapter)
@@ -316,7 +318,7 @@ def comic_upload_do(comic, request):
 
 
     page = ComicPage(
-        file=os.path.basename(tmp.name),
+        file=os.path.basename(filename),
         chapter=last_chapter,
         author=request.user,
         date_published=date_published,

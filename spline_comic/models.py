@@ -16,6 +16,7 @@ from sqlalchemy.orm import relationship
 
 from spline.feature.core import feature_adapter
 from spline.feature.feed import IFeedItem
+from spline.feature.filestore import StoredFile
 from spline.format import format_date
 from spline.models import Base, User
 from spline.models import Prose, TZDateTime, now
@@ -92,7 +93,7 @@ class ComicPage(Base):
     # FK in this table, so whatever.
     order = Column(Integer, nullable=False)
 
-    file = Column(UnicodeText, nullable=False)
+    file = Column(StoredFile, nullable=False)
     title = TitleColumn()
     title_slug = SlugColumn(title)
     comment = Column(Prose, nullable=False)

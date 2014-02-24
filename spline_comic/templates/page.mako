@@ -64,7 +64,7 @@
 <section class="comic-page">
     ${draw_comic_controls(prev_page, page, next_page)}
 
-    <img src="${request.static_url('spline:../data/filestore/' + page.file)}"
+    <img src="${page.file.url_from_request(request)}"
         class="comic-page-image">
 
     ${draw_comic_controls(prev_page, page, next_page)}

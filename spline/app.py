@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from pyramid.authentication import SessionAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
@@ -64,16 +65,16 @@ def main(global_config, **settings):
     # TODO this should be a little more organized and enforce that the
     # directories exist and are writable by us -- or at least that the datadir
     # itself is?
-    datadir = settings['spline.datadir']
+    datadir = Path(settings['spline.datadir'])
     settings.update({
-        'spline.search.whoosh.path': os.path.join(datadir, 'whoosh-index'),
-        'spline.wiki.root': os.path.join(datadir, 'wiki'),
+        'spline.search.whoosh.path': str(datadir / 'whoosh-index'),
+        'spline.wiki.root': str(datadir / 'wiki'),
 
         # TODO this is all going away, i think.  lol CHANGEME.  what is that
         # even for?
         'session.type': 'file',
-        'session.data_dir': os.path.join(datadir, 'sessions/data'),
-        'session.lock_dir': os.path.join(datadir, 'sessions/lock'),
+        'session.data_dir': str(datadir / 'sessions/data'),
+        'session.lock_dir': str(datadir / 'sessions/lock'),
         'session.secret': 'CHANGEME',
         'session.cookie_on_exception': True,
     })
@@ -104,6 +105,11 @@ def main(global_config, **settings):
 
     config.include('pyramid_mako')
 
+    from spline.feature.filestore import IStorage, FilesystemStorage
+    filestore_dir = (datadir / 'filestore').resolve()
+    config.registry.registerUtility(FilesystemStorage(filestore_dir), IStorage)
+    config.add_static_view('filestore', str(filestore_dir))
+
     # Logging
     # TODO neeed to somehow specify whether this is debug land or not; want
     # sane defaults but not always the same
@@ -123,7 +129,6 @@ def main(global_config, **settings):
 
     # Static assets
     config.add_static_view('static', 'assets', cache_max_age=3600)
-    config.add_static_view('filestore', '../data/filestore', cache_max_age=3600)
     # Sass compilation
     config.include('pyramid_scss')
     config.add_route('pyscss', '/css/{css_path:[^/]+}.css')

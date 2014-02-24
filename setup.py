@@ -1,4 +1,5 @@
 import os
+import sys
 
 from setuptools import setup, find_packages
 
@@ -21,7 +22,11 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'whoosh',
-    ]
+]
+
+# pypi versions of stdlib packages
+if sys.version_info < (3, 4):
+    requires.append('pathlib')
 
 setup(name='spline',
       version='0.0',

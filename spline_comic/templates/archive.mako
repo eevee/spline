@@ -20,7 +20,7 @@
     </h1>
 
     <div class="media">
-        <img src="${request.static_url('spline:../data/filestore/' + first_page.file)}"
+        <img src="${first_page.file.url_from_request(request)}"
             class="media-inset image-capped">
 
         <div class="media-body">

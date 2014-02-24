@@ -21,7 +21,7 @@
         ${block.latest_page.comic.title}
     </header>
     <div class="block-body media">
-        <img src="${request.static_url('spline:../data/filestore/' + block.chapter_cover_page.file)}"
+        <img src="${block.chapter_cover_page.file.url_from_request(request)}"
             class="media-inset image-capped">
 
         <div class="media-body">
