@@ -7,17 +7,14 @@
     <link rel="alternate" type="application/atom+xml" href="/@@feed">
 </%block>
 
-<section>
-    <h1>Recent activity</h1>
+<%block name="header"><h1>${request.registry.settings['spline.site_title']}</h1></%block>
 
-    <ol class="activity-feed">
-        % for activitum in activity:
-        <li>
-            <% activitum.renderer.implementation().get_def(activitum.renderer.defname).render_context(context, activitum.source) %>
-        </li>
-        % endfor
-    </ol>
+## TODO once blocks are figured out, deprecate this junk and port everything away from it
+% for activitum in activity:
+<section>
+    <% activitum.renderer.implementation().get_def(activitum.renderer.defname).render_context(context, activitum.source) %>
 </section>
+% endfor
 
 <%namespace name="librendering" module="spline.display.rendering" />
 

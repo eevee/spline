@@ -5,21 +5,20 @@
 
 // primary colors
 $primary-accent: hsl(225, 30%, 50%);
-$header-bg: hsl(225, 30%, 50%);
-$link-color: hsl(210, 70%, 50%);
-$link-visited-color: hsl(255, 70%, 60%);
+$secondary-accent: hsl(330, 30%, 50%);
+// TODO FLORAVERSE
+// temp overrides for floraverse
+$primary-accent: #953a34;
+$secondary-accent: #8cbc7c;
+
+$link-color: $secondary-accent;
+$link-visited-color: scale-color(adjust-hue($secondary-accent, 30deg), $lightness: -20%);
 
 // detail colors (largely grays)
 $border-color: #e8e8e8;
 $container-bg: #fcfcfc;
 
 $privileged-color: hsl(45, 90%, 75%);
-
-// temp overrides for floraverse
-$primary-accent: #82015e;
-$header-bg: $primary-accent;
-$link-color: #913152;
-$link-visited-color: #a64763;
 
 // Headers, where zero is the page title
 $h0-color: $primary-accent;
@@ -42,15 +41,12 @@ body > header {
     z-index: 5;
     position: relative;
 
-    box-shadow:
-        0 0 3px rgba(black, 0.9);
-    background: $header-bg url(/static/images/debut_dark.png) fixed;
-
     > nav.navbar {
         background: #222 url(/static/images/debut_dark.png) fixed;
         box-shadow:
             inset 0 -1px 1px -1px rgba(white, 0.5),
-            inset 0 2em 3em -2em rgba(white, 0.2);
+            inset 0 2em 3em -2em rgba(white, 0.2),
+            0 0 3px rgba(black, 0.9);
         border-bottom: 1px solid #444;
 
         > ul.global-nav {
@@ -83,15 +79,19 @@ body > header {
                     line-height: 1.5;
                 }
                 > a:hover {
-                    background: rgba(scale-color($primary-accent, $saturation: -40%, $lightness: 50%), 0.25);
+                    background: rgba(scale-color($secondary-accent, $saturation: 30%, $lightness: 50%), 0.25);
                 }
 
                 > .selected {
-                    box-shadow: inset 0 -0.75em 0.5em -0.5em hsl(0, 0%, 50%);
-                    $bg-color: scale-color($primary-accent, $saturation: -70%, $lightness: -10%);
+                    box-shadow: inset 0 -0.5em 0.5em -0.5em hsl(0, 0%, 50%);
+                    $bg-color: scale-color($secondary-accent, $saturation: -70%, $lightness: -10%);
                     background: url(/static/images/debut_dark.png) fixed $bg-color;
                     box-shadow:
-                        inset 0 0.33em 0.33em rgba(black, 0.3);
+                        inset 0 0.25em 0.33em rgba(black, 0.4);
+
+                    &:hover {
+                        background: scale-color($secondary-accent, $saturation: -50%, $lightness: -10%);
+                    }
                 }
             }
 
@@ -205,6 +205,11 @@ input[type=search] {
     border-radius: 1em;
 }
 
+// TODO this too?
+p {
+    margin-top: 0;
+}
+
 // -----------------------------------------------------------------------------
 // utility classes
 
@@ -212,6 +217,23 @@ input[type=search] {
 .image-capped {
     max-width: 200px;
     max-height: 200px;
+}
+
+ul.inline-list {
+    margin: 0;
+    padding: 0;
+
+    > li {
+        display: inline-block;
+
+        &::before {
+            content: "• ";
+            margin: 0 0.33em;
+        }
+        &:first-child::before {
+            content: none;
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -253,29 +275,6 @@ input[type=search] {
 }
 
 
-// Generic (media?) block with possibly a header, and maybe a sprite or avatar
-// or whatever later
-.block {
-    margin: 1em;
-    padding: 0.5em;
-
-    background: $container-bg;
-    background: white url(/static/images/textured_paper.png) top left repeat;
-    border: 1px solid #ccc;
-        box-shadow: 1px 1px 2px #ccc;
-
-    > header {
-        margin: -0.5em -0.5em 0.5em;
-        padding: 0.5em;
-
-        background: gray;
-        background: linear-gradient(rgba(#ccc, 0.1), rgba(#ccc, 0.2));
-        background: #f0f0f0 url(/static/images/textured_paper.png) top left repeat;
-    }
-
-}
-
-
 // Ye media object, of course.  But with flexbox!
 .media {
     @include flexbox;
@@ -285,6 +284,16 @@ input[type=search] {
 }
 .media-body {
     @include flex(1);
+}
+
+.media-body--with-footer {
+    @include flexbox;
+    @include flex-direction(column);
+}
+.media-body-main {
+    @include flex(1);
+}
+.media-body-footer {
 }
 
 
@@ -331,21 +340,21 @@ table.table-pretty {
 
         > a {
             display: block;
-            margin: 0.5em;
+            margin: 0 0.5em 0.5em 0;
             height: 2.5em;
             width: 2.5em;
             line-height: 2.5em;
             vertical-align: middle;
             text-align: center;
 
-            background: white;
-            border: 1px solid #e8e8e8;
+            background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
+            border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
 
             &:visited {
                 border-style: dotted;
             }
             &:hover {
-                background: #fcfcfc;
+                background: scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
             }
         }
 

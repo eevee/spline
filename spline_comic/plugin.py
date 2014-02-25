@@ -59,7 +59,7 @@ def build_menu(event):
     # TODO can these be...  cached?  but then how would it be busted.
     # TODO order?
     for comic in session.query(Comic):
-        event.add_item(comic.title, 'comic.most-recent', comic)
+        event.add_item("{} comic".format(comic.title), 'comic.most-recent', comic)
 
 
 def includeme(config):
