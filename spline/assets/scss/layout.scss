@@ -4,6 +4,7 @@
 // config
 
 // primary colors
+$primary-accent: hsl(225, 30%, 50%);
 $header-bg: hsl(225, 30%, 50%);
 $link-color: hsl(210, 70%, 50%);
 $link-visited-color: hsl(255, 70%, 60%);
@@ -14,56 +15,43 @@ $container-bg: #fcfcfc;
 
 $privileged-color: hsl(45, 90%, 75%);
 
-// temp overrides
-$header-bg: lighten(#580140, 10%);
+// temp overrides for floraverse
+$primary-accent: #82015e;
+$header-bg: $primary-accent;
 $link-color: #913152;
 $link-visited-color: #a64763;
+
+// Headers, where zero is the page title
+$h0-color: $primary-accent;
+$h1-color: scale-color($primary-accent, $saturation: -50%);
+$h0-border: scale-color($primary-accent, $saturation: -70%, $lightness: 80%);
+$h1-border: scale-color($primary-accent, $saturation: -70%, $lightness: 90%);
 
 
 // -----------------------------------------------------------------------------
 // main layout
 
 body {
-    background: white url(/static/images/debut_light.png) top left repeat;
+    background: white url(/static/images/debut_light.png) fixed top left repeat;
 
     // TODO need a stick footer, but this is close enough for now
     margin-bottom: 8em;
 }
 
 body > header {
+    z-index: 5;
     position: relative;
-    margin: 0 0 1em;
 
-    background: $header-bg;
-
-    > h1 {
-        font-size: 2em;
-        margin: 0;
-        padding: 0.5em;
-        color: white;
-        font-weight: normal;
-    }
-    > h2 {
-        font-size: 1.33em;
-        margin: 0;
-        padding: 0.75em;
-        color: scale-color($header-bg, $saturation: 30%, $lightness: 70%);
-        font-weight: normal;
-    }
-    > h1 + h2 {
-        margin-top: -0.75em;
-        padding-top: 0;
-    }
+    box-shadow:
+        0 0 3px rgba(black, 0.9);
+    background: $header-bg url(/static/images/debut_dark.png) fixed;
 
     > nav.navbar {
-        // Keep box-shadow above following h1 and h2
-        z-index: 1;
-
-        background: url(/static/images/debut_dark.png) fixed #333;
-        border-bottom: 1px solid #222;
+        background: #222 url(/static/images/debut_dark.png) fixed;
         box-shadow:
-            inset 0 2em 3em -2em rgba(white, 0.2),
-            0 0 3px black;
+            inset 0 -1px 1px -1px rgba(white, 0.5),
+            inset 0 2em 3em -2em rgba(white, 0.2);
+        border-bottom: 1px solid #444;
 
         > ul.global-nav {
             margin: 0;
@@ -95,9 +83,15 @@ body > header {
                     line-height: 1.5;
                 }
                 > a:hover {
-                    background: hsl(225, 20%, 60%);
-                    background: url(/static/images/debut_dark.png) hsl(225, 40%, 70%);
-                    background: hsla(225, 70%, 70%, 0.3);
+                    background: rgba(scale-color($primary-accent, $saturation: -40%, $lightness: 50%), 0.25);
+                }
+
+                > .selected {
+                    box-shadow: inset 0 -0.75em 0.5em -0.5em hsl(0, 0%, 50%);
+                    $bg-color: scale-color($primary-accent, $saturation: -70%, $lightness: -10%);
+                    background: url(/static/images/debut_dark.png) fixed $bg-color;
+                    box-shadow:
+                        inset 0 0.33em 0.33em rgba(black, 0.3);
                 }
             }
 
@@ -111,34 +105,60 @@ body > header {
                 }
             }
         }
-
-        > ul.section-nav {
-            position: absolute;
-            bottom: 1em;
-            right: 1em;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-
-            > li {
-                display: inline-block;
-                margin: 0 0.5em;
-
-                > a {
-                    color: white;
-                }
-            }
-        }
     }
 }
 
 body > .main {
+    position: relative;
+    width: 80%;
+    min-width: 960px;
+    padding: 1em 0;
+    margin: 0 auto;
+
+    border: 1px solid #f4f4f4;
+    background: #fefefe;
+
+    > header {
+        // Page title
+        h1 {
+            font-size: 2em;
+            margin: 1rem;
+            margin-top: 0;
+            padding-bottom: 0.5rem;
+            color: $h0-color;
+            font-weight: normal;
+            border-bottom: 1px solid $h0-border;
+        }
+
+        // Section navigation, on the upper right
+        nav {
+            float: right;
+            margin: 0.5rem;
+            padding: 0;
+
+            > ul {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+
+                > li {
+                    display: inline-block;
+                    margin: 0 0.5em;
+                }
+            }
+        }
+    }
+
     > section {
         margin-left: 1em;
         margin-right: 1em;
 
-        h1, h2 {
-            border-bottom: 1px solid #ccc;
+        h1 {
+            font-size: 1.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid $h1-border;
+            color: $h1-color;
+            font-weight: normal;
         }
     }
 }

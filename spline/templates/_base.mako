@@ -30,16 +30,18 @@
                 ##    % endif
                 ##</li>
             </ul>
-            <ul class="section-nav">
-                <%block name="section_nav"></%block>
-            </ul>
         </nav>
-
-        <%block name="header"></%block>
-        <%block name="subheader"></%block>
     </header>
 
     <div class="main">
+        <header>
+            <nav>
+                <ul>
+                    <%block name="section_nav"></%block>
+                </ul>
+            </nav>
+            <%block name="header"></%block>
+        </header>
 
         ${next.body()}
 

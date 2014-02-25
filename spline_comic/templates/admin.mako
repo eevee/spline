@@ -7,7 +7,6 @@
 <%inherit file="spline_comic:templates/_base.mako" />
 
 <%block name="title">Administrate ${comic.title}</%block>
-<%block name="subheader"><h2>Admin</h2></%block>
 
 <section>
     <h1>Queue</h1>
