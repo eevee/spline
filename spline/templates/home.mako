@@ -2,9 +2,13 @@
 
 <%block name="title">home</%block>
 
-## TODO un-hardcode this
+## TODO un-hardcode these two
 <%block name="head_extra">
     <link rel="alternate" type="application/atom+xml" href="/@@feed">
+</%block>
+## TODO figure out a better story for icons; turn them into data: uris?
+<%block name="section_nav">
+    <li><a href="/@@feed"><img src="/static/images/fugue-icons/feed.png"> RSS</a></li>
 </%block>
 
 <%block name="header"><h1>${request.registry.settings['spline.site_title']}</h1></%block>
