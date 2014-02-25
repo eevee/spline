@@ -31,7 +31,8 @@ $h1-border: scale-color($primary-accent, $saturation: -70%, $lightness: 90%);
 // main layout
 
 body {
-    background: white url(/static/images/debut_light.png) fixed top left repeat;
+    $bg-color: scale-color($primary-accent, $saturation: -80%, $lightness: 85%);
+    background: $bg-color url(/static/images/floraverse-background.png) fixed;
 
     // TODO need a stick footer, but this is close enough for now
     margin-bottom: 8em;
