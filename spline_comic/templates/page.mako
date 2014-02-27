@@ -48,11 +48,15 @@
     }
     .comic-page-image-container {
         display: flex;
+        /* Fallback for browsers without min-content; little janky, though.
+         * TODO is there any better way to do this?  at all? */
+        width: 800px;
         width: -moz-min-content;
         width: -webkit-min-content;
         width: min-content;
         min-width: 600px;
         flex-direction: column;
+        align-items: center;
         margin: 1em auto;
     }
     .comic-page-image {
@@ -62,6 +66,7 @@
         box-shadow: 0 1px 3px hsl(0, 0%, 90%);
     }
     .comic-page-meta {
+        align-self: stretch;
         display: flex;
         margin-top: 0.33em;
         justify-content: space-between;
