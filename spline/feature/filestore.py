@@ -72,7 +72,7 @@ class FilesystemStorage(object):
 
         fh.seek(0)
         parent_dir = self._dir_for(filename)
-        if not parent_dir.isdir():
+        if not parent_dir.is_dir():
             parent_dir.mkdir(parents=True)
         path = parent_dir / filename
 
