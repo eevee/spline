@@ -17,10 +17,8 @@ from sqlalchemy.orm import (
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
-from spline.models.meta import SplineDeclarativeMeta
-
 session = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base(metaclass=SplineDeclarativeMeta)
+Base = declarative_base()
 
 class TZDateTime(types.TypeDecorator):
     impl = types.DateTime
