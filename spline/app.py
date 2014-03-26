@@ -37,7 +37,10 @@ def inject_template_vars(event):
     event['spline_menu'] = menu
 
 
-def main(global_config, **settings):
+def main(args):
+    # args is an argparse Namespace.
+    settings = vars(args)
+
     # Built-in core settings we have to have.  These are part of the app
     # propert and it makes zero sense for either a deployer or a developer to
     # ever change them.
