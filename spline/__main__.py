@@ -35,8 +35,11 @@ def parse_bind(s):
 
 
 def make_parser():
-    parser = argparse.ArgumentParser(description="Run the Spline web app.")
-    parser.add_argument('bind', metavar='bind', type=parse_bind,
+    parser = argparse.ArgumentParser(
+        description="Run the Spline web app.",
+        fromfile_prefix_chars='@',
+    )
+    parser.add_argument('bind', metavar='bind', nargs='?', type=parse_bind,
                         help='what to bind to, either host:port or unix://path')
     parser.add_argument('--dev', action='store_true', dest='spline.debug',
                         help='run in development mode')
@@ -62,6 +65,11 @@ def main():
     args = parser.parse_args()
 
     app = spline.app.main({}, **vars(args))
-    waitress.serve(app, **args.bind)
+    if args.bind:
+        waitress.serve(app, **args.bind)
+    else:
+        return app
 
-main()
+
+if __name__ == '__main__':
+    application = main()
