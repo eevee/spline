@@ -116,7 +116,8 @@ def exception_handler(context, request):
     except Exception:
         response = Response(
             "Whoops, sorry.  Something is HILARIOUSLY wrong.",
-            content_type='text/plain; charset=utf8')
+            content_type='text/plain',
+            charset='utf8')
 
     response.status_int = 500
     return response
