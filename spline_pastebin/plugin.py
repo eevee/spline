@@ -1,14 +1,27 @@
+from collections import namedtuple
+
 from pyramid.events import subscriber
 
-from spline.events import FrontPageActivity
+from spline.events import FrontPageLayout
 from spline.events import BuildMenu
+from spline.models import session
 from spline_pastebin.models import Paste
 
 
-@subscriber(FrontPageActivity)
+FrontPageBlock = namedtuple('FrontPageBlock', ['renderer', 'pastes'])
+
+@subscriber(FrontPageLayout)
 def find_activity(event):
-    event.activity_from_database(
-        Paste, 'spline_pastebin:templates/_lib#render_activity.mako')
+    # TODO proooobably need some kinda helpful shared  date and count limit here
+    # TODO start porting to logic?
+    pastes = session.query(Paste).order_by(Paste.timestamp.desc()).limit(8).all()
+
+    # TODO is this a good idea
+    if pastes:
+        event.blocks.append(FrontPageBlock(
+            renderer='spline_pastebin:templates/_lib#front_page_block.mako',
+            pastes=pastes,
+        ))
 
 
 @subscriber(BuildMenu)

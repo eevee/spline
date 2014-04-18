@@ -1,14 +1,31 @@
+<%!
+    from spline.format import format_datetime, format_filesize
+%>
 <%namespace name="libcore" file="spline:templates/_lib.mako" />
 
-<%def name="render_activity(paste)">
-<div class="-header">
-    <div class="-timestamp"><a href="${request.route_url('pastebin.view', id=paste.id)}">${libcore.timestamp(paste.timestamp)}</a></div>
-    <div class="-title">${paste.nice_title}</div>
-    <div class="-user">
-        ${libcore.user(paste.author)} pasted
-        ${paste.lines}
-        ${u'line' if paste.lines == 1 else u'lines'} of
-        ${paste.syntax or u'plain text'}
+<%def name="paste_list(pastes)">
+<table class="table table-striped table-hover">
+    <tbody>
+        % for paste in pastes:
+        <tr>
+            <td><a href="${request.route_url('pastebin.view', id=paste.id)}">${paste.nice_title}</a></td>
+            <td>${paste.nice_author}</td>
+            <td>${paste.nice_syntax}</td>
+            <td>${format_filesize(paste.size)}</td>
+            <td>${paste.lines}</td>
+            <td>${format_datetime(paste.timestamp)}</td>
+        </tr>
+        % endfor
+    </tbody>
+</table>
+</%def>
+
+
+<%def name="front_page_block(block)">
+<section>
+    <h1>Recent pastes</h1>
+    <div class="block-body">
+        ${paste_list(block.pastes)}
     </div>
-</div>
+</section>
 </%def>
