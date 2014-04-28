@@ -2,3 +2,5 @@
 *.pyc
 *.pyo
 /*.egg-info
+
+/data/filestore/
