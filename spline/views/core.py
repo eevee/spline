@@ -3,9 +3,7 @@ from pyramid.renderers import render_to_response
 from pyramid.response import Response
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
-from sqlalchemy.orm.exc import NoResultFound
 
-from .models import User, session
 from spline.events import FrontPageActivity
 from spline.events import FrontPageLayout
 
@@ -25,31 +23,6 @@ def home(request):
         activity=event.sorted_activity,
         layout=layout,
     )
-
-@view_config(route_name='__core__.login', request_method='GET', renderer='/login.mako')
-def login(request):
-    return dict()
-
-@view_config(route_name='__core__.login', request_method='POST')
-def login__do(request):
-    from pyramid.httpexceptions import HTTPForbidden, HTTPSeeOther
-    from pyramid.security import remember
-
-    # TODO don't allow re-login, implement logout, add real auth, etc etc.
-
-    # TODO key errors...
-    username = request.POST['username']
-
-    try:
-        user = session.query(User).filter_by(name=username).one()
-    except NoResultFound:
-        raise HTTPForbidden(detail="you don't have an account chief")
-
-    if True:
-        headers = remember(request, user.id)
-        return HTTPSeeOther(request.route_url('__core__.home'), headers=headers)
-    else:
-        raise HTTPForbidden
 
 
 ### Search
@@ -97,13 +70,6 @@ def search(request):
     )
 
 
-### Search
-
-@view_config(route_name='__core__.search', renderer='/search-results.mako')
-def search(request):
-    raw_query = request.GET['q']
-
-
 ### Special
 
 @view_config(context=Exception)
@@ -130,6 +96,15 @@ def four_oh_four_handler(context, request):
         status=404,
     )
 
+
+"""
+@forbidden_view_config(append_slash=True, renderer='/error404.mako')
+def four_oh_three_handler(context, request):
+    request.response.status_int = 404
+    return dict(
+        status=404,
+    )
+"""
 
 
 

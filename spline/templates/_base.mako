@@ -7,6 +7,15 @@
   ## TODO FLORAVERSE
   <link rel="icon" type="image/png" href="http://fc07.deviantart.net/fs71/f/2014/025/a/d/mini_by_extyrannomon-d73quix.png">
   <title><%block name="title">somewhere</%block> - ${request.registry.settings.get('spline.site_title', 'spline')}</title>
+
+    ## TODO i would not mind a more smarter javascript load system
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    ## TODO for example this nonsense shouldn't need to be in here
+    <script src="https://login.persona.org/include.js"></script>
+    <script src="${request.static_url('spline:assets/js/persona.js')}"></script>
+
+    <link rel="login" href="${request.route_url('__core__.auth.persona.login')}">
+    <link rel="logout" href="${request.route_url('__core__.auth.logout')}">
 <%block name="head_extra"></%block>
 </head>
 <body>
@@ -31,13 +40,31 @@
                 ##    </form>
                 ##</li>
 
-                ##<li class="nav-auth">
-                ##    % if request.user:
-                ##        <span class="not-a-link">hey ${request.user.name}, sup</span>
-                ##    % else:
-                ##        <a href="${request.route_url('__core__.login')}">log in</a>
-                ##    % endif
-                ##</li>
+                <li class="nav-auth">
+                % if request.user:
+                    <span class="not-a-link" id="current-user"
+                        ## TODO need a better way to manage the weird
+                        ## intermediate state where persona thinks we're logged
+                        ## in but spline thinks we're pending
+                        data-email="${request.session.get('pending_auth', {}).get('persona_email') or request.user.email}">
+                        ${request.user.name}
+                        ## TODO rel isn't actually valid on form; how else to do this?
+                        ## TODO sigh get this style outta here.  also button
+                        ## turns white-text on hover for some reason.
+                        <form rel="logout" style="display: inline-block;" action="${request.route_url('__core__.auth.logout')}" method="POST">
+                            <button type="submit">log out</button>
+                        </form>
+                    </span>
+                % else:
+                    <a rel="login" href="${request.route_url('__core__.auth.login')}"
+                        ## TODO need a better way to manage the weird
+                        ## intermediate state where persona thinks we're logged
+                        ## in but spline thinks we're pending
+                        id="current-user"
+                        data-email="${request.session.get('pending_auth', {}).get('persona_email') or u''}">
+                    log in</a>
+                % endif
+                </li>
             </ul>
         </nav>
 

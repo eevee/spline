@@ -126,6 +126,7 @@ class WikiPage(object):
             new_tree_oid = tb.write()
 
         # Now commit it
+        # TODO fix this to avoid the race condition when updating HEAD
         # TODO at least a username...
         author = pygit2.Signature('spline_wiki', 'spline@localhost')
         self.wiki.repo.create_commit(

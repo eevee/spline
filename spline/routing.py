@@ -13,6 +13,9 @@ from spline.models import session
 
 import re
 
+# TODO this shouldn't be a top-level module.  put in feature, rename feature to
+# something making it more obviously a pyramid plugin?
+
 
 # nb: This is pretty conservative, only stripping out non-identifier-like
 # ASCII.  It can be changed at any time, because slugs are (supposed to be...)

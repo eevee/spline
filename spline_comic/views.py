@@ -140,7 +140,7 @@ def comic_archive(comic, request):
 def comic_admin(comic, request):
     # TODO permissions
     if not request.user:
-        return HTTPForbidden()
+        raise HTTPForbidden
 
     queued_q = (
         session.query(ComicPage)

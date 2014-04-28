@@ -86,9 +86,9 @@ def main(args):
     if debug:
         settings.update({
             # TODO maybe i want to turn these on...  why didn't i?
-            'pyramid.debug_authorization': False,
-            'pyramid.debug_notfound': False,
-            'pyramid.debug_routematch': False,
+            'pyramid.debug_authorization': True,
+            'pyramid.debug_notfound': True,
+            'pyramid.debug_routematch': True,
 
             'pyramid.reload_templates': True,
             'scss.compress': False,
@@ -138,10 +138,16 @@ def main(args):
     config.add_view(route_name='pyscss', view='pyramid_scss.controller.get_scss', renderer='scss', request_method='GET')
 
     # Routes
+    # TODO i'm increasingly unsure about using @@ for everything but also i
+    # don't want to clobber any routes the wiki might use.
     config.add_route('__core__.home', '/')
-    config.add_route('__core__.login', '/@@login')
     config.add_route('__core__.search', '/@@search')
     config.add_route('__core__.feed', '/@@feed')
+
+    config.add_route('__core__.auth.login', '/@@auth/login/')
+    config.add_route('__core__.auth.logout', '/@@auth/logout/')
+    config.add_route('__core__.auth.register', '/@@auth/register/')
+    config.add_route('__core__.auth.persona.login', '/@@auth/login/persona/')
 
 
     config.scan('spline.views')

@@ -4,8 +4,7 @@ from sqlalchemy.schema import Column
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.types import Integer
 from sqlalchemy.types import Unicode
-
-from spline.routing import to_slug
+from sqlalchemy.types import UnicodeText
 
 
 def _make_column(explicit_args, explicit_kwargs, *default_args, **default_kwargs):
@@ -27,6 +26,9 @@ def _make_column(explicit_args, explicit_kwargs, *default_args, **default_kwargs
     return Column(*args, **kwargs)
 
 
+# TODO should this move out of here to a general-purpose sqla hacks module?
+# would fit with extensions to, say, logging.  i need a cool word for that
+# package.
 class DeferredAttribute(object):
     """Minor hackery used with `deferred_attr_factory`."""
     # Hopefully, more or less, self-explanatory.  The __call__ is triggered at
@@ -102,6 +104,16 @@ def SurrogateKeyColumn(*args, **kwargs):
         autoincrement=True)
 
 
+def IdentifierColumn(*args, **kwargs):
+    return _make_column(
+        args, kwargs,
+        UnicodeText,
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+
 def TitleColumn(*args, **kwargs):
     return _make_column(
         args, kwargs,
@@ -111,6 +123,9 @@ def TitleColumn(*args, **kwargs):
 
 @deferred_attr_factory
 def SlugColumn(title_column, *args, **kwargs):
+    # circular import otherwise
+    from spline.routing import to_slug
+
     column = _make_column(args, kwargs, Unicode, nullable=False)
 
     mapped_class = yield column

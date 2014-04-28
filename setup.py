@@ -13,6 +13,7 @@ requires = [
     'transaction',
     'lxml',
     'mako>=0.7.0',
+    'pybrowserid',
     'pyramid_beaker',
     'pyramid_debugtoolbar',
     'pyramid_scss',
@@ -47,6 +48,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     test_suite='spline',
+
     install_requires=requires,
     entry_points="""\
         [paste.app_factory]

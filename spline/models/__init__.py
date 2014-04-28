@@ -4,6 +4,8 @@ import pytz
 from sqlalchemy import (
     Column,
     Integer,
+    ForeignKey,
+    Table,
     UnicodeText,
 )
 
@@ -11,11 +13,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types
 
 from sqlalchemy.orm import (
+    relationship,
     scoped_session,
     sessionmaker,
 )
 
 from zope.sqlalchemy import ZopeTransactionExtension
+
+from spline.models.columns import IdentifierColumn
+from spline.models.columns import SurrogateKeyColumn
 
 session = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -48,5 +54,22 @@ Prose = UnicodeText
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    name = Column(UnicodeText, nullable=False, unique=True, index=True)
+    id = SurrogateKeyColumn()
+    email = IdentifierColumn()
+    name = IdentifierColumn()
+
+
+class Group(Base):
+    __tablename__ = 'groups'
+    id = SurrogateKeyColumn()
+    name = IdentifierColumn()
+
+    users = relationship(
+        User,
+        secondary=Table(
+            'user_groups', Base.metadata,
+            Column('user_id', ForeignKey(User.id), nullable=False, primary_key=True),
+            Column('group_id', ForeignKey(id), nullable=False, primary_key=True),
+        ),
+    )
+
