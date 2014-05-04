@@ -1,6 +1,7 @@
 from sqlalchemy.event import listen
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.schema import Column
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.types import Integer
 from sqlalchemy.types import Unicode
@@ -135,3 +136,44 @@ def SlugColumn(title_column, *args, **kwargs):
 
     title_attr = getattr(mapped_class, title_column.key)
     listen(title_attr, 'set', set_slug)
+
+
+class Unrenderable(str):
+    """String subclass which balks at being rendered directly into a template.
+    Used for prose, which is a string, but which should very rarely be printed
+    out directly.
+    """
+    # The rationale here is that it's very easy to print out trivial Markdown
+    # (e.g. a single line of text) directly and think all is well and good,
+    # then find out later that whoops no that was supposed to be rendered.
+    def __html__(self):
+        raise TypeError(
+            "This string should never be treated as HTML!  "
+            "Perhaps you meant to use render_prose?"
+        )
+
+
+class ProseType(TypeDecorator):
+    # TODO there will almost certainly be a rendered-markdown cache somewhere
+    # down the line; how on earth will that work with this setup?  use a type
+    # that's a composite of the original and its cache?  or, uh, i guess it
+    # depends on where the cache is stored.  hard to foresee from here.
+    impl = Unicode
+
+    def process_bind_param(self, value, dialect):
+        # Python -> database.  Here we do nothing, because an AutoMarkdown is
+        # already a string, which the db adapter should be able to handle just
+        # fine.
+        return value
+
+    def process_result_value(self, value, dialect):
+        # Database -> Python.  Wrap in an Unrenderable so the source can't be
+        # accidentally rendered.
+        return Unrenderable(value)
+
+
+def ProseColumn(*args, **kwargs):
+    return _make_column(
+        args, kwargs,
+        ProseType,
+        nullable=False)

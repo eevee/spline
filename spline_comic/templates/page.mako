@@ -1,4 +1,5 @@
 <%!
+    from spline.display.rendering import render_prose
     from spline.format import format_date
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
@@ -101,7 +102,7 @@
 
 % if page.comment:
 <section class="media-block">
-    <p>${page.comment}</p>
+    ${render_prose(page.comment)}
     —<em>${page.author.name}</em>
 </section>
 % endif

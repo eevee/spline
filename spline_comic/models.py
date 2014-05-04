@@ -19,7 +19,8 @@ from spline.feature.feed import IFeedItem
 from spline.feature.filestore import StoredFile
 from spline.format import format_date
 from spline.models import Base, User
-from spline.models import Prose, TZDateTime, now
+from spline.models import TZDateTime, now
+from spline.models.columns import ProseColumn
 from spline.models.columns import SlugColumn
 from spline.models.columns import SurrogateKeyColumn
 from spline.models.columns import TitleColumn
@@ -96,7 +97,7 @@ class ComicPage(Base):
     file = Column(StoredFile, nullable=False)
     title = TitleColumn()
     title_slug = SlugColumn(title)
-    comment = Column(Prose, nullable=False)
+    comment = ProseColumn()
 
     __table_args__ = (
         UniqueConstraint(page_number, chapter_id, deferrable=True),
