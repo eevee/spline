@@ -97,7 +97,8 @@ class WikiPage(object):
         return self.tree_entry is not None
 
     def read(self):
-        return self.blob.data
+        # TODO wrap in Unrenderable
+        return self.blob.data.decode('utf8')
 
     def write(self, new_data):
         assert self.path

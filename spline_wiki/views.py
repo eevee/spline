@@ -25,17 +25,7 @@ def wiki_view(page, request):
 
     # TODO maybe i should go through git for this too, in case the repo is
     # bare.  bare repo actually sounds like an ok idea.
-    raw_content = page.read()
-
-    import markdown
-    # TODO this should be part of core and used more everywhere
-    # TODO does this cause a huge copy?  can i wrap it more simply...
-    content = Markup(markdown.markdown(
-        raw_content,
-        extensions=[],
-        output_format='html5',
-        safe_mode='escape',
-    ))
+    content = page.read()
 
     return dict(
         path=page.path,
