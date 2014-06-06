@@ -1,11 +1,18 @@
+import types
+
 from sqlalchemy.event import listen
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.schema import Column
+from sqlalchemy.schema import ForeignKey
+from sqlalchemy.orm import class_mapper
+from sqlalchemy.orm import mapper
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.types import TypeEngine
 from sqlalchemy.types import Integer
 from sqlalchemy.types import Unicode
 from sqlalchemy.types import UnicodeText
+from sqlalchemy.util import set_creation_order
 
 
 def _make_column(explicit_args, explicit_kwargs, *default_args, **default_kwargs):
@@ -27,36 +34,79 @@ def _make_column(explicit_args, explicit_kwargs, *default_args, **default_kwargs
     return Column(*args, **kwargs)
 
 
+def copy_creation_order(fromobj, toobj):
+    """Copies the value set by `set_creation_order` from the first argument
+    onto the second.
+    """
+    toobj._creation_order = fromobj._creation_order
+
+
+def sort_ordered_props(props):
+    """Sort an `OrderedProperties` (often used for a list of columns) by the
+    properties' creation order.
+    """
+    props._data.sort(key=lambda k: props[k]._creation_order)
+
+
 # TODO should this move out of here to a general-purpose sqla hacks module?
-# would fit with extensions to, say, logging.  i need a cool word for that
-# package.
-class DeferredAttribute(object):
+class DeferredAttribute(declared_attr):
     """Minor hackery used with `deferred_attr_factory`."""
-    # Hopefully, more or less, self-explanatory.  The __call__ is triggered at
-    # class creation time by declared_attr, which passes in the class itself,
-    # and then we do the "post" setup by listening for mapper_configured.
-    def __init__(self, generator):
-        self.generator = generator
-        self.done = False
+    # Hopefully, more or less, self-explanatory.  The __get__ overrides the
+    # usual behavior of declared_attr and is triggered during class creation
+    # time.  We get the owning class from the descriptor protocol, find the key
+    # we're assigned to by skimming the class dict, and then do post-creation
+    # setup by adding a listener for just before the mapper is configured.
+    def __init__(self, f, args, kwargs):
+        self.f = f
+        self.args = args
+        self.kwargs = kwargs
 
-    def __call__(self, mapped_class):
-        attribute = next(self.generator)
+        set_creation_order(self)
 
-        listen(mapped_class, "mapper_configured", self._on_mapper_configured)
+    def __get__(self, inst, owner):
+        # Should only ever be called on the class, not an instance
+        assert inst is None
+
+        # TODO this is probably all wrong for mixins
+        for key, value in owner.__dict__.items():
+            if value is self:
+                attribute_key = key
+                break
+        else:
+            raise RuntimeError("Couldn't find myself in the class dict??")
+
+        ret = self.f(attribute_key, *self.args, **self.kwargs)
+
+        if isinstance(ret, types.GeneratorType):
+            attribute = next(ret)
+
+            # Save some stuff we'll need in the handler
+            self.generator = ret
+            self.mapped_class = owner
+
+            # This event is fired just before anything is configured, which
+            # makes it a good time to add new columns and properties
+            listen(mapper, "before_configured", self.on_configure, once=True)
+        else:
+            attribute = ret
+
+        # The returned attribute is replacing us, so it should assume our
+        # creation order
+        copy_creation_order(self, attribute)
+
         return attribute
 
-    def _on_mapper_configured(self, mapper, mapped_class):
-        # Only do this setup ONCE!  It's possible for mapper_configured to fire
-        # more than once, in the face of egregious shenanigans.
-        if self.done:
-            return
-        self.done = True
-
+    def on_configure(self):
         # Run the rest of the generator and close it
         try:
-            self.generator.send(mapped_class)
+            self.generator.send(self.mapped_class)
         except StopIteration:
             pass
+        else:
+            raise RuntimeError(
+                "A deferred_attr_factory generator should yield "
+                "no more than once")
+
         self.generator.close()
 
 
@@ -66,30 +116,35 @@ def deferred_attr_factory(f):
     mapped class, but it can also do some further setup after the class is
     fully constructed.
 
-    Because the two steps may happen some time apart, the wrapped function MUST
+    Because the two steps may happen some time apart, the wrapped function may
     be a generator, yielding the object it wants to "return" into the class
     body.  The generator will later be sent the entire class to do with as it
     pleases.
 
-    This is most convenient when making custom column types, because you don't
-    necessarily know the name of the column until after the class is created.
-    For example:
+    The wrapped function will be passed one extra initial argument: the name
+    it's assigned to in the containing class.
+
+    This is mostly useful for adding multiple things to a class, adding event
+    listeners to attributes, or other setup that doesn't work while the class
+    is being constructed and thus can't work with `declared_attr`.  Consider it
+    a way to do `__declare_first__` or `last` without touching the class
+    itself.  For example:
 
         @deferred_attr_factory
-        def make_some_kinda_column(*args):
+        def double_column(key, *args):
             column = Column(*args)
             mapped_class = yield column
-            print(column.key)
+            setattr(mapped_class, key + "2", Column(*args))
 
         class SomeTable(Base):
-            foo = make_some_kinda_column(Integer)
-            # At mapper config time, "foo" will be printed.  Magic!
+            foo = double_column(Integer)
+            # Now we have two identical columns, foo and foo2.  Magic!
     """
 
     def attribute(*args, **kwargs):
         # This happens when the "function" is called in the body of a
         # declarative class.  This is the factory part.
-        return declared_attr(DeferredAttribute(f(*args, **kwargs)))
+        return DeferredAttribute(f, args, kwargs)
 
     return attribute
 
@@ -115,6 +170,34 @@ def IdentifierColumn(*args, **kwargs):
     )
 
 
+@deferred_attr_factory
+def Relationship(key, remote_class, *args, **kwargs):
+    remote_keys = class_mapper(remote_class).primary_key
+    if len(remote_keys) > 1:
+        raise ValueError("Can't (yet?) link to a table with a compound key")
+
+    rel = relationship(remote_class)
+    mapped_class = yield rel
+
+    # TODO split out relationship() kwargs
+    column = _make_column(
+        args, kwargs,
+        ForeignKey(*remote_keys),
+        primary_key=False,
+        nullable=False,
+    )
+
+    setattr(mapped_class, key + '_id', column)
+
+    # TODO i can't assign the column to the class at the correct time because
+    # when we're called it's only halfway through being built  :(  so i have to
+    # dig into some internals to make the column order /look like/ it would be
+    # if the caller had specified the column manually.
+    copy_creation_order(rel, column)
+    sort_ordered_props(mapped_class.__table__.columns)
+    sort_ordered_props(mapped_class.__table__.primary_key.columns)
+
+
 def TitleColumn(*args, **kwargs):
     return _make_column(
         args, kwargs,
@@ -123,7 +206,7 @@ def TitleColumn(*args, **kwargs):
 
 
 @deferred_attr_factory
-def SlugColumn(title_column, *args, **kwargs):
+def SlugColumn(key, title_column, *args, **kwargs):
     # circular import otherwise
     from spline.routing import to_slug
 
@@ -132,9 +215,9 @@ def SlugColumn(title_column, *args, **kwargs):
     mapped_class = yield column
 
     def set_slug(target, value, oldvalue, initiator):
-        setattr(target, title_column.key, to_slug(value))
+        setattr(target, key, to_slug(value))
 
-    title_attr = getattr(mapped_class, title_column.key)
+    title_attr = getattr(mapped_class, key)
     listen(title_attr, 'set', set_slug)
 
 
