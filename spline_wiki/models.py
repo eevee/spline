@@ -100,7 +100,7 @@ class WikiPage(object):
         # TODO wrap in Unrenderable
         return self.blob.data.decode('utf8')
 
-    def write(self, new_data):
+    def write(self, new_data, author_name, author_email, message):
         assert self.path
 
         # Need to rebuild the tree from the bottom up.  Normally you'd do this
@@ -128,13 +128,13 @@ class WikiPage(object):
 
         # Now commit it
         # TODO fix this to avoid the race condition when updating HEAD
-        # TODO at least a username...
-        author = pygit2.Signature('spline_wiki', 'spline@localhost')
+        author = pygit2.Signature(author_name, author_email)
+        committer = pygit2.Signature('spline_wiki', 'spline@localhost')
         self.wiki.repo.create_commit(
             'refs/heads/master',
-            author, author,
-            # TODO lol seriously
-            u'Updating wiki',
+            author,
+            committer,  # helps distinguish web commits from not
+            message,
             new_tree_oid,
             [self.wiki.current_commit().oid],
         )

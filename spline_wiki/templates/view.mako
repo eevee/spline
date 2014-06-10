@@ -3,8 +3,22 @@
 %>
 <%inherit file="/_base.mako" />
 
+<%block name="title">${content.metadata.get('title', ['Untitled'])[-1]}</%block>
+
+## TODO need a better list of wiki operations and whatevers here
+## TODO parent?  breadcrumbs?
+<p>
+    <a href="${request.route_url('wiki', '@@edit', traverse=path)}">edit</a>
+    ·
+    history
+    ·
+    translate??
+    ·
+    talk??
+</p>
+
 hello!  ${path} / ${request.view_name} / ${request.subpath}
 
 <section>
-${render_prose(content)}
+${content}
 </section>

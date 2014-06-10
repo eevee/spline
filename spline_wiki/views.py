@@ -1,8 +1,10 @@
 from markupsafe import Markup
+from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 
+from spline.display.rendering import render_prose
 
 
 @view_config(route_name='wiki', renderer='spline_wiki:templates/view.mako')
@@ -25,7 +27,7 @@ def wiki_view(page, request):
 
     # TODO maybe i should go through git for this too, in case the repo is
     # bare.  bare repo actually sounds like an ok idea.
-    content = page.read()
+    content = render_prose(page.read())
 
     return dict(
         path=page.path,
@@ -39,6 +41,10 @@ def wiki_view(page, request):
     request_method='GET',
     renderer='spline_wiki:templates/edit.mako')
 def wiki_edit(page, request):
+    # TODO perms
+    if not request.user:
+        raise HTTPForbidden
+
     # TODO what if it's not writable?  should we check that now?
     if page.exists:
         raw_content = page.read()
@@ -56,10 +62,19 @@ def wiki_edit(page, request):
     name='edit',
     request_method='POST')
 def wiki_edit__do(page, request):
+    # TODO perms
+    if not request.user:
+        raise HTTPForbidden
+
     # TODO what if it's not writable?  should we check that now?
     # TODO try HARD to do something useful in the case of conflicts!
     # TODO also, notice conflicts.
     # TODO consider wiring the commit process into `transaction`
-    page.write(request.POST['content'])
+    page.write(
+        request.POST['content'],
+        request.user.name,
+        request.user.email,
+        request.POST['message'],
+    )
 
     return HTTPSeeOther(location=request.route_url('wiki', traverse=page.path))
