@@ -1,11 +1,20 @@
 from markupsafe import Markup
 from pyramid.httpexceptions import HTTPForbidden
+from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 
 from spline.display.rendering import render_prose
+from spline.models import User
+from spline.models import session
 
+
+# TODO move regular wiki pages under their own directory namespace, so other
+# stuff doesn't have to worry about conflicting
+# TODO figure out the set of reserved characters in wiki urls so i can add a
+# suffix for translations or whatever?  or maybe just root them, i.e. stick all
+# pages in /wiki/en/path/path/path.
 
 @view_config(route_name='wiki', renderer='spline_wiki:templates/view.mako')
 def wiki_view(page, request):
@@ -78,3 +87,27 @@ def wiki_edit__do(page, request):
     )
 
     return HTTPSeeOther(location=request.route_url('wiki', traverse=page.path))
+
+
+@view_config(
+    route_name='wiki',
+    name='history',
+    request_method='GET',
+    renderer='spline_wiki:templates/history.mako')
+def wiki_history(page, request):
+    if not page.exists:
+        # TODO not sure what should be done here really
+        raise HTTPNotFound
+
+    history = page.get_history()
+
+    if history.all_emails:
+        q = (session.query(User.email, User)
+            .filter(User.email.in_(history.all_emails))
+        )
+        history.native_email_map = dict(q)
+
+    return dict(
+        page=page,
+        history=history,
+    )

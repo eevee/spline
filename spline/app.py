@@ -41,6 +41,8 @@ def main(args):
     # args is an argparse Namespace.
     settings = vars(args)
 
+    datadir = Path(settings['spline.datadir'])
+
     # Built-in core settings we have to have.  These are part of the app
     # propert and it makes zero sense for either a deployer or a developer to
     # ever change them.
@@ -48,6 +50,7 @@ def main(args):
     settings.update({
         'pyramid.default_locale_name': u'en',
         'mako.directories': ['spline:templates'],
+        'mako.module_directory': str(datadir / '_mako_cache'),
         'mako.strict_undefined': True,
 
         # TODO: should not need to hardcode a weird archetype path here  :)
@@ -68,7 +71,6 @@ def main(args):
     # TODO this should be a little more organized and enforce that the
     # directories exist and are writable by us -- or at least that the datadir
     # itself is?
-    datadir = Path(settings['spline.datadir'])
     settings.update({
         'spline.search.whoosh.path': str(datadir / 'whoosh-index'),
         'spline.wiki.root': str(datadir / 'wiki'),

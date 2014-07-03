@@ -1,3 +1,6 @@
+from collections import namedtuple
+from datetime import datetime
+
 import pygit2
 from pyramid.decorator import reify
 
@@ -7,6 +10,7 @@ from pyramid.decorator import reify
 # have the formatting problem)
 
 WIKI_ENCODING = 'UTF-8'
+SYSTEM_SIGNATURE = pygit2.Signature('System user', 'spline@localhost')
 
 
 # TODO write an interface and use that to plug this into the registry
@@ -24,10 +28,10 @@ class Wiki(object):
             empty_tree = treebuilder.write()
             # HERE'S A GOOD QUESTION: what the fuck is the email here?
             # TODO if users have email addresses then we can use those...
-            author = pygit2.Signature('spline_wiki', 'spline@localhost')
             self.repo.create_commit(
                 'refs/heads/master',
-                author, author,
+                SYSTEM_SIGNATURE,
+                SYSTEM_SIGNATURE,
                 u'Initial commit of an empty wiki',
                 empty_tree,
                 [],  # parents
@@ -41,6 +45,12 @@ class Wiki(object):
 
     def read(self, path):
         return u''
+
+    def get_history(self):
+        return self.repo.walk(
+            self.current_commit().oid,
+            pygit2.GIT_SORT_TOPOLOGICAL | pygit2.GIT_SORT_TIME,
+        )
 
 
 class WikiPage(object):
@@ -129,12 +139,48 @@ class WikiPage(object):
         # Now commit it
         # TODO fix this to avoid the race condition when updating HEAD
         author = pygit2.Signature(author_name, author_email)
-        committer = pygit2.Signature('spline_wiki', 'spline@localhost')
         self.wiki.repo.create_commit(
             'refs/heads/master',
             author,
-            committer,  # helps distinguish web commits from not
+            SYSTEM_SIGNATURE,  # helps distinguish web commits from not
             message,
             new_tree_oid,
             [self.wiki.current_commit().oid],
         )
+
+    def get_history(self):
+        # TODO this needs a billion things.  limiting + pagination, looking up
+        # users...  well maybe that's it actually
+        path = '/'.join(self.git_path)  # TODO ugh christ
+        history = WikiHistory()
+        for commit in self.wiki.get_history():
+            if path in commit.tree:
+                history.add_commit(commit)
+
+        return history
+
+
+WikiChange = namedtuple('WikiChange', ('time', 'author', 'git_author', 'committer', 'git_committer', 'message'))
+
+
+class WikiHistory:
+    def __init__(self):
+        self.commits = []
+        self.all_emails = set()
+        self.native_email_map = {}
+
+    def add_commit(self, commit):
+        self.commits.append(commit)
+        self.all_emails.add(commit.author.email)
+        self.all_emails.add(commit.committer.email)
+
+    def __iter__(self):
+        for commit in self.commits:
+            yield WikiChange(
+                time=datetime.utcfromtimestamp(commit.commit_time),
+                author=self.native_email_map.get(commit.author.email),
+                git_author=commit.author,
+                committer=self.native_email_map.get(commit.committer.email),
+                git_committer=commit.committer,
+                message=commit.message,
+            )

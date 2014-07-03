@@ -176,7 +176,10 @@ def Relationship(key, remote_class, *args, **kwargs):
     if len(remote_keys) > 1:
         raise ValueError("Can't (yet?) link to a table with a compound key")
 
-    rel = relationship(remote_class)
+    rel = relationship(
+        remote_class,
+        backref=kwargs.pop('backref', None),
+    )
     mapped_class = yield rel
 
     # TODO split out relationship() kwargs

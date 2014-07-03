@@ -10,7 +10,7 @@
 <p>
     <a href="${request.route_url('wiki', '@@edit', traverse=path)}">edit</a>
     ·
-    history
+    <a href="${request.route_url('wiki', '@@history', traverse=path)}">history</a>
     ·
     translate??
     ·
