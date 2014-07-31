@@ -100,6 +100,13 @@
     ${draw_comic_controls(prev_page, page, next_page)}
 </section>
 
+% if transcript.exists:
+<% from spline.display.rendering import render_prose %>
+<section>
+    ${render_prose(transcript.read())}
+</section>
+% endif
+
 % if page.comment:
 <section class="media-block">
     ${render_prose(page.comment)}

@@ -31,7 +31,7 @@ def render_prose(prose):
         return prose
 
     renderer = markdown.Markdown(
-        extensions=['meta'],
+        extensions=['meta', 'def_list'],
         output_format='html5',
         safe_mode='escape',
     )
