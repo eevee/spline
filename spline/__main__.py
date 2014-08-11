@@ -2,10 +2,29 @@
 # NOTE: this code CANNOT EVER go in spline/app.py; running that directly will
 # change its name to __main__ which will make pyramid confused and unhappy.
 import argparse
+import shlex
 
 import waitress
 
 import spline.app
+
+
+class ShlexArgumentParser(argparse.ArgumentParser):
+    """Trivial subclass that overrides how from-file args are parsed."""
+    def convert_arg_line_to_args(self, arg_line):
+        """To make these files not a nightmare to maintain, two changes are
+        made here:
+
+        1. Each line is fed through shlex.split().  So if you want to use
+        spaces or quotes, you MUST quote or escape them.
+        2. Comments (lines beginning with optional whitespace and then a #) are
+        ignored.
+        """
+        arg_line = arg_line.strip()
+        if arg_line.startswith('#'):
+            return []
+
+        return shlex.split(arg_line)
 
 
 def parse_bind(s):
@@ -35,7 +54,7 @@ def parse_bind(s):
 
 
 def make_parser():
-    parser = argparse.ArgumentParser(
+    parser = ShlexArgumentParser(
         description="Run the Spline web app.",
         fromfile_prefix_chars='@',
     )
