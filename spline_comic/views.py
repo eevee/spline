@@ -1,3 +1,4 @@
+from datetime import datetime
 from datetime import timedelta
 import hashlib
 import os
@@ -12,6 +13,7 @@ from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
+import pytz
 
 from spline.models import now
 from spline.models import session
@@ -147,15 +149,26 @@ def comic_admin(comic, request):
     if not request.user:
         raise HTTPForbidden
 
-    queued_q = (
+    # Figure out the starting date for the calendar.  We want to show the
+    # previous four weeks, and start at the beginning of the week.
+    today = comic.current_publication_date
+    weekday_offset = (today.weekday() - 6) % -7
+    start = today + timedelta(days=weekday_offset - 7 * 4)
+
+    # Grab "recent" pages -- any posted in the past two weeks OR in the future.
+    recent_pages = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic == comic)
-        .filter(ComicPage.is_queued)
+        .filter(ComicPage.date_published >= start)
+        .order_by(ComicPage.date_published.desc())
+        .all()
     )
 
     last_queued, queue_next_date = _get_last_queued_date(comic)
-    num_queued = queued_q.count()
+    num_queued = sum(1 for page in recent_pages if page.is_queued)
+
+    day_to_page = {page.date_published.date(): page for page in recent_pages}
 
     chapters = (
         session.query(ComicChapter)
@@ -165,12 +178,24 @@ def comic_admin(comic, request):
         .all()
     )
 
+    # Express calendar in dates.  Go at least four weeks into the future, OR
+    # one week beyond the last queued comic (for some padding).
+    calendar_start = start.date()
+    calendar_end = max(
+        max(day_to_page) + timedelta(days=7),
+        today.date() + timedelta(days=7 * 4),
+    )
+
     return dict(
         comic=comic,
         chapters=chapters,
         num_queued=num_queued,
         last_queued=last_queued,
         queue_next_date=queue_next_date,
+
+        day_to_page=day_to_page,
+        calendar_start=calendar_start,
+        calendar_end=calendar_end,
     )
 
 

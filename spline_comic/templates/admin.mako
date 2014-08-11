@@ -1,5 +1,6 @@
 <%!
-    from calendar import day_name
+    import calendar
+    from datetime import timedelta
 
     from spline.format import format_date
     from spline_comic.models import END_OF_TIME
@@ -21,18 +22,92 @@
     <p>Your queue is empty.  No new pages will be posted until you add more.</p>
     % endif
 
+    <style>
+    .calendar {
+        margin-bottom: 1em;
+
+        text-align: center;
+    }
+    .calendar td {
+        width: 2em;
+        border: 1px solid #e0e0e0;
+    }
+    .calendar .calendar-month-0 {
+        background: white;
+    }
+    .calendar .calendar-month-1 {
+        background: #f6f6f6;
+    }
+    .calendar .calendar-month-name {
+        transform: rotate(-90deg);
+    }
+    .calendar .calendar-today {
+        background: hsl(60, 100%, 70%);
+    }
+    </style>
     <form action="${request.route_url('comic.save-queue', comic)}" method="POST">
-        <p>
-            Queued pages are posted on:
-            % for i, name in enumerate(day_name):
-                <label>
-                    <input type="checkbox" name="weekday" value="${i}"
-                        ${u"checked" if str(i) in comic.config_queue else u""}>
-                    <span class="checked-label">${name}</span>
-                </label>
-            % endfor
-            <button type="submit">Save</button>
-        </p>
+        <table class="calendar comic-calendar">
+            <caption>Post queued pages on:</caption>
+            <thead>
+                <tr>
+                    ## TODO don't use calendar module for this; we never setlocale()
+                    <th></th>
+                    % for wd in (6, 0, 1, 2, 3, 4, 5):
+                    <th>
+                        <label>
+                            <input type="checkbox" name="weekday" value="${wd}"
+                                ${u"checked" if str(wd) in comic.config_queue else u""}>
+                            <span class="checked-label"><br>${calendar.day_abbr[wd]}</span>
+                        </label>
+                    </th>
+                    % endfor
+                </tr>
+            </thead>
+            <% calendar_date = calendar_start %>
+            <% seen_ym = set() %>
+            <tbody>
+                % while calendar_date <= calendar_end:
+                <tr>
+                    <% ym = calendar_date.year, calendar_date.month %>
+                    % if ym not in seen_ym:
+                        <%! import math %>
+                        <%
+                            seen_ym.add(ym)
+                            if ym == (calendar_end.year, calendar_end.month):
+                                lastday = calendar_end.day
+                            else:
+                                __, lastday = calendar.monthrange(*ym)
+
+                            weeks = int(math.ceil((lastday - calendar_date.day + 1) / 7))
+                        %>
+                        <th rowspan="${weeks}" class="calendar-month-${calendar_date.month % 2}">
+                            % if weeks > 1:
+                            <div class="calendar-month-name">${calendar.month_abbr[calendar_date.month]}</div>
+                            % endif
+                        </th>
+                    % endif
+                    % for day in range(7):
+                        <td class="
+                            calendar-month-${calendar_date.month % 2}
+                            % if calendar_date == comic.current_publication_date.date():
+                            calendar-today
+                            % endif
+                        ">
+                            % if calendar_date in day_to_page:
+                            <a href="${request.route_url('comic.page', day_to_page[calendar_date])}">
+                            ${calendar_date.day}
+                            </a>
+                            % else:
+                            ${calendar_date.day}
+                            % endif
+                        </td>
+                        <% calendar_date += timedelta(days=1) %>
+                    % endfor
+                </tr>
+                % endwhile
+            </tbody>
+        </table>
+        <p><button type="submit">Save and update queue</button></p>
     </form>
 </section>
 
