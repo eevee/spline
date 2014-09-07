@@ -13,7 +13,9 @@ def includeme(config):
 
     wiki = Wiki(config.registry.settings['spline.wiki.root'])
 
-    # Routing
-    config.add_route('wiki', '/*traverse', factory=lambda request: wiki)
+    # Routing, of a sort.  Pyramid always tries traversal after all routes fail
+    # to match.
+    # TODO this won't respect the path root, i think, but maybe it shouldn't
+    config.set_root_factory(lambda request: wiki)
 
     config.scan('spline_wiki')

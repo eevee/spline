@@ -77,4 +77,9 @@ def includeme(config):
     drc2 = drc.derive('page_id', ComicPage.id, slug=ComicPage.title_slug, relchain=(ComicPage.chapter, ComicChapter.comic))
     config.add_route('comic.page', '/{comic_id}/page/{page_id}/', **drc2.kwargs)
 
+    # TODO lol this is catastrophically bad
+    # TODO maybe add a method for adding more paths?  or reuse some of
+    # pyramid's existing static plumbing?
+    config.registry.settings['scss.asset_path'] += '\nspline_comic:assets/scss'
+
     config.scan('spline_comic')

@@ -1,4 +1,3 @@
-from markupsafe import Markup
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
@@ -8,6 +7,7 @@ from pyramid.view import view_config
 from spline.display.rendering import render_prose
 from spline.models import User
 from spline.models import session
+from spline_wiki.models import WikiPage
 
 
 # TODO move regular wiki pages under their own directory namespace, so other
@@ -16,7 +16,7 @@ from spline.models import session
 # suffix for translations or whatever?  or maybe just root them, i.e. stick all
 # pages in /wiki/en/path/path/path.
 
-@view_config(route_name='wiki', renderer='spline_wiki:templates/view.mako')
+@view_config(context=WikiPage, renderer='spline_wiki:templates/view.mako')
 def wiki_view(page, request):
     # TODO wait what happens if the path is empty
 
@@ -45,7 +45,7 @@ def wiki_view(page, request):
 
 
 @view_config(
-    route_name='wiki',
+    context=WikiPage,
     name='edit',
     request_method='GET',
     renderer='spline_wiki:templates/edit.mako')
@@ -67,7 +67,7 @@ def wiki_edit(page, request):
 
 
 @view_config(
-    route_name='wiki',
+    context=WikiPage,
     name='edit',
     request_method='POST')
 def wiki_edit__do(page, request):
@@ -90,7 +90,7 @@ def wiki_edit__do(page, request):
 
 
 @view_config(
-    route_name='wiki',
+    context=WikiPage,
     name='history',
     request_method='GET',
     renderer='spline_wiki:templates/history.mako')

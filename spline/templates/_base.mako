@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html class="no-js" lang="en">
 <head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='archetype')}">
-  <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='layout')}">
-  ## TODO FLORAVERSE
-  <link rel="icon" type="image/png" href="http://fc07.deviantart.net/fs71/f/2014/025/a/d/mini_by_extyrannomon-d73quix.png">
-  <title><%block name="title">somewhere</%block> - ${request.registry.settings.get('spline.site_title', 'spline')}</title>
+    <meta charset="utf-8">
+    <%block name="head_stylesheets">
+    <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='archetype')}">
+    <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='layout')}">
+    </%block>
+    ## TODO FLORAVERSE
+    <link rel="icon" type="image/png" href="http://fc07.deviantart.net/fs71/f/2014/025/a/d/mini_by_extyrannomon-d73quix.png">
+    <title><%block name="title">somewhere</%block> - ${request.registry.settings.get('spline.site_title', 'spline')}</title>
 
     ## TODO i would not mind a more smarter javascript load system
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>

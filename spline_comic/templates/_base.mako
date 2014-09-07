@@ -1,5 +1,10 @@
 <%inherit file="spline:templates/_base.mako" />
 
+<%block name="head_stylesheets">
+${parent.head_stylesheets()}
+    <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='comic')}">
+</%block>
+
 <%block name="header"><h1>${comic.title}</h1></%block>
 
 <%block name="section_nav">

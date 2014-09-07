@@ -55,10 +55,11 @@ def main(args):
 
         # TODO: should not need to hardcode a weird archetype path here  :)
         # TODO i am not thrilled that only a string works here
+        # TODO: pyramid_scss should learn to do asset specs in imports as well,
+        # but scss needs import hooking for that to work
         'scss.asset_path':
             'spline:assets/scss\n' +
             os.path.join(os.getcwd(), '../archetype.git/scss'),
-
 
         # These are reversed in debug mode
         # TODO scss should really be built and served directly in production
@@ -134,10 +135,6 @@ def main(args):
 
     # Static assets
     config.add_static_view('static', 'assets', cache_max_age=3600)
-    # Sass compilation
-    config.include('pyramid_scss')
-    config.add_route('pyscss', '/css/{css_path:[^/]+}.css')
-    config.add_view(route_name='pyscss', view='pyramid_scss.controller.get_scss', renderer='scss', request_method='GET')
 
     # Routes
     # TODO i'm increasingly unsure about using @@ for everything but also i
@@ -162,7 +159,11 @@ def main(args):
         plugin, route_prefix = plugins.split(':', 1)
         config.include(plugin, route_prefix=route_prefix)
 
-    # Final catch-all route to defer to the wiki
-    config.add_route('__core__.wiki', '/*path')
+    # Sass compilation
+    # TODO this has to appear after the includes, or pyramid_scss won't see any
+    # additional paths added.  needs a real api for doing that
+    config.include('pyramid_scss')
+    config.add_route('pyscss', '/css/{css_path:[^/]+}.css')
+    config.add_view(route_name='pyscss', view='pyramid_scss.controller.get_scss', renderer='scss', request_method='GET')
 
     return config.make_wsgi_app()
