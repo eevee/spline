@@ -124,18 +124,17 @@
 
                 <dt>Chapter</dt>
                 <dd>
-                    <ul>
+                    <select name="chapter">
                       % for chapter in chapters:
-                        <li><label>
-                            <input type="radio" name="chapter" value="${chapter.id}"
+                        <option value="${chapter.id}"
                                 % if loop.first:
-                                checked
+                                selected
                                 % endif
                             >
-                            <span class="checked-label">${chapter.title}</span>
-                        </label></li>
+                            ${chapter.title}
+                        </option>
                       % endfor
-                    </ul>
+                    </select>
                 </dd>
 
                 <dt>Commentary</dt>
