@@ -12,7 +12,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from spline.feature.core import feature_adapter
 from spline.feature.feed import IFeedItem
@@ -21,6 +23,7 @@ from spline.format import format_date
 from spline.models import Base, User
 from spline.models import TZDateTime, now
 from spline.models.columns import ProseColumn
+from spline.models.columns import Relationship
 from spline.models.columns import SlugColumn
 from spline.models.columns import SurrogateKeyColumn
 from spline.models.columns import TitleColumn
@@ -122,7 +125,13 @@ class ComicPage(Base):
 class ComicPageTranscript(Base):
     __tablename__ = 'comic_page_transcripts'
 
-    page_id = Column(ForeignKey(ComicPage.id), primary_key=True, nullable=False)
+    page = Relationship(
+        ComicPage, primary_key=True,
+        backref=backref(
+            'transcripts',
+            collection_class=attribute_mapped_collection('language'),
+        ),
+    )
     language = Column(Unicode(2), primary_key=True, nullable=False)
     # TODO meld this into wiki, i guess, somehow...???
     transcript = Column(UnicodeText, nullable=False)

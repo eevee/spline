@@ -148,6 +148,8 @@ def main(args):
     config.add_route('__core__.auth.register', '/@@auth/register/')
     config.add_route('__core__.auth.persona.login', '/@@auth/login/persona/')
 
+    config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
+
 
     config.scan('spline.views')
     config.scan('spline.feature')

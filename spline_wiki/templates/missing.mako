@@ -5,5 +5,5 @@
 
     <p>There's no such page <code>/${path}</code> in the wiki.</p>
 
-    <p>Perhaps you'd like to <a href="${request.route_url('wiki', '@@edit', traverse=path)}">create it?</a></p>
+    <p>Perhaps you'd like to <a href="${request.resource_url(page, '@@edit')}">create it?</a></p>
 </section>

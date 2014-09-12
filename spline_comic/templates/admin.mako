@@ -116,55 +116,103 @@
 
     <form action="${request.route_url('comic.upload', comic)}" method="POST" enctype="multipart/form-data">
         <fieldset>
-            <dl class="vertical">
-                <dd><input type="file" name="file"></dd>
+            <p><input type="file" name="file"></p>
+            <p><input type="text" name="title" placeholder="Title (optional)"></p>
 
-                <dt>Title</dt>
-                <dd><input type="text" name="title"></dd>
+            <p>
+                Chapter: <select name="chapter">
+                    % for chapter in chapters:
+                    <option value="${chapter.id}"
+                            % if loop.first:
+                            selected
+                            % endif
+                        >
+                        ${chapter.title}
+                    </option>
+                    % endfor
+                </select>
+            </p>
 
-                <dt>Chapter</dt>
-                <dd>
-                    <select name="chapter">
-                      % for chapter in chapters:
-                        <option value="${chapter.id}"
-                                % if loop.first:
-                                selected
-                                % endif
-                            >
-                            ${chapter.title}
-                        </option>
-                      % endfor
-                    </select>
-                </dd>
+            <style>
+                .js-markdown-preview {
+                    display: flex;
+                }
+                .js-markdown-preview textarea {
+                    display: block;
+                    flex: 1;
 
-                <dt>Commentary</dt>
-                <dd><textarea name="comment"></textarea></dd>
+                    ## TODO move to somewhere global
+                    height: 16em;
+                }
+                .js-markdown-preview .js-markdown-preview--preview {
+                    flex: 1;
+                    margin-left: 1em;
+                }
+            </style>
+            <script>
+                // TODO hey you know what would be great?  coffeescript.
+                $(function() {
+                    $('.js-markdown-preview').each(function() {
+                        var $preview = $('<div>', { 'class': 'js-markdown-preview--preview' });
+                        $(this).append($preview);
+                        var $el = $(this);
+                        var timer = null;
+                        var req = null;
+                        var render = function(markdown) {
+                            timer = null;
+                            req = $.ajax({
+                                url: '/api/render-markdown/',
+                                method: 'POST',
+                                data: {markdown: markdown},
+                            });
 
-                <dd>
-                    <label>
-                        <input type="radio" name="when" value="queue" checked>
-                        <span class="checked-label">
-                          % if queue_next_date:
-                            Add this page to your queue, to be published on ${format_date(queue_next_date)}.
-                          % else:
-                            Add this page to your queue.  It will not be published until you select queue dates above.
-                          % endif
-                        </span>
-                    </label>
-                </dd>
-                <dd>
-                    <label>
-                        <input type="radio" name="when" value="now">
-                        <span class="checked-label">
-                          % if num_queued:
-                            Publish this page now, ahead of the ${num_queued} pages in your queue.
-                          % else:
-                            Publish this page now.
-                          % endif
-                        </span>
-                    </label>
-                </dd>
-            </dl>
+                            req.done(function(resp) {
+                                timer = null;
+                                req = null;
+                                $preview.html(resp.markup);
+                                // TODO try to scroll to show the same part
+                                // of the text the user is typing in
+                            });
+                            // TODO uhh failure
+                        };
+                        $(this).find('textarea').on('keypress', function(ev) {
+                            var $textarea = $(this);
+                            if (timer || req) {
+                                return;
+                            }
+                            timer = setTimeout(function() { render($textarea.val()); }, 1000);
+                        });
+                    });
+                });
+            </script>
+            <div class="js-markdown-preview">
+                <textarea name="comment" placeholder="Comment (optional)"></textarea>
+            </div>
+
+            <p>
+                <label>
+                    <input type="radio" name="when" value="queue" checked>
+                    <span class="checked-label">
+                        % if queue_next_date:
+                        Add this page to your queue, to be published on ${format_date(queue_next_date)}.
+                        % else:
+                        Add this page to your queue.  It will not be published until you select queue dates above.
+                        % endif
+                    </span>
+                </label>
+            </p>
+            <p>
+                <label>
+                    <input type="radio" name="when" value="now">
+                    <span class="checked-label">
+                        % if num_queued:
+                        Publish this page now, ahead of the ${num_queued} pages in your queue.
+                        % else:
+                        Publish this page now.
+                        % endif
+                    </span>
+                </label>
+            </p>
 
             <footer><button type="submit">Upload and add to queue</button></footer>
         </fieldset>

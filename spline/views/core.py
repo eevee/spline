@@ -4,6 +4,7 @@ from pyramid.response import Response
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
 
+from spline.display.rendering import render_prose
 from spline.events import FrontPageActivity
 from spline.events import FrontPageLayout
 
@@ -119,3 +120,9 @@ def feed(request):
     )
     feed.populate_from_subscribers()
     return feed
+
+
+@view_config(route_name='__core__.api.render-markdown', request_method='POST', renderer='json')
+def render_markdown(request):
+    markup = render_prose(request.POST['markdown'])
+    return dict(markup=markup)
