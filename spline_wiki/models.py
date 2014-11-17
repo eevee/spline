@@ -15,6 +15,9 @@ SYSTEM_SIGNATURE = pygit2.Signature('System user', 'spline@localhost')
 
 # TODO write an interface and use that to plug this into the registry
 class Wiki(object):
+    __name__ = None
+    __parent__ = None
+
     def __init__(self, path):
         # TODO this should really be in some sort of first-install code.  or
         # app startup code.  wait, that's where it is now.
@@ -54,11 +57,24 @@ class Wiki(object):
 
 
 class WikiPage(object):
+    __scope__ = 'wiki'
+
     def __init__(self, wiki, parts=()):
         self.wiki = wiki
         self.parts = parts
 
     # Pyramid Resource API
+    @property
+    def __name__(self):
+        return self.parts[-1]
+
+    @property
+    def __parent__(self):
+        if len(self.parts) > 1:
+            return WikiPage(self.wiki, self.parts[:-1])
+        else:
+            return self.wiki
+
     def __getitem__(self, key):
         return WikiPage(self.wiki, self.parts + (key,))
 

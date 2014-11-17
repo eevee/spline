@@ -8,9 +8,9 @@
 ## TODO need a better list of wiki operations and whatevers here
 ## TODO parent?  breadcrumbs?
 <p>
-    <a href="${request.resource_url(page, '@@edit')}">edit</a>
+    <a href="${request.resource_url(request.context, '@@edit')}">edit</a>
     ·
-    <a href="${request.route_url(page, '@@history')}">history</a>
+    <a href="${request.resource_url(request.context, '@@history')}">history</a>
     ·
     translate??
     ·
