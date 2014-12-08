@@ -172,15 +172,15 @@ def IdentifierColumn(*args, **kwargs):
 
 @deferred_attr_factory
 def Relationship(key, remote_class, *args, **kwargs):
-    remote_keys = class_mapper(remote_class).primary_key
-    if len(remote_keys) > 1:
-        raise ValueError("Can't (yet?) link to a table with a compound key")
-
     rel = relationship(
         remote_class,
         backref=kwargs.pop('backref', None),
     )
     mapped_class = yield rel
+
+    remote_keys = class_mapper(remote_class).primary_key
+    if len(remote_keys) > 1:
+        raise ValueError("Can't (yet?) link to a table with a compound key")
 
     # TODO split out relationship() kwargs
     column = _make_column(

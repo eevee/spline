@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     Table,
     UnicodeText,
+    Unicode,
 )
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -22,9 +23,11 @@ from zope.sqlalchemy import ZopeTransactionExtension
 
 from spline.models.columns import IdentifierColumn
 from spline.models.columns import SurrogateKeyColumn
+from spline.models.columns import Relationship
 
 session = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
+
 
 class TZDateTime(types.TypeDecorator):
     impl = types.DateTime
@@ -38,6 +41,7 @@ class TZDateTime(types.TypeDecorator):
         if value is None:
             return None
         return value.replace(tzinfo=pytz.utc)
+
 
 def now():
     """Default value for time columns."""
@@ -58,6 +62,13 @@ class User(Base):
     email = IdentifierColumn()
     name = IdentifierColumn()
 
+    def can(self, scope, permission):
+        for group in self.groups:
+            for gp in group.group_permissions:
+                if gp.scope == scope and gp.permission == permission:
+                    return True
+        return False
+
 
 class Group(Base):
     __tablename__ = 'groups'
@@ -71,5 +82,28 @@ class Group(Base):
             Column('user_id', ForeignKey(User.id), nullable=False, primary_key=True),
             Column('group_id', ForeignKey(id), nullable=False, primary_key=True),
         ),
+        backref='groups',
     )
 
+
+class GroupPermission(Base):
+    __tablename__ = 'group_permissions'
+
+    id = SurrogateKeyColumn()
+    group = Relationship(Group, backref='group_permissions')
+    scope = Column(Unicode)
+    permission = Column(Unicode)
+
+    # TODO but wait, this needs to be scoped to a context too; how do i do
+    # that, haha.  give them all a "scope" name, and deny permission to
+    # anything without one?
+
+# TODO train of thought with database:
+# - this needs a migration, obviously.  but also probably needs data.
+# - creating it from scratch also needs data.
+# - migrations really need to be divided into separate plugins.
+# - how would alembic know which plugins to upgrade?
+# - maybe creating tables from scratch should register with alembic, and then
+#   it only upgrades the tables it sees already mentioned.
+# - i probably need a separate utility to wrap these things.  setup, upgrade.
+#   invoke, i guess?  it's python after all.

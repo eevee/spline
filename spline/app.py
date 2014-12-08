@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-from pyramid.authentication import SessionAuthenticationPolicy
-from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.events import BeforeRender
 from pyramid.security import authenticated_userid
@@ -12,19 +10,16 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from spline.events import BuildMenu
 from spline.models import User, session
+from spline.web.auth import DatabaseAuthenticationPolicy
+from spline.web.auth import RoleAuthorizationPolicy
 
 
-def get_user(request):
-    userid = authenticated_userid(request)
-
+def authenticate_userid(userid, request):
     if userid is None:
         return None
 
-    try:
-        return session.query(User).get(userid)
-    except NoResultFound:
-        # TODO should this forget who you are if you don't exist?
-        return None
+    # TODO should this forget who you are if you don't exist?
+    return session.query(User).get(userid)
 
 
 # TODO: GET RID OF THIS THE TOOLBAR FIRES IT ONCE FOR EVERY PANEL WHOOPS
@@ -126,9 +121,9 @@ def main(args):
     config.set_session_factory(session_factory)
 
     # Auth
-    config.set_authentication_policy(SessionAuthenticationPolicy(prefix='__core__.auth.'))
-    config.set_authorization_policy(ACLAuthorizationPolicy())
-    config.add_request_method(get_user, 'user', reify=True)
+    config.set_authentication_policy(DatabaseAuthenticationPolicy())
+    config.set_authorization_policy(RoleAuthorizationPolicy())
+    config.add_request_method(authenticated_userid, 'user', reify=True)
 
     # Events
     config.add_subscriber(inject_template_vars, BeforeRender)

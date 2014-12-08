@@ -16,7 +16,9 @@ from spline_wiki.models import WikiPage
 # suffix for translations or whatever?  or maybe just root them, i.e. stick all
 # pages in /wiki/en/path/path/path.
 
-@view_config(context=WikiPage, renderer='spline_wiki:templates/view.mako')
+@view_config(
+    context=WikiPage,
+    renderer='spline_wiki:templates/view.mako')
 def wiki_view(page, request):
     # TODO wait what happens if the path is empty
 
@@ -47,6 +49,7 @@ def wiki_view(page, request):
 @view_config(
     context=WikiPage,
     name='edit',
+    permission='edit',
     request_method='GET',
     renderer='spline_wiki:templates/edit.mako')
 def wiki_edit(page, request):
