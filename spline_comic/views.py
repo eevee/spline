@@ -67,9 +67,15 @@ def comic_most_recent(comic, request):
     include_queued = bool(request.user)
     prev_page, next_page = get_prev_next_page(page, include_queued)
 
+    # TODO this is duplicated below lol
+    from spline_wiki.models import Wiki
+    wiki = Wiki(request.registry.settings['spline.wiki.root'])
+    transcript = wiki['!comic-pages'][str(page.id)]['en']
+
     ns = dict(
         comic=comic,
         page=page,
+        transcript=transcript,
         prev_page=prev_page,
         next_page=next_page,
     )
