@@ -25,6 +25,10 @@ import spline_qdb.models
 import spline_wiki.models
 target_metadata = spline.models.Base.metadata
 
+# TODO alas this needs doing or stuff added by Relationship won't exist yet  :/
+import sqlalchemy.orm
+sqlalchemy.orm.configure_mappers()
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")

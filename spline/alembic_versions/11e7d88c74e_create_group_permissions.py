@@ -17,9 +17,11 @@ import sqlalchemy as sa
 def upgrade():
     op.create_table('group_permissions',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('group_id', sa.Integer(), nullable=False),
         sa.Column('scope', sa.Unicode(), nullable=True),
         sa.Column('permission', sa.Unicode(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
     )
 
 
