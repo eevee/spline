@@ -35,6 +35,7 @@ END_OF_TIME = pytz.utc.localize(datetime.max)
 
 class Comic(Base):
     __tablename__ = 'comics'
+    __scope__ = 'comic'
 
     id = SurrogateKeyColumn()
     title = TitleColumn()
@@ -72,6 +73,7 @@ class Comic(Base):
 
 class ComicChapter(Base):
     __tablename__ = 'comic_chapters'
+    __scope__ = 'comic-chapter'
 
     id = SurrogateKeyColumn()
     comic_id = Column(Integer, ForeignKey(Comic.id), nullable=False)
@@ -83,6 +85,7 @@ class ComicChapter(Base):
 
 class ComicPage(Base):
     __tablename__ = 'comic_pages'
+    __scope__ = 'comic-page'
 
     id = SurrogateKeyColumn()
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)

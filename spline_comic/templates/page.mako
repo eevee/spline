@@ -34,7 +34,6 @@
 </section>
 
 % if transcript.exists:
-<% from spline.display.rendering import render_prose %>
 <section>
     ${render_prose(transcript.read())}
 </section>
@@ -72,6 +71,7 @@
                 ## times + timezone in the database so the publication date is
                 ## always whatever it was when the page was actually published?
                 ## seems more correct
+                ## TODO FIX THIS FOR THE PAGE TITLE AS WELL FUCK
                 ${format_date(page.comic.timezone.normalize(page.date_published.astimezone(page.comic.timezone)))}
             </div>
         </div>

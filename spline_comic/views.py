@@ -63,8 +63,7 @@ def comic_most_recent(comic, request):
         .first()
     )
 
-    # TODO permissions
-    include_queued = bool(request.user)
+    include_queued = request.has_permission('queue', comic)
     prev_page, next_page = get_prev_next_page(page, include_queued)
 
     # TODO this is duplicated below lol
@@ -89,18 +88,17 @@ def comic_most_recent(comic, request):
 
     return render_to_response(renderer, ns, request=request)
 
+
 @view_config(
     route_name='comic.page',
     request_method='GET',
     renderer='spline_comic:templates/page.mako')
 def comic_page(page, request):
-    # TODO permissions
-    if page.is_queued and not request.user:
+    include_queued = request.has_permission('queue', page.comic)
+    if page.is_queued and not include_queued:
         # 404 instead of 403 to prevent snooping
         return HTTPNotFound()
 
-    # TODO permissions
-    include_queued = bool(request.user)
     prev_page, next_page = get_prev_next_page(page, include_queued)
 
     from spline_wiki.models import Wiki
@@ -129,8 +127,7 @@ def comic_archive(comic, request):
         .options(contains_eager(ComicPage.chapter))
     )
 
-    if not request.user:
-        # TODO permissions
+    if not request.has_permission('queue', comic):
         q = q.filter(~ ComicPage.is_queued)
 
     pages_by_chapter = {}
@@ -148,13 +145,10 @@ def comic_archive(comic, request):
 
 @view_config(
     route_name='comic.admin',
+    permission='admin',
     request_method='GET',
     renderer='spline_comic:templates/admin.mako')
 def comic_admin(comic, request):
-    # TODO permissions
-    if not request.user:
-        raise HTTPForbidden
-
     # Figure out the starting date for the calendar.  We want to show the
     # previous four weeks, and start at the beginning of the week.
     today = comic.current_publication_date
@@ -252,12 +246,9 @@ def _generate_queue_dates(days_of_week, start):
 
 @view_config(
     route_name='comic.save-queue',
+    permission='admin',
     request_method='POST')
 def comic_queue_do(comic, request):
-    # TODO permissions
-    if not request.user:
-        return HTTPForbidden()
-
     # TODO this would be easier with a real validator.
     weekdays = []
     for wd in request.POST.getall('weekday'):
@@ -285,12 +276,9 @@ def comic_queue_do(comic, request):
 
 @view_config(
     route_name='comic.upload',
+    permission='admin',
     request_method='POST')
 def comic_upload_do(comic, request):
-    # TODO permissions
-    if not request.user:
-        return HTTPForbidden()
-
     # TODO validation and all that boring stuff
     file_upload = request.POST['file']
     fh = file_upload.file
