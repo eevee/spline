@@ -36,7 +36,7 @@ def login__do(request):
         raise HTTPForbidden(detail="you don't have an account chief")
 
     if True:
-        headers = remember(request, user.id)
+        headers = remember(request, user)
         # TODO return to same url?
         return HTTPSeeOther(request.route_url('__core__.home'), headers=headers)
     else:
@@ -91,7 +91,7 @@ def login(request):
             redirect=request.route_url('__core__.auth.register'),
         )
     else:
-        request.response.headers.extend(remember(request, user.id))
+        request.response.headers.extend(remember(request, user))
         return dict(
             redirect=request.POST['came_from'],
             success=True,
@@ -133,7 +133,7 @@ def register__do(request):
 
     return HTTPSeeOther(
         location=url,
-        headers=remember(request, user.id),
+        headers=remember(request, user),
     )
 
 
