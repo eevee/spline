@@ -1,19 +1,13 @@
-from datetime import datetime
 from datetime import timedelta
-import hashlib
 import os
 import os.path
-import shutil
-from tempfile import NamedTemporaryFile
 
 from sqlalchemy import func
 from sqlalchemy.orm import contains_eager
-from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
-import pytz
 
 from spline.models import now
 from spline.models import session

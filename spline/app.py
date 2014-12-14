@@ -6,7 +6,6 @@ from pyramid.events import BeforeRender
 from pyramid.security import authenticated_userid
 import pyramid_beaker
 from sqlalchemy import engine_from_config
-from sqlalchemy.orm.exc import NoResultFound
 
 from spline.events import BuildMenu
 from spline.models import User, session

@@ -3,7 +3,6 @@ import datetime
 import pytz
 from sqlalchemy import (
     Column,
-    Integer,
     ForeignKey,
     Table,
     UnicodeText,
