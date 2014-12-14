@@ -66,13 +66,7 @@
             </div>
 
             <div class="-date">
-                ## TODO seems like the model should handle this for me.  also
-                ## this is ludicrously complicated.  maybe i should just store
-                ## times + timezone in the database so the publication date is
-                ## always whatever it was when the page was actually published?
-                ## seems more correct
-                ## TODO FIX THIS FOR THE PAGE TITLE AS WELL FUCK
-                ${format_date(page.comic.timezone.normalize(page.date_published.astimezone(page.comic.timezone)))}
+                ${format_date(page.date_published)}
             </div>
         </div>
 </%def>

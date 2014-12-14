@@ -4,6 +4,7 @@ import tzlocal
 import pytz
 from sqlalchemy import (
     Column,
+    DateTime,
     ForeignKey,
     Integer,
     Unicode,
@@ -89,7 +90,7 @@ class ComicPage(Base):
 
     id = SurrogateKeyColumn()
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
-    date_published = Column(TZDateTime, nullable=False, index=True)
+    date_published = Column(DateTime(timezone=True), nullable=False, index=True)
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
 

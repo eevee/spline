@@ -213,15 +213,15 @@ def SlugColumn(key, title_column, *args, **kwargs):
     # circular import otherwise
     from spline.routing import to_slug
 
-    column = _make_column(args, kwargs, Unicode, nullable=False)
+    column = _make_column(args, kwargs, Unicode, nullable=False, default='')
 
     mapped_class = yield column
 
     def set_slug(target, value, oldvalue, initiator):
-        setattr(target, key, to_slug(value))
+        return to_slug(value)
 
     title_attr = getattr(mapped_class, key)
-    listen(title_attr, 'set', set_slug)
+    listen(title_attr, 'set', set_slug, retval=True)
 
 
 class Unrenderable(str):
