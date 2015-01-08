@@ -6,8 +6,6 @@
     <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='archetype')}">
     <link rel="stylesheet" type="text/css" href="${request.route_url('pyscss', css_path='layout')}">
     </%block>
-    ## TODO FLORAVERSE
-    <link rel="icon" type="image/png" href="http://fc07.deviantart.net/fs71/f/2014/025/a/d/mini_by_extyrannomon-d73quix.png">
     <title><%block name="title">somewhere</%block> - ${request.registry.settings.get('spline.site_title', 'spline')}</title>
 
     ## TODO i would not mind a more smarter javascript load system
@@ -31,6 +29,7 @@
 </head>
 <body>
     <header>
+    <%block name="main_header">
         <nav class="navbar">
             <ul class="global-nav">
                 <li><a class="brand" href="${request.route_url('__core__.home')}">home</a></li>
@@ -38,12 +37,7 @@
                 <li><a href="${request.route_url(route_name, *args, **kwargs)}">${label}</a></li>
                 % endfor
 
-                ## TODO FLORAVERSE
-                <li><a href="http://floraverse.deviantart.com/">deviantArt</a></li>
-                <li><a href="irc://irc.veekun.com/floraverse">Chat</a></li>
-                <li><a href="http://floraverse.tumblr.com/">Tumblr</a></li>
-                <li><a href="http://papayakitty.com/floracast/">Podcast</a></li>
-                <li><a href="http://www.patreon.com/floraverse">Support us</a></li>
+                <%block name="extra_global_nav"></%block>
 
                 ##<li class="nav-search">
                 ##    <form action="${request.route_url('__core__.search')}" method="GET">
@@ -78,10 +72,7 @@
                 </li>
             </ul>
         </nav>
-
-        ## TODO FLORAVERSE
-        <img src="http://papayakitty.com/stayout/flora/florasitebannertransr.png" style="display: block; margin: 0.5rem auto;">
-
+    </%block>
     </header>
 
     <div class="main">

@@ -4,6 +4,7 @@
 
 ## TODO un-hardcode these two
 <%block name="head_extra">
+    ${parent.head_extra()}
     <link rel="alternate" type="application/atom+xml" href="/@@feed">
 </%block>
 ## TODO figure out a better story for icons; turn them into data: uris?

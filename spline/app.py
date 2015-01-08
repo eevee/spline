@@ -31,10 +31,9 @@ def inject_template_vars(event):
     event['spline_menu'] = menu
 
 
-def main(args):
-    # args is an argparse Namespace.
-    settings = vars(args)
-
+def main(global_settings, **settings):
+    # TODO this doesn't actually work as a paste entry point, because the ini
+    # values need converting  :S
     datadir = Path(settings['spline.datadir'])
 
     # Built-in core settings we have to have.  These are part of the app
@@ -43,7 +42,7 @@ def main(args):
     # TODO is this where this kind of thing should go?  seems, y'know, clunky
     settings.update({
         'pyramid.default_locale_name': u'en',
-        'mako.directories': ['spline:templates'],
+        'mako.directories': ['floraverse_com:templates', 'spline:templates'],
         'mako.module_directory': str(datadir / '_mako_cache'),
         'mako.strict_undefined': True,
 
@@ -128,7 +127,15 @@ def main(args):
     config.add_subscriber(inject_template_vars, BeforeRender)
 
     # Static assets
-    config.add_static_view('static', 'assets', cache_max_age=3600)
+    config.add_static_view('static', 'spline:assets', cache_max_age=3600)
+    # Use this instead of a separate static view so that everything lives in
+    # /static and it's possible to replace something without changing code.
+    # Note that the downside here is that you have to use 'spline:assets' even
+    # for assets that don't actually live there!
+    config.override_asset(
+        to_override='spline:assets/',
+        override_with='floraverse_com:assets/',
+    )
 
     # Routes
     # TODO i'm increasingly unsure about using @@ for everything but also i

@@ -83,7 +83,7 @@ def main():
     parser = make_parser()
     args = parser.parse_args()
 
-    app = spline.app.main(args)
+    app = spline.app.main({}, **vars(args))
     if args.bind:
         waitress.serve(app, **args.bind)
     else:
