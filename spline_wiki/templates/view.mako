@@ -17,7 +17,7 @@
     talk??
 </p>
 
-hello!  ${path} / ${request.view_name} / ${request.subpath}
+hello!  ${page.path} / ${request.view_name} / ${request.subpath}
 
 <section>
 ${content}

@@ -33,7 +33,7 @@ def wiki_view(page, request):
         # TODO should actually link to creation page lol
         return render_to_response(
             'spline_wiki:templates/missing.mako',
-            dict(path=page.path),
+            dict(page=page),
             request=request)
 
     # TODO maybe i should go through git for this too, in case the repo is
@@ -41,7 +41,7 @@ def wiki_view(page, request):
     content = render_prose(page.read())
 
     return dict(
-        path=page.path,
+        page=page,
         content=content,
     )
 
@@ -89,7 +89,7 @@ def wiki_edit__do(page, request):
         request.POST['message'],
     )
 
-    return HTTPSeeOther(location=request.route_url('wiki', traverse=page.path))
+    return HTTPSeeOther(location=request.resource_url(page))
 
 
 @view_config(
