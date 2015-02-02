@@ -175,10 +175,9 @@ def comic_admin(comic, request):
     # Express calendar in dates.  Go at least four weeks into the future, OR
     # one week beyond the last queued comic (for some padding).
     calendar_start = start.date()
-    calendar_end = max(
-        max(day_to_page) + timedelta(days=7),
-        today.date() + timedelta(days=7 * 4),
-    )
+    calendar_end = today.date() + timedelta(days=7 * 4)
+    if day_to_page:
+        calendar_end = max(calendar_end, max(day_to_page) + timedelta(days=7))
 
     return dict(
         comic=comic,
