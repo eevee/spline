@@ -18,6 +18,27 @@
     ## TODO parent?  breadcrumbs?
 </%block>
 
+## TODO TODO TODO LOL SUPER GROTESQUE HACK
+## this particular floraverse page direly needs this light styling and there's
+## no way to do it with pure markdown oops
+% if page.path == 'characters':
+<style>
+    .markup img {
+        display: block;
+        float: right;
+        margin-right: 1em;
+        margin-bottom: 1em;
+    }
+    .markup p {
+        clear: both;
+    }
+    ## TODO honestly this should probably be a default
+    .markup h1, .markup h2 {
+        clear: both;
+    }
+</style>
+% endif
+
 <section class="markup">
 ${content}
 </section>
