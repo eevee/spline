@@ -11,6 +11,24 @@
     ${comic.title} page for ${format_date(page.date_published)}
 </%block>
 
+
+${main_section(prev_page, page, next_page)}
+
+% if transcript.exists:
+<section>
+    ${render_prose(transcript.read())}
+</section>
+% endif
+
+% if page.comment:
+<section class="media-block">
+    ${render_prose(page.comment)}
+    —<em>${page.author.name}</em>
+</section>
+% endif
+
+
+<%def name="main_section(prev_page, page, next_page)">
 <section class="comic-page">
     ${draw_comic_controls(prev_page, page, next_page)}
 
@@ -32,20 +50,7 @@
 
     ${draw_comic_controls(prev_page, page, next_page)}
 </section>
-
-% if transcript.exists:
-<section>
-    ${render_prose(transcript.read())}
-</section>
-% endif
-
-% if page.comment:
-<section class="media-block">
-    ${render_prose(page.comment)}
-    —<em>${page.author.name}</em>
-</section>
-% endif
-
+</%def>
 
 <%def name="draw_comic_controls(prev_page, page, next_page)">
         <div class="comic-page-controls">

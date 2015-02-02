@@ -11,8 +11,8 @@
     ## TODO i would not mind a more smarter javascript load system
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     ## TODO for example this nonsense shouldn't need to be in here
-    <script src="https://login.persona.org/include.js"></script>
-    <script src="${request.static_url('spline:assets/js/persona.js')}"></script>
+    ##<script src="https://login.persona.org/include.js"></script>
+    ##<script src="${request.static_url('spline:assets/js/persona.js')}"></script>
 
     ## TODO really need some better way to handle vendored stuff like this.
     <link rel="stylesheet" type="text/css" href="${request.static_url('spline:assets/vendor/chosen-1.1.0/chosen.min.css')}">
@@ -75,7 +75,12 @@
     </%block>
     </header>
 
-    <div class="main">
+    <%block name="main">
+    <main class="tile">
+        ## TODO i increasingly dislike how rigid this structure is, and how it
+        ## ends up outside any section -- impossible for a page to make multiple
+        ## tiles this way.  in practice i think this gets factored out into a
+        ## common intermediate base template anyway, so...
         <header>
             <nav>
                 <ul>
@@ -87,7 +92,8 @@
 
         ${next.body()}
 
-    </div>
+    </main>
+    </%block>
 
     ## Google Analytics cruft
     ## TODO /definitely/ unhardcode this nonsense

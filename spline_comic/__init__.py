@@ -1,1 +1,4 @@
-from spline_comic.plugin import includeme
+from .plugin import comic_plugin
+
+
+includeme = comic_plugin.configure_pyramid

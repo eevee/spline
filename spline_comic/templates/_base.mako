@@ -1,7 +1,7 @@
 <%!
     from pyramid.security import view_execution_permitted
 %>
-<%inherit file="spline:templates/_base.mako" />
+<%inherit file="/_base.mako" />
 
 <%block name="head_stylesheets">
 ${parent.head_stylesheets()}

@@ -8,8 +8,8 @@ $primary-accent: hsl(225, 30%, 50%);
 $secondary-accent: hsl(225, 10%, 40%);
 // TODO FLORAVERSE
 // temp overrides for floraverse
-$primary-accent: #953a34;
-$secondary-accent: #8cbc7c;
+$primary-accent: #9c7873;
+$secondary-accent: #4a9f7c;
 
 $link-color: $secondary-accent;
 $link-visited-color: scale-color(adjust-hue($secondary-accent, 30deg), $lightness: -20%);
@@ -32,7 +32,13 @@ $h1-border: scale-color($primary-accent, $saturation: -70%, $lightness: 90%);
 
 body {
     $bg-color: scale-color($primary-accent, $saturation: -80%, $lightness: 85%);
-    background: $bg-color url(/static/images/floraverse-background.png) fixed;
+    // TODO FLORAVERSE
+    $bg-color: #e7ddd5;  // TODO recalculate primary accent from this?
+    background: url(/static/images/global-background-marble.png) $bg-color fixed;
+    background:
+        url(/static/images/global-background-grass.png) repeat-x,
+        url(/static/images/global-background-marble.png) repeat,
+        $bg-color;
 
     // TODO need a stick footer, but this is close enough for now
     margin-bottom: 8em;
@@ -110,22 +116,66 @@ body > header {
     }
 }
 
-body > .main {
-    position: relative;
-    width: 80%;
-    min-width: 960px;
-    padding: 1em 0;
-    margin: 0 auto;
+.front-page-layout section {
+    @extend .tile;
+    padding: 1em;
+    margin: 1em 0;
+}
 
-    border: 1px solid #f4f4f4;
+.ad {
+    position: relative;
+
+    > a:only-of-type {
+        display: block;
+    }
+
+    &::before {
+        display: block;
+        font-size: 0.5em;
+        line-height: 1;
+        position: absolute;
+        top: -1em;
+        content: 'advertisement';
+        opacity: 0.4;
+    }
+}
+.ad-728x90 {
+    width: 728px;
+    height: 90px;
+    margin: 0 auto;
+    padding: 0;
+
+    // Sorta chump hack, but whatever.  Need a margin when this floats between
+    // the header and main
+    body > & {
+        margin: 1em auto;
+    }
+}
+.ad-160x600 {
+    width: 160px;
+    height: 600px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.tile {
+    border: 1px solid scale-color($primary-accent, $lightness: 50%);
+    border-radius: 0.5em;
+    box-shadow: 1px 1px 3px rgba(gray, 0.3);
     background: #fefefe;
+}
+
+main {
+    position: relative;
+    width: 90%;
+    min-width: 990px;
+    margin: 1em auto;
 
     > header {
         // Page title
         h1 {
             font-size: 2em;
             margin: 1rem;
-            margin-top: 0;
             padding-bottom: 0.5rem;
             color: $h0-color;
             font-weight: normal;
@@ -152,14 +202,18 @@ body > .main {
     }
 
     > section {
-        margin-left: 1em;
-        margin-right: 1em;
-
         h1 {
             font-size: 1.5rem;
             padding-bottom: 0.25rem;
             border-bottom: 1px solid $h1-border;
             color: $h1-color;
+            font-weight: normal;
+        }
+        h2, section h1 {
+            font-size: 1.33rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px dotted scale-color($h1-border, $lightness: 15%);
+            color: scale-color($h1-color, $lightness: 15%);
             font-weight: normal;
         }
     }
@@ -329,6 +383,22 @@ table.table-pretty {
 }
 
 // -----------------------------------------------------------------------------
+// front page layouts -- probably need genericizing, probably need more
+// options, probably need to be usable elsewhere.  or maybe this should just
+// use a grid thing that lives in archetype?
+.front-page-layout {
+    @include flexbox;
+
+    .front-page-main {
+        @include flex(1 0 auto);
+    }
+    .front-page-sidebar {
+        @include flex(none);
+        width: 320px;
+    }
+}
+
+// -----------------------------------------------------------------------------
 // comic stuff that shouldn't live here at all
 
 /*ol*/.comic-page-grid {
@@ -364,5 +434,160 @@ table.table-pretty {
             box-shadow: 0 0 0 2px $privileged-color;
         }
 
+    }
+}
+
+
+
+// TODO FLORAVERSE
+
+.floraverse-header {
+    @include flexbox();
+    z-index: 0;
+    justify-content: center;
+    align-content: flex-start;
+
+    clear: both;  // TODO hack for navbar being rude
+}
+.floraverse-bush-left {
+    position: relative;
+    flex: none;
+    margin-right: -93px;
+}
+.floraverse-banner {
+    flex: none;
+
+    > img {
+        z-index: 1;
+        position: relative;
+        display: block;
+    }
+}
+.floraverse-bush-right {
+    position: relative;
+    flex: none;
+    margin-left: -55px;
+}
+
+.floraverse-bush-words {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.floraverse-button {
+    position: absolute;
+    z-index: 2;
+    display: block;
+
+    img {
+        display: block;
+    }
+    img:first-child {
+        position: absolute;
+        z-index: -1;
+        animation: rotate 6s linear infinite paused;
+    }
+
+    &:hover img:first-child {
+        animation-play-state: running;
+    }
+
+}
+.floraverse-button-deviantart {
+    left: 89px;
+    top: 27px;
+}
+.floraverse-button-twitter {
+    left: 58px;
+    top: 64px;
+}
+.floraverse-button-tumblr {
+    left: 102px;
+    top: 106px;
+}
+.floraverse-button-patreon {
+    left: 51px;
+    top: 114px;
+}
+.floraverse-button-facebook {
+    left: 15px;
+    top: 73px;
+}
+.floraverse-button-rss {
+    right: 47px;
+    top: 94px;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.floraverse-navbar {
+    z-index: -1;
+    font-size: 1.25em;
+    margin-top: -3em;
+    padding: 3em 4em 0.25em;
+
+    color: white;
+    background: #4a9f7c;
+    border: 0.5em solid #3b8c68;
+    border-width: 0 0.25em 0.25em;
+    border-radius: 6em / 3em;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+
+    > ul {
+        @include flexbox;
+        justify-content: space-between;
+
+        margin: 0;
+
+        a, img {
+            display: block;
+        }
+
+        > li {
+            opacity: 0.9;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+}
+
+// hiveworks "jumpbar"
+#ibar {
+    height: 49px;  // word of god
+    padding: 0;
+    margin: 1em 0.5em;
+}
+
+
+// Add some default styling to markup blocks, since they can't easily change
+// styling themselves
+.markup {
+    dl {
+        dt {
+            margin-right: 0.5em;
+            margin-bottom: 0.5em;
+            width: 12em;
+            float: left;
+            color: $primary-accent;
+            text-align: right;
+        }
+        dt::before {
+            content: '';
+            display: block;
+            clear: left;
+        }
+        dt::after {
+            content: ':';
+        }
+        dd {
+            margin: 0.5em 0;
+        }
     }
 }

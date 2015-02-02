@@ -31,6 +31,10 @@ def inject_template_vars(event):
     event['spline_menu'] = menu
 
 
+def config_register_spline_plugin(config, plugin):
+    config.registry.spline_plugins[plugin.name] = plugin
+
+
 def main(global_settings, **settings):
     # TODO this doesn't actually work as a paste entry point, because the ini
     # values need converting  :S
@@ -158,6 +162,16 @@ def main(global_settings, **settings):
     # Plugin loading
     # TODO this could totally be inside the app proper, as long as i know how
     # to restart myself.  mamayo problem?
+    # TODO there are really two steps here, of scanning and then importing.
+    # but i doubt the web app itself wants to scan just to import, right?
+    # TODO now there's both a plugin dict here AND a "registry" in the Plugin
+    # class itself (which is still in spline_comic btw) -- which is correct?
+    # TODO SIGH should i just give up and use setuptools fucking entry points
+    # TODO or actually maybe i should be taking advantage of zope things here
+    # -- you can have named implementations of an interface after all!
+    config.registry.spline_plugins = {}
+    config.add_directive(
+        'register_spline_plugin', config_register_spline_plugin)
     for plugins in settings.get('spline.plugins', ()):
         plugin, route_prefix = plugins.split(':', 1)
         config.include(plugin, route_prefix=route_prefix)
