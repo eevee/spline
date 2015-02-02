@@ -110,3 +110,30 @@ def get_first_pages_for_comics(comics):
         .filter(ComicChapter.comic_id.in_(comic_ids))
         .all()
     )
+
+
+def get_prev_next_page(page, include_queued):
+    if not page:
+        return None, None
+
+    prev_page = (
+        session.query(ComicPage)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic_id == page.comic.id)
+        .filter(ComicPage.order < page.order)
+        .order_by(ComicPage.order.desc())
+        .first()
+    )
+    next_page = (
+        session.query(ComicPage)
+        .join(ComicPage.chapter)
+        .filter(ComicChapter.comic_id == page.comic.id)
+        .filter(ComicPage.order > page.order)
+        .order_by(ComicPage.order.asc())
+        .first()
+    )
+
+    if next_page and next_page.is_queued and not include_queued:
+        next_page = None
+
+    return prev_page, next_page

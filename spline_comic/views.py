@@ -11,36 +11,10 @@ from pyramid.view import view_config
 
 from spline.models import now
 from spline.models import session
+from spline_comic.logic import get_prev_next_page
 from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
 from spline_comic.models import END_OF_TIME
-
-
-def get_prev_next_page(page, include_queued):
-    if not page:
-        return None, None
-
-    prev_page = (
-        session.query(ComicPage)
-        .join(ComicPage.chapter)
-        .filter(ComicChapter.comic_id == page.comic.id)
-        .filter(ComicPage.order < page.order)
-        .order_by(ComicPage.order.desc())
-        .first()
-    )
-    next_page = (
-        session.query(ComicPage)
-        .join(ComicPage.chapter)
-        .filter(ComicChapter.comic_id == page.comic.id)
-        .filter(ComicPage.order > page.order)
-        .order_by(ComicPage.order.asc())
-        .first()
-    )
-
-    if next_page and next_page.is_queued and not include_queued:
-        next_page = None
-
-    return prev_page, next_page
 
 
 @view_config(
