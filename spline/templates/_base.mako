@@ -10,9 +10,6 @@
 
     ## TODO i would not mind a more smarter javascript load system
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-    ## TODO for example this nonsense shouldn't need to be in here
-    ##<script src="https://login.persona.org/include.js"></script>
-    ##<script src="${request.static_url('spline:assets/js/persona.js')}"></script>
 
     ## TODO really need some better way to handle vendored stuff like this.
     <link rel="stylesheet" type="text/css" href="${request.static_url('spline:assets/vendor/chosen-1.1.0/chosen.min.css')}">
@@ -22,9 +19,6 @@
             $('select').chosen();
         });
     </script>
-
-    <link rel="login" href="${request.route_url('__core__.auth.persona.login')}">
-    <link rel="logout" href="${request.route_url('__core__.auth.logout')}">
 <%block name="head_extra"></%block>
 </head>
 <body>

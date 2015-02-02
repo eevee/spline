@@ -151,7 +151,6 @@ def main(global_settings, **settings):
     config.add_route('__core__.auth.login', '/@@auth/login/')
     config.add_route('__core__.auth.logout', '/@@auth/logout/')
     config.add_route('__core__.auth.register', '/@@auth/register/')
-    config.add_route('__core__.auth.persona.login', '/@@auth/login/persona/')
 
     config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
 

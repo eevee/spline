@@ -60,6 +60,7 @@ class User(Base):
     id = SurrogateKeyColumn()
     email = IdentifierColumn()
     name = IdentifierColumn()
+    password = Column(Unicode, nullable=False)
 
     def can(self, scope, permission):
         for group in self.groups:

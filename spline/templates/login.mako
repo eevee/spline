@@ -5,14 +5,14 @@
 <section>
     <h1>Log in</h1>
 
-    <form action="${request.route_url('__core__.login')}" method="POST">
+    <form action="" method="POST">
         <fieldset>
             <dl class="horizontal">
                 <dt><label>Name</label></dt>
                 <dd><input type="text" name="username" value=""></dd>
 
                 <dt><label>Password</label></dt>
-                <dd>honor system  :)</dd>
+                <dd><input type="password" name="password" value=""></dd>
 
                 <dd><button type="submit">Log in</button></dd>
             </dl>

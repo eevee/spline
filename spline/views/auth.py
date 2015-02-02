@@ -1,6 +1,6 @@
-from browserid import RemoteVerifier
-from browserid.errors import TrustError
+import bcrypt
 from sqlalchemy.orm.exc import NoResultFound
+from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.security import forget, remember
 from pyramid.view import view_config
@@ -35,7 +35,9 @@ def login__do(request):
     except NoResultFound:
         raise HTTPForbidden(detail="you don't have an account chief")
 
-    if True:
+    given_pw = request.POST['password'].encode('utf8')
+    actual_pw = user.password.encode('ascii')
+    if actual_pw == bcrypt.hashpw(given_pw, actual_pw):
         headers = remember(request, user)
         # TODO return to same url?
         return HTTPSeeOther(request.route_url('__core__.home'), headers=headers)
@@ -65,41 +67,6 @@ def logout__do(request):
         return HTTPSeeOther(return_url, headers=headers)
 
 
-# TODO csrf here plz -- also everywhere.
-@view_config(route_name='__core__.auth.persona.login', renderer='json')
-def login(request):
-    # Verify the assertion and get the email of the user
-    verifier = RemoteVerifier([request.host_url])
-    try:
-        data = verifier.verify(request.POST['assertion'])
-    except (ValueError, TrustError) as exc:
-        log.exception("Bad Persona login: {!r}".format(exc))
-        raise HTTPBadRequest("Invalid Persona assertion!")
-    email = data['email']
-
-    # Now either log us in immediately, or redirect to the registration page
-    try:
-        user = session.query(User).filter_by(email=email).one()
-    except NoResultFound:
-        request.session['pending_auth'] = dict(
-            persona_email=email,
-            return_to=request.POST['came_from'],
-        )
-
-        return dict(
-            success=True,
-            redirect=request.route_url('__core__.auth.register'),
-        )
-    else:
-        request.response.headers.extend(remember(request, user))
-        return dict(
-            redirect=request.POST['came_from'],
-            success=True,
-        )
-
-
-#@view_config(
-#    route_name='__core__.auth.persona.verify',
 
 
 @view_config(
@@ -107,6 +74,9 @@ def login(request):
     request_method='GET',
     renderer='/register.mako')
 def register(request):
+    # TODO finish this
+    raise HTTPForbidden
+
     # TODO any better way to handle these clearly-inappropriate cases?
     if request.user or 'pending_auth' not in request.session:
         return HTTPSeeOther(location=request.route_url('__core__.home'))
@@ -117,6 +87,9 @@ def register(request):
     route_name='__core__.auth.register',
     request_method='POST')
 def register__do(request):
+    # TODO finish this
+    raise HTTPForbidden
+
     # TODO check for duplicate username haha.
     # TODO and er duplicate email, which is less likely to happen i suppose
     user = User(
