@@ -1,4 +1,3 @@
-from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
@@ -53,10 +52,6 @@ def wiki_view(page, request):
     request_method='GET',
     renderer='spline_wiki:templates/edit.mako')
 def wiki_edit(page, request):
-    # TODO perms
-    if not request.user:
-        raise HTTPForbidden
-
     # TODO what if it's not writable?  should we check that now?
     if page.exists:
         raw_content = page.read()
@@ -72,12 +67,9 @@ def wiki_edit(page, request):
 @view_config(
     context=WikiPage,
     name='edit',
+    permission='edit',
     request_method='POST')
 def wiki_edit__do(page, request):
-    # TODO perms
-    if not request.user:
-        raise HTTPForbidden
-
     # TODO what if it's not writable?  should we check that now?
     # TODO try HARD to do something useful in the case of conflicts!
     # TODO also, notice conflicts.
