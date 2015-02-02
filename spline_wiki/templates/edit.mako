@@ -5,11 +5,15 @@
 <%block name="title">Edit ${page.path}</%block>
 
 <section>
-    <h1>Edit ${page.path}</h1>
+    <h1>Edit /${page.path}</h1>
 
     <form action="" method="POST">
-        <textarea name="content" rows="30" cols="100">${raw_content}</textarea>
-        <input type="text" name="message" size="50" placeholder="Describe your change">
-        <button>Save</button>
+        <p>
+            <textarea class="fill" name="content" rows="30" cols="100">${raw_content}</textarea>
+        </p>
+        <p>
+            <input type="text" name="message" size="50" placeholder="Describe your change">
+            <button type="submit">Save</button>
+        </p>
     </form>
 </section>

@@ -5,20 +5,19 @@
 
 <%block name="title">${content.metadata.get('title', ['Untitled'])[-1]}</%block>
 
-## TODO need a better list of wiki operations and whatevers here
-## TODO parent?  breadcrumbs?
-<p>
-    <a href="${request.resource_url(request.context, '@@edit')}">edit</a>
-    ·
-    <a href="${request.resource_url(request.context, '@@history')}">history</a>
-    ·
-    translate??
-    ·
-    talk??
-</p>
+<%block name="header"><h1>${content.metadata.get('title', ['Untitled'])[-1]}</h1></%block>
 
-hello!  ${page.path} / ${request.view_name} / ${request.subpath}
+<%block name="section_nav">
+    ## TODO would be nice to use view_execution_permitted here, too
+  % if request.has_permission('edit', page):
+    <li><a href="${request.resource_url(page, '@@edit')}">edit</a></li>
+  % endif
+    <li><a href="${request.resource_url(page, '@@history')}">history</a></li>
+    ## TODO need a better list of wiki operations and whatevers here
+    ## TODO translate?  talk?
+    ## TODO parent?  breadcrumbs?
+</%block>
 
-<section>
+<section class="markup">
 ${content}
 </section>
