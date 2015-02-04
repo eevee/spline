@@ -442,20 +442,20 @@ table.table-pretty {
 // TODO FLORAVERSE
 
 .floraverse-header {
-    @include flexbox();
+    @include flexbox;
     z-index: 0;
-    justify-content: center;
-    align-content: flex-start;
+    @include justify-content(center);
+    @include align-content(flex-start);
 
     clear: both;  // TODO hack for navbar being rude
 }
 .floraverse-bush-left {
     position: relative;
-    flex: none;
+    @include flex(none);
     margin-right: -93px;
 }
 .floraverse-banner {
-    flex: none;
+    @include flex(none);
 
     > img {
         z-index: 1;
@@ -465,7 +465,7 @@ table.table-pretty {
 }
 .floraverse-bush-right {
     position: relative;
-    flex: none;
+    @include flex(none);
     margin-left: -55px;
 }
 
@@ -486,10 +486,12 @@ table.table-pretty {
     img:first-child {
         position: absolute;
         z-index: -1;
+        -webkit-animation: rotate 6s linear infinite paused;
         animation: rotate 6s linear infinite paused;
     }
 
     &:hover img:first-child {
+        -webkit-animation-play-state: running;
         animation-play-state: running;
     }
 
@@ -519,6 +521,10 @@ table.table-pretty {
     top: 94px;
 }
 
+@-webkit-keyframes rotate {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
 @keyframes rotate {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -540,7 +546,7 @@ table.table-pretty {
 
     > ul {
         @include flexbox;
-        justify-content: space-between;
+        @include justify-content(space-between);
 
         margin: 0;
 
