@@ -35,6 +35,26 @@ def config_register_spline_plugin(config, plugin):
     config.registry.spline_plugins[plugin.name] = plugin
 
 
+# TODO this is still in progress -- splitting the core stuff into a plugin as
+# well
+def core_plugin_includeme(config):
+    # Routes
+    # TODO i'm increasingly unsure about using @@ for everything but also i
+    # don't want to clobber any routes the wiki might use.
+    config.add_route('__core__.home', '/')
+    config.add_route('__core__.search', '/@@search')
+    config.add_route('__core__.feed', '/@@feed')
+
+    config.add_route('__core__.auth.login', '/@@auth/login/')
+    config.add_route('__core__.auth.logout', '/@@auth/logout/')
+    config.add_route('__core__.auth.register', '/@@auth/register/')
+
+    config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
+
+    config.scan('spline.views')
+    config.scan('spline.feature')
+
+
 def main(global_settings, **settings):
     # TODO this doesn't actually work as a paste entry point, because the ini
     # values need converting  :S
@@ -141,22 +161,8 @@ def main(global_settings, **settings):
         override_with='floraverse_com:assets/',
     )
 
-    # Routes
-    # TODO i'm increasingly unsure about using @@ for everything but also i
-    # don't want to clobber any routes the wiki might use.
-    config.add_route('__core__.home', '/')
-    config.add_route('__core__.search', '/@@search')
-    config.add_route('__core__.feed', '/@@feed')
-
-    config.add_route('__core__.auth.login', '/@@auth/login/')
-    config.add_route('__core__.auth.logout', '/@@auth/logout/')
-    config.add_route('__core__.auth.register', '/@@auth/register/')
-
-    config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
-
-
-    config.scan('spline.views')
-    config.scan('spline.feature')
+    # Load core stuff first
+    config.include(core_plugin_includeme)
 
     # Plugin loading
     # TODO this could totally be inside the app proper, as long as i know how

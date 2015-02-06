@@ -1,3 +1,4 @@
+from pyramid.httpexceptions import HTTPMovedPermanently
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
@@ -21,15 +22,26 @@ from spline_wiki.models import WikiPage
 def wiki_view(page, request):
     # TODO wait what happens if the path is empty
 
+    # If we got here and the URL has no trailing slash, redirect and add it.
+    # (Only files and /@@foo are allowed to not have a trailing slash.)
+    # TODO any cleaner way to do this, or cleaner place to do it?  i can't use
+    # append_slash because core has dibs on the notfound view, and anyway i
+    # want a consistent url for pages that /do/ exist too
+    if not request.path.endswith('/'):
+        new_url = request.path_url + '/'
+        if request.query_string:
+            new_url += '?'
+            new_url += request.query_string
+        raise HTTPMovedPermanently(location=new_url)
+
     if not page.exists:
         # TODO what if it exists, but is a directory, or unreadable, or etc.?
-        # TODO i wish this were a separate endpoint but i guess it doens't
-        # matter
-        # TODO should this be a 404?  i'm inclined to think so
         # TODO should offer spelling suggestions...  eventually
         # TODO should examine the hierarchy to see if the parent exist, or any
         # children exist
-        # TODO should actually link to creation page lol
+        # TODO possibly a URL containing a dot somewhere (or @@, or whatever)
+        # should not end up here?
+        request.response.status_int = 404
         return render_to_response(
             'spline_wiki:templates/missing.mako',
             dict(page=page),
