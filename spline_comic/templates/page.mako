@@ -4,31 +4,26 @@
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
 
-<%block name="title">
-    % if page.title:
-    ${page.title} -
-    % endif
-    ${comic.title} page for ${format_date(page.date_published)}
-</%block>
+<%!
+def title_for_page(page):
+    if page.title:
+        prefix = page.title + ' - '
+    else:
+        prefix = ''
+    return "{prefix}{title} page for {date}".format(
+        prefix=prefix,
+        title=page.comic.title,
+        date=format_date(page.date_published),
+    )
+%>
+
+<%block name="title">${title_for_page(page)}</%block>
 
 
-${main_section(prev_page, page, next_page)}
-
-% if transcript.exists:
-<section>
-    ${render_prose(transcript.read())}
-</section>
-% endif
-
-% if page.comment:
-<section class="media-block">
-    ${render_prose(page.comment)}
-    —<em>${page.author.name}</em>
-</section>
-% endif
+${main_section(prev_page, page, next_page, transcript)}
 
 
-<%def name="main_section(prev_page, page, next_page)">
+<%def name="main_section(prev_page, page, next_page, transcript=None)">
 <section class="comic-page">
     ${draw_comic_controls(prev_page, page, next_page)}
 
@@ -50,7 +45,48 @@ ${main_section(prev_page, page, next_page)}
 
     ${draw_comic_controls(prev_page, page, next_page)}
 </section>
+
+% if transcript and transcript.exists:
+<section>
+    ${render_prose(transcript.read())}
+</section>
+% endif
+
+% if page.comment:
+<section class="media-block">
+    ${render_prose(page.comment)}
+    —<em>${page.author.name}</em>
+</section>
+% endif
+
+## TODO i don't like this globally-unique id thing, though, granted, it's
+## unlikely there'd be more than one disqus thread on a single page
+<section class="comments">
+    <h1>Comments</h1>
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        ## TODO FLORAVERSE
+        var disqus_shortname = 'floraverse';
+        ## Note: this block might be included on pages that aren't the comic
+        ## page (most notably the homepage!), so we mustn't assume the disqus
+        ## defaults are okay
+        ## TODO need a standard html-safe jsonify thing (or a block that changes the filter, like buck's JS?)
+        ## TODO do something so that dev doesn't snag the url first?  or is that not a problem with full uri?
+        <% import json %>
+        var disqus_identifier = ${json.dumps(request.route_url('comic.page', page))|n};
+        var disqus_url = ${json.dumps(request.route_url('comic.page', page))|n};
+        var disqus_title = ${json.dumps(title_for_page(page))|n};
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+</section>
 </%def>
+
 
 <%def name="draw_comic_controls(prev_page, page, next_page)">
         <div class="comic-page-controls">
