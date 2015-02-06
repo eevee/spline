@@ -218,10 +218,10 @@ def SlugColumn(key, title_column, *args, **kwargs):
     mapped_class = yield column
 
     def set_slug(target, value, oldvalue, initiator):
-        return to_slug(value)
+        setattr(target, key, to_slug(value))
 
-    title_attr = getattr(mapped_class, key)
-    listen(title_attr, 'set', set_slug, retval=True)
+    title_attr = getattr(mapped_class, title_column.key)
+    listen(title_attr, 'set', set_slug)
 
 
 class Unrenderable(str):
