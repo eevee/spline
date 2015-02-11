@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import time
 from datetime import timedelta
 import os
 import os.path
@@ -8,8 +10,8 @@ from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
+import pytz
 
-from spline.models import now
 from spline.models import session
 from spline_comic.logic import get_prev_next_page
 from spline_comic.models import ComicChapter
@@ -128,7 +130,7 @@ def comic_admin(comic, request):
         session.query(ComicPage)
         .join(ComicPage.chapter)
         .filter(ComicChapter.comic == comic)
-        .filter(ComicPage.date_published >= start)
+        .filter(ComicPage.date_published >= start.astimezone(pytz.utc))
         .order_by(ComicPage.date_published.desc())
         .all()
     )
@@ -137,6 +139,7 @@ def comic_admin(comic, request):
     num_queued = sum(1 for page in recent_pages if page.is_queued)
 
     day_to_page = {page.date_published.date(): page for page in recent_pages}
+    from pprint import pprint; pprint(day_to_page)
 
     chapters = (
         session.query(ComicChapter)
@@ -181,7 +184,10 @@ def _get_last_queued_date(comic):
     if last_queued:
         queue_end_date = last_queued.date_published
     else:
-        queue_end_date = comic.current_publication_date
+        queue_end_date = datetime.combine(
+            comic.current_publication_date.astimezone(pytz.utc),
+            time(),
+        )
     if queue_end_date == END_OF_TIME:
         queue_next_date = None
     else:
@@ -189,6 +195,7 @@ def _get_last_queued_date(comic):
         queue_next_date = next(_generate_queue_dates(weekdays, start=queue_end_date))
 
     return last_queued, queue_next_date
+
 
 def _generate_queue_dates(days_of_week, start):
     if not days_of_week:
@@ -234,7 +241,9 @@ def comic_queue_do(comic, request):
 
     new_dates = _generate_queue_dates(weekdays, start=comic.current_publication_date)
     for page, new_date in zip(queued, new_dates):
-        page.date_published = new_date
+        page.date_published = datetime.combine(
+            new_date, time()).replace(tzinfo=pytz.utc)
+        page.timezone = comic.timezone.zone
 
     comic.config_queue = ''.join(str(wd) for wd in sorted(weekdays))
 
@@ -267,10 +276,14 @@ def comic_upload_do(comic, request):
 
     when = request.POST['when']
     if when == 'now':
-        date_published = now()
+        date_published = datetime.now(pytz.utc)
     elif when == 'queue':
         last_queued, queue_next_date = _get_last_queued_date(comic)
-        date_published = queue_next_date
+        date_published = datetime.combine(
+            queue_next_date,
+            time(tzinfo=comic.timezone),
+        )
+        date_published = date_published.astimezone(pytz.utc)
 
     # Fetch next page number and ordering.  Also need to shift everyone else
     # forwards by one if this is bumping the queue.  Blurgh.
@@ -289,7 +302,6 @@ def comic_upload_do(comic, request):
         .update({ComicPage.order: ComicPage.order + 1})
     )
 
-
     max_page_number, = (
         session.query(func.max(ComicPage.page_number))
         .with_parent(last_chapter)
@@ -307,13 +319,12 @@ def comic_upload_do(comic, request):
         .update({ComicPage.page_number: ComicPage.page_number + 1})
     )
 
-
-
     page = ComicPage(
         file=os.path.basename(filename),
         chapter=last_chapter,
         author=request.user,
         date_published=date_published,
+        timezone=comic.timezone.zone,
 
         order=next_order,
         page_number=next_page_number,

@@ -89,8 +89,16 @@ class ComicPage(Base):
     __scope__ = 'comic-page'
 
     id = SurrogateKeyColumn()
+
+    # TIME IS REALLY HARD???
+    # This is mostly used internally, so it can just be a pytz UTC time.
     timestamp = Column(TZDateTime, nullable=False, index=True, default=now)
-    date_published = Column(DateTime(timezone=True), nullable=False, index=True)
+    # date_published is used all over the dang place, though, and we want to
+    # know what timezone it's supposed to be in, because that controls the date
+    # it claims to be.
+    date_published = Column(TZDateTime, nullable=False, index=True)
+    timezone = Column(Unicode, nullable=False)
+
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
 
@@ -115,6 +123,11 @@ class ComicPage(Base):
     chapter = relationship(ComicChapter, backref='pages')
     comic = association_proxy('chapter', 'comic')
 
+    @hybrid_property
+    def local_date_published(self):
+        tz = pytz.timezone(self.timezone)
+        return tz.normalize(self.date_published.astimezone(tz))
+
     # Some words on how queuing works:
     # As little non-essential state is stored as possible.  Queued pages are
     # just those that are published in the future.  Changing the queue dates
@@ -123,7 +136,7 @@ class ComicPage(Base):
     # set to END_OF_TIME.
     @hybrid_property
     def is_queued(self):
-        return self.date_published > now()
+        return self.date_published > datetime.now(pytz.utc)
 
 
 class ComicPageTranscript(Base):

@@ -28,7 +28,7 @@ session = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 
-class TZDateTime(types.TypeDecorator):
+class UTCDateTime(types.TypeDecorator):
     impl = types.DateTime
 
     def process_bind_param(self, value, dialect):
@@ -42,6 +42,11 @@ class TZDateTime(types.TypeDecorator):
         return value.replace(tzinfo=pytz.utc)
 
 
+# TODO back compat
+TZDateTime = UTCDateTime
+
+
+# TODO this probably needs a rename too
 def now():
     """Default value for time columns."""
     return datetime.datetime.now(pytz.utc)

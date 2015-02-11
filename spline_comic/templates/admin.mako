@@ -15,7 +15,7 @@
     <p>Today's publication date is <b>${format_date(comic.current_publication_date)}</b>.</p>
 
     % if num_queued and last_queued.date_published < END_OF_TIME:
-    <p>You have <b>${num_queued}</b> queued pages, enough to last until ${format_date(last_queued.date_published)}.</p>
+    <p>You have <b>${num_queued}</b> queued pages, enough to last until ${format_date(last_queued.local_date_published)}.</p>
     % elif num_queued:
     <p>You have <b>${num_queued}</b> queued pages, but your queue is <strong>disabled</strong>.  No new pages will be posted until you add one manually or enable queuing.</p>
     % else:

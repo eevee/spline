@@ -15,7 +15,7 @@
     %>
     <h1 id="chapter-${chapter.title_slug}">
         ${chapter.title}
-        <span class="unheader">${format_date(first_page.date_published)} – ${format_date(last_page.date_published)}</span>
+        <span class="unheader">${format_date(first_page.local_date_published)} – ${format_date(last_page.local_date_published)}</span>
     </h1>
 
     <div class="media">

@@ -13,7 +13,7 @@ def title_for_page(page):
     return "{prefix}{title} page for {date}".format(
         prefix=prefix,
         title=page.comic.title,
-        date=format_date(page.date_published),
+        date=format_date(page.local_date_published),
     )
 %>
 
@@ -107,7 +107,7 @@ ${main_section(prev_page, page, next_page, transcript)}
             </div>
 
             <div class="-date">
-                ${format_date(page.date_published)}
+                ${format_date(page.local_date_published)}
             </div>
         </div>
 </%def>

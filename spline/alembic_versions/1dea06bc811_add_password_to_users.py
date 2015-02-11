@@ -1,4 +1,4 @@
-"""empty message
+"""Add password to users
 
 Revision ID: 1dea06bc811
 Revises: 11e7d88c74e
