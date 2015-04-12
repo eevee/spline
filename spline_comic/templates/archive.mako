@@ -6,36 +6,31 @@
 <%block name="title">Archive for ${comic.title}</%block>
 
     ##<p><a href="${request.route_url('comic.admin', comic)}" class="btn warning">Queue settings</a></p>
-## TODO admin-only indication for queued pages?
-% for chapter in chapters:
+% for comic in comics:
 <section>
     <%
-        first_page = pages_by_chapter[chapter][0]
-        last_page = pages_by_chapter[chapter][-1]
+        first_chapter_page = first_pages_by_comic[comic][0]
+        # TODO what i actually want here is the /last/ page of the last chapter
+        last_chapter_page = first_pages_by_comic[comic][-1]
     %>
-    <h1 id="chapter-${chapter.title_slug}">
-        ${chapter.title}
-        <span class="unheader">${format_date(first_page.local_date_published)} – ${format_date(last_page.local_date_published)}</span>
+    <h1 id="comic-${comic.title_slug}">
+        ${comic.title}
+        <span class="unheader">${format_date(first_chapter_page.local_date_published)} – ${format_date(last_chapter_page.local_date_published)}</span>
     </h1>
 
-    <div class="media">
-        <img src="${first_page.file.url_from_request(request)}"
-            class="media-inset image-capped">
-
-        <div class="media-body">
             <ul class="comic-page-grid">
-            % for page in pages_by_chapter[chapter]:
+            % for page in first_pages_by_comic[comic]:
                 <li
                     % if page.is_queued:
                     class="privileged"
                     % endif
                 >
                     <a href="${request.route_url('comic.page', page)}">
-                        ${page.page_number}</a>
+        <img src="${page.file.url_from_request(request)}"
+            class="image-capped">
+            </a>
                 </li>
             % endfor
             </ul>
-        </div>
-    </div>
 </section>
 % endfor

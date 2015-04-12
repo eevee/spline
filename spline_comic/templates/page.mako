@@ -20,12 +20,12 @@ def title_for_page(page):
 <%block name="title">${title_for_page(page)}</%block>
 
 
-${main_section(prev_page, page, next_page, transcript)}
+${main_section(page, adjacent_pages, transcript)}
 
 
-<%def name="main_section(prev_page, page, next_page, transcript=None)">
+<%def name="main_section(page, adjacent_pages, transcript=None)">
 <section class="comic-page">
-    ${draw_comic_controls(prev_page, page, next_page)}
+    ${draw_comic_controls(page, adjacent_pages)}
 
     <div class="comic-page-image-container">
         <img src="${page.file.url_from_request(request)}"
@@ -82,7 +82,7 @@ ${main_section(prev_page, page, next_page, transcript)}
     </div>
     % endif
 
-    ${draw_comic_controls(prev_page, page, next_page)}
+    ${draw_comic_controls(page, adjacent_pages)}
 </section>
 
 % if transcript and transcript.exists:
@@ -127,26 +127,40 @@ ${main_section(prev_page, page, next_page, transcript)}
 </%def>
 
 
-<%def name="draw_comic_controls(prev_page, page, next_page)">
-        <div class="comic-page-controls">
-            <div class="-prev">
-              % if prev_page:
-                <a href="${request.route_url('comic.page', prev_page)}">◀ back</a>
-              % else:
-                ◁ back
-              % endif
-            </div>
+<%def name="_maybe_page_link(page, yes_label, no_label)">
+% if page is None:
+${no_label}
+% else:
+<a href="${request.route_url('comic.page', page)}">${yes_label}</a>
+% endif
+</%def>
 
-            <div class="-next">
-              % if next_page:
-                <a href="${request.route_url('comic.page', next_page)}">next ▶</a>
-              % else:
-                next ▷
-              % endif
-            </div>
-
-            <div class="-date">
-                ${format_date(page.local_date_published)}
-            </div>
+<%def name="draw_comic_controls(page, adjacent_pages)">
+    <div class="comic-page-controls">
+      % if adjacent_pages.prev_by_date == adjacent_pages.prev_by_story:
+        <div class="-prev -combined">
+            ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous', '◁ previous')}
         </div>
+      % else:
+        <div class="-prev">
+            ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous by date', '◁ previous by date')}
+            ${_maybe_page_link(adjacent_pages.prev_by_story, '◀ previous by story', '◁ previous by story')}
+        </div>
+      % endif
+
+        <div class="-date">
+            ${format_date(page.local_date_published)}
+        </div>
+
+      % if adjacent_pages.next_by_date == adjacent_pages.next_by_story:
+        <div class="-next -combined">
+            ${_maybe_page_link(adjacent_pages.next_by_date, 'next ▶', 'next ▷')}
+        </div>
+      % else:
+        <div class="-next">
+            ${_maybe_page_link(adjacent_pages.next_by_date, 'next by date ▶', 'next by date ▷')}
+            ${_maybe_page_link(adjacent_pages.next_by_story, 'next by story ▶', 'next by story ▷')}
+        </div>
+      % endif
+    </div>
 </%def>

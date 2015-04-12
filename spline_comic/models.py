@@ -15,6 +15,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import synonym
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from spline.feature.core import feature_adapter
@@ -82,6 +83,9 @@ class ComicChapter(Base):
     title_slug = SlugColumn(title)
 
     comic = relationship(Comic, backref='chapters')
+
+    # TODO reify
+    order = synonym('id')
 
 
 class ComicPage(Base):

@@ -1,4 +1,6 @@
+from sqlalchemy import and_
 from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm import eagerload_all
 
@@ -112,28 +114,60 @@ def get_first_pages_for_comics(comics):
     )
 
 
-def get_prev_next_page(page, include_queued):
+class PreviousNextPager:
+    def __init__(
+            self, prev_by_date, next_by_date, prev_by_story, next_by_story):
+        self.prev_by_date = prev_by_date
+        self.next_by_date = next_by_date
+        self.prev_by_story = prev_by_story
+        self.next_by_story = next_by_story
+
+
+def get_adjacent_pages(page, include_queued):
     if not page:
         return None, None
 
-    prev_page = (
-        session.query(ComicPage)
-        .join(ComicPage.chapter)
-        .filter(ComicChapter.comic_id == page.comic.id)
+    q = session.query(ComicPage).join(ComicPage.chapter)
+    if not include_queued:
+        q = q.filter(~ ComicPage.is_queued)
+
+    prev_by_date = (
+        q
         .filter(ComicPage.order < page.order)
         .order_by(ComicPage.order.desc())
         .first()
     )
-    next_page = (
-        session.query(ComicPage)
-        .join(ComicPage.chapter)
-        .filter(ComicChapter.comic_id == page.comic.id)
+    next_by_date = (
+        q
         .filter(ComicPage.order > page.order)
         .order_by(ComicPage.order.asc())
         .first()
     )
 
-    if next_page and next_page.is_queued and not include_queued:
-        next_page = None
+    # So, "by story" is a little more complicated.  What it really means is:
+    # 1. If there's a prev/next page in this chapter, use that.
+    # 2. Otherwise, if there's a prev/next chapter in this comic, use the
+    # last/first page of it.
+    prev_by_story = (
+        q
+        .filter(ComicChapter.comic_id == page.chapter.comic_id)
+        .filter(or_(
+            ComicChapter.order < page.chapter.order,
+            and_(ComicChapter.order == page.chapter.order, ComicPage.order < page.order),
+        ))
+        .order_by(ComicChapter.order.desc(), ComicPage.order.desc())
+        .first()
+    )
+    next_by_story = (
+        q
+        .filter(ComicChapter.comic_id == page.chapter.comic_id)
+        .filter(or_(
+            ComicChapter.order > page.chapter.order,
+            and_(ComicChapter.order == page.chapter.order, ComicPage.order > page.order),
+        ))
+        .order_by(ComicChapter.order.asc(), ComicPage.order.asc())
+        .first()
+    )
 
-    return prev_page, next_page
+    return PreviousNextPager(
+        prev_by_date, next_by_date, prev_by_story, next_by_story)

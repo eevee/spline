@@ -13,7 +13,7 @@ from pyramid.view import view_config
 import pytz
 
 from spline.models import session
-from spline_comic.logic import get_prev_next_page
+from spline_comic.logic import get_adjacent_pages
 from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
 from spline_comic.models import END_OF_TIME
@@ -34,7 +34,7 @@ def comic_most_recent(comic, request):
     )
 
     include_queued = request.has_permission('queue', comic)
-    prev_page, next_page = get_prev_next_page(page, include_queued)
+    adjacent_pages = get_adjacent_pages(page, include_queued)
 
     # TODO this is duplicated below lol
     from spline_wiki.models import Wiki
@@ -45,8 +45,7 @@ def comic_most_recent(comic, request):
         comic=comic,
         page=page,
         transcript=transcript,
-        prev_page=prev_page,
-        next_page=next_page,
+        adjacent_pages=adjacent_pages,
     )
 
     # TODO sometime maybe the landing page will be a little more interesting
@@ -69,7 +68,7 @@ def comic_page(page, request):
         # 404 instead of 403 to prevent snooping
         return HTTPNotFound()
 
-    prev_page, next_page = get_prev_next_page(page, include_queued)
+    adjacent_pages = get_adjacent_pages(page, include_queued)
 
     from spline_wiki.models import Wiki
     wiki = Wiki(request.registry.settings['spline.wiki.root'])
@@ -79,8 +78,7 @@ def comic_page(page, request):
         comic=page.comic,
         page=page,
         transcript=transcript,
-        prev_page=prev_page,
-        next_page=next_page,
+        adjacent_pages=adjacent_pages,
     )
 
 
@@ -92,24 +90,33 @@ def comic_archive(comic, request):
     q = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
+        #.filter(ComicChapter.comic == comic)
         .order_by(ComicPage.order.asc())
         .options(contains_eager(ComicPage.chapter))
     )
 
+    # TODO hmmm really need to fetch the first page of each chapter, soooomehow
+    # TODO also: need to figure out how the title of a chapter works, since for
+    # (most...) single-page faux chapters it'll be ignored, right?
+    # TODO empty chapters won't appear at all
+
     if not request.has_permission('queue', comic):
         q = q.filter(~ ComicPage.is_queued)
 
-    pages_by_chapter = {}
+    first_pages_by_comic = {}
+    seen_chapters = set()
     for page in q:
-        pages_by_chapter.setdefault(page.chapter, []).append(page)
-    chapters = list(pages_by_chapter.keys())
-    chapters.sort(key=lambda chapter: chapter.id)
+        if page.chapter in seen_chapters:
+            continue
+        seen_chapters.add(page.chapter)
+        first_pages_by_comic.setdefault(page.chapter.comic, []).append(page)
+    comics = list(first_pages_by_comic)
+    comics.sort(key=lambda comic: comic.id)
 
     return dict(
         comic=comic,
-        pages_by_chapter=pages_by_chapter,
-        chapters=chapters,
+        first_pages_by_comic=first_pages_by_comic,
+        comics=comics,
     )
 
 
@@ -139,7 +146,6 @@ def comic_admin(comic, request):
     num_queued = sum(1 for page in recent_pages if page.is_queued)
 
     day_to_page = {page.date_published.date(): page for page in recent_pages}
-    from pprint import pprint; pprint(day_to_page)
 
     chapters = (
         session.query(ComicChapter)

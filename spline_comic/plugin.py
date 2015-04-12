@@ -12,7 +12,7 @@ from spline_comic.logic import get_recent_pages
 from spline_comic.logic import get_latest_page_per_comic
 from spline_comic.logic import get_first_pages_for_chapters
 from spline_comic.logic import get_first_pages_for_comics
-from spline_comic.logic import get_prev_next_page
+from spline_comic.logic import get_adjacent_pages
 from spline_comic.models import Comic, ComicChapter, ComicPage
 
 
@@ -61,6 +61,8 @@ def populate_feed(event):
 def build_menu(event):
     # TODO can these be...  cached?  but then how would it be busted.
     # TODO order?
+    # TODO this is pretty piss-poor now that "comic" has been kind of
+    # overloaded to mean not really that
     for comic in session.query(Comic):
         event.add_item("{} comic".format(comic.title), 'comic.most-recent', comic)
 
@@ -128,13 +130,11 @@ def render_current_page(request):
     # but happens to work for floraverse
     latest_page = get_latest_page_per_comic()[0]
 
-    prev_page, next_page = get_prev_next_page(
-        latest_page, include_queued=False)
+    adjacent_pages = get_adjacent_pages(latest_page, include_queued=False)
 
     return dict(
-        prev_page=prev_page,
         page=latest_page,
-        next_page=next_page,
+        adjacent_pages=adjacent_pages,
     )
 
 
