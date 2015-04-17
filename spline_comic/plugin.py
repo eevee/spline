@@ -126,9 +126,7 @@ def render_current_page(request):
     # TODO it would be nice, in theory, if there were a little plugin-scoped
     # bucket for storing data in, in case there's something expensive that
     # multiple blocks need
-    # TODO this is totally arbitrary (and will crash if there are no comics!!)
-    # but happens to work for floraverse
-    latest_page = get_latest_page_per_comic()[0]
+    latest_page = get_recent_pages().first()
 
     adjacent_pages = get_adjacent_pages(latest_page, include_queued=False)
 
