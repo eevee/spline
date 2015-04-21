@@ -38,7 +38,7 @@ ${main_section(page, adjacent_pages, transcript)}
               % endif
             </div>
             <div class="-chapter-page">
-                <a href="${request.route_url('comic.archive', page.comic)}#chapter-${page.chapter.title_slug}">${page.chapter.title}</a>, page ${page.page_number}
+                <a href="${request.route_url('comic.archive')}#chapter-${page.chapter.title_slug}">${page.chapter.title}</a>, page ${page.page_number}
             </div>
         </div>
     </div>

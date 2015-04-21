@@ -14,25 +14,29 @@ import pytz
 
 from spline.models import session
 from spline_comic.logic import get_adjacent_pages
+from spline_comic.models import Comic
 from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
 from spline_comic.models import END_OF_TIME
+from spline_comic.models import XXX_HARDCODED_QUEUE
+from spline_comic.models import XXX_HARDCODED_TIMEZONE
+from spline_comic.models import get_current_publication_date
 
 
 @view_config(
     route_name='comic.most-recent',
     request_method='GET')
-def comic_most_recent(comic, request):
+def comic_most_recent(request):
     page = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         # "Most recent" never includes the queue
         .filter(~ ComicPage.is_queued)
         .order_by(ComicPage.order.desc())
         .first()
     )
 
+    comic = page.chapter.comic
     include_queued = request.has_permission('queue', comic)
     adjacent_pages = get_adjacent_pages(page, include_queued)
 
@@ -86,11 +90,10 @@ def comic_page(page, request):
     route_name='comic.archive',
     request_method='GET',
     renderer='spline_comic:templates/archive.mako')
-def comic_archive(comic, request):
+def comic_archive(request):
     q = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        #.filter(ComicChapter.comic == comic)
         .order_by(ComicPage.order.asc())
         .options(contains_eager(ComicPage.chapter))
     )
@@ -99,6 +102,9 @@ def comic_archive(comic, request):
     # TODO also: need to figure out how the title of a chapter works, since for
     # (most...) single-page faux chapters it'll be ignored, right?
     # TODO empty chapters won't appear at all
+
+    # XXX
+    comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
     if not request.has_permission('queue', comic):
         q = q.filter(~ ComicPage.is_queued)
@@ -125,10 +131,10 @@ def comic_archive(comic, request):
     permission='admin',
     request_method='GET',
     renderer='spline_comic:templates/admin.mako')
-def comic_admin(comic, request):
+def comic_admin(request):
     # Figure out the starting date for the calendar.  We want to show the
     # previous four weeks, and start at the beginning of the week.
-    today = comic.current_publication_date
+    today = get_current_publication_date(XXX_HARDCODED_TIMEZONE)
     weekday_offset = (today.weekday() - 6) % -7
     start = today + timedelta(days=weekday_offset - 7 * 4)
 
@@ -136,21 +142,19 @@ def comic_admin(comic, request):
     recent_pages = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         .filter(ComicPage.date_published >= start.astimezone(pytz.utc))
         .order_by(ComicPage.date_published.desc())
         .all()
     )
 
-    last_queued, queue_next_date = _get_last_queued_date(comic)
+    last_queued, queue_next_date = _get_last_queued_date()
     num_queued = sum(1 for page in recent_pages if page.is_queued)
 
     day_to_page = {page.date_published.date(): page for page in recent_pages}
 
     chapters = (
         session.query(ComicChapter)
-        .with_parent(comic)
-        # TODO should actually order by latest addition...  or maybe first?
+        # TODO should be ordered in, um, order
         .order_by(ComicChapter.id.desc())
         .all()
     )
@@ -162,6 +166,10 @@ def comic_admin(comic, request):
     calendar_end = today.date() + timedelta(days=7 * 4)
     if day_to_page:
         calendar_end = max(calendar_end, max(day_to_page) + timedelta(days=7))
+
+    # TODO really really really need to move configuration out of comics.  this
+    # was clever but not clever enough.
+    comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
     return dict(
         comic=comic,
@@ -177,11 +185,10 @@ def comic_admin(comic, request):
 
 
 # TODO this is crap
-def _get_last_queued_date(comic):
+def _get_last_queued_date():
     queued_q = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         .filter(ComicPage.is_queued)
     )
 
@@ -191,13 +198,13 @@ def _get_last_queued_date(comic):
         queue_end_date = last_queued.date_published
     else:
         queue_end_date = datetime.combine(
-            comic.current_publication_date.astimezone(pytz.utc),
+            get_current_publication_date(XXX_HARDCODED_TIMEZONE).astimezone(pytz.utc),
             time(),
         )
     if queue_end_date == END_OF_TIME:
         queue_next_date = None
     else:
-        weekdays = [int(wd) for wd in comic.config_queue]
+        weekdays = [int(wd) for wd in XXX_HARDCODED_QUEUE]
         queue_next_date = next(_generate_queue_dates(weekdays, start=queue_end_date))
 
     return last_queued, queue_next_date
@@ -229,7 +236,7 @@ def _generate_queue_dates(days_of_week, start):
     route_name='comic.save-queue',
     permission='admin',
     request_method='POST')
-def comic_queue_do(comic, request):
+def comic_queue_do(request):
     # TODO this would be easier with a real validator.
     weekdays = []
     for wd in request.POST.getall('weekday'):
@@ -239,17 +246,16 @@ def comic_queue_do(comic, request):
     queued = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         .filter(ComicPage.is_queued)
         .order_by(ComicPage.order.asc())
         .all()
     )
 
-    new_dates = _generate_queue_dates(weekdays, start=comic.current_publication_date)
+    new_dates = _generate_queue_dates(weekdays, start=get_current_publication_date(XXX_HARDCODED_TIMEZONE))
     for page, new_date in zip(queued, new_dates):
         page.date_published = datetime.combine(
             new_date, time()).replace(tzinfo=pytz.utc)
-        page.timezone = comic.timezone.zone
+        page.timezone = XXX_HARDCODED_TIMEZONE.zone
 
     comic.config_queue = ''.join(str(wd) for wd in sorted(weekdays))
 
@@ -261,7 +267,7 @@ def comic_queue_do(comic, request):
     route_name='comic.upload',
     permission='admin',
     request_method='POST')
-def comic_upload_do(comic, request):
+def comic_upload_do(request):
     # TODO validation and all that boring stuff
     file_upload = request.POST['file']
     fh = file_upload.file
@@ -284,10 +290,10 @@ def comic_upload_do(comic, request):
     if when == 'now':
         date_published = datetime.now(pytz.utc)
     elif when == 'queue':
-        last_queued, queue_next_date = _get_last_queued_date(comic)
+        last_queued, queue_next_date = _get_last_queued_date()
         date_published = datetime.combine(
             queue_next_date,
-            time(tzinfo=comic.timezone),
+            time(tzinfo=XXX_HARDCODED_TIMEZONE),
         )
         date_published = date_published.astimezone(pytz.utc)
 
@@ -330,7 +336,7 @@ def comic_upload_do(comic, request):
         chapter=last_chapter,
         author=request.user,
         date_published=date_published,
-        timezone=comic.timezone.zone,
+        timezone=XXX_HARDCODED_TIMEZONE.zone,
 
         order=next_order,
         page_number=next_page_number,

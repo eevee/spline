@@ -47,7 +47,7 @@
                 <ul class="inline-list">
                     <li><a href="${request.route_url('comic.page', block.comic_first_page)}">Start of the entire comic</li>
                     <li><a href="${request.route_url('comic.page', block.chapter_cover_page)}">Start of this chapter</a></li>
-                    <li><a href="${request.route_url('comic.archive', page.comic)}">Archive</a></li>
+                    <li><a href="${request.route_url('comic.archive')}">Archive</a></li>
                 </ul>
             </div>
         </div>

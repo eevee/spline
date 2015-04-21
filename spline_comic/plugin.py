@@ -142,13 +142,24 @@ def configure_comic(self, config):
 
     # Routing
     # TODO what goes on / now?
-    drc = DatabaseRouteConnector('comic_id', Comic.title_slug)
-    config.add_route('comic.most-recent', '/{comic_id}/', **drc.kwargs)
-    config.add_route('comic.admin', '/{comic_id}/admin/', **drc.kwargs)
-    config.add_route('comic.save-queue', '/{comic_id}/admin/queue/', **drc.kwargs)
-    config.add_route('comic.upload', '/{comic_id}/admin/upload/', **drc.kwargs)
-    config.add_route('comic.archive', '/{comic_id}/archive/', **drc.kwargs)
+    config.add_route('comic.archive', '/')
 
+    config.add_route('comic.admin', '/@@admin')
+    config.add_route('comic.save-queue', '/@@admin/queue')
+    config.add_route('comic.upload', '/@@admin/upload')
+
+    # TODO so where does this go, if anywhere?  really only existed to replace
+    # the front page...
+    config.add_route('comic.most-recent', '/most-recent/')
+
+    drc = DatabaseRouteConnector('comic_id', Comic.title_slug)
+    config.add_route('comic.browse', '/{comic_id}/', **drc.kwargs)
+
+    # TODO oh yeah this is completely fucking wrong now.  really SHOULD have a
+    # chapter in it somewhere, but the problem is that "transparent" chapters
+    # would mean we sometimes have /comic/chapter/page/ and sometimes have
+    # /comic/page/ and dealing with that is too hard so i'm not bothering yet.
+    # maybe i want to just suck it up and allow infinite nesting here haha.  :S
     drc2 = drc.derive('page_id', ComicPage.id, slug=ComicPage.title_slug, relchain=(ComicPage.chapter, ComicChapter.comic))
     config.add_route('comic.page', '/{comic_id}/page/{page_id}/', **drc2.kwargs)
 

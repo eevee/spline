@@ -5,7 +5,6 @@
 
 <%block name="title">Archive for ${comic.title}</%block>
 
-    ##<p><a href="${request.route_url('comic.admin', comic)}" class="btn warning">Queue settings</a></p>
 % for comic in comics:
 <section>
     <%

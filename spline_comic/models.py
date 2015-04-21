@@ -35,6 +35,20 @@ from spline.models.columns import TitleColumn
 END_OF_TIME = pytz.utc.localize(datetime.max)
 
 
+# XXX TODO XXX HAHA GIANT HACK, PLEASE GET THIS INTO A REAL PLACE SOMETIME
+XXX_HARDCODED_TIMEZONE = pytz.timezone('America/Los_Angeles')
+XXX_HARDCODED_QUEUE = '024'
+
+
+def get_current_publication_date(timezone):
+    """Return "today" localized to the given timezone and with the time set to
+    midnight.  This is the time at which a new comic is published, from the
+    publisher's perspective.
+    """
+    return datetime.now(timezone).replace(
+        hour=0, minute=0, second=0, microsecond=0)
+
+
 class Comic(Base):
     __tablename__ = 'comics'
     __scope__ = 'comic'
@@ -56,8 +70,10 @@ class Comic(Base):
     # global default?  per-site?  ?????
     config_timezone = Column(Unicode, nullable=True)
 
+    # XXX TODO XXX HAHA GIANT HACK, PLEASE GET THIS INTO A REAL PLACE SOMETIME
     @property
     def timezone(self):
+        return XXX_HARDCODED_TIMEZONE
         if self.config_timezone in pytz.all_timezones_set:
             return pytz.timezone(self.config_timezone)
         else:
