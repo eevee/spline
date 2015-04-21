@@ -43,6 +43,13 @@ ${main_section(prev_page, page, next_page, transcript)}
         </div>
     </div>
 
+    ## XXX FLORAVERSE i am human garbage.  please make this a real feature goddamn.
+    % if page.id == 292:
+    <div class="comic-page-image-container">
+        <iframe width="640" height="480" src="https://www.youtube.com/embed/UqrqZorg_78?rel=0" frameborder="0" allowfullscreen></iframe>
+    </div>
+    % endif
+
     ${draw_comic_controls(prev_page, page, next_page)}
 </section>
 
