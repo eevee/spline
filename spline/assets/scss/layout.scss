@@ -390,7 +390,7 @@ table.table-pretty {
     @include flexbox;
 
     .front-page-main {
-        @include flex(1 0 auto);
+        @include flex(0 1 auto);
     }
     .front-page-sidebar {
         @include flex(none);
