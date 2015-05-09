@@ -60,6 +60,10 @@ ${main_section(prev_page, page, next_page, transcript)}
     <div class="comic-page-image-container">
         <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-part3" frameborder="0" allowfullscreen></iframe>
     </div>
+    % elif page.id == 300:
+    <div class="comic-page-image-container">
+        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-part4" frameborder="0" allowfullscreen></iframe>
+    </div>
     % endif
 
     ${draw_comic_controls(prev_page, page, next_page)}
