@@ -70,7 +70,7 @@ ${main_section(prev_page, page, next_page, transcript)}
     </div>
     % elif page.id == 303:
     <div class="comic-page-image-container">
-        <iframe width="640" height="480" src="https://www.youtube.com/embed/YiPJWad_hiY?rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="640" height="480" src="https://www.youtube.com/embed/pie_XcfuVI4?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
     % endif
 
