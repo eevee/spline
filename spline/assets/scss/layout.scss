@@ -391,6 +391,13 @@ table.table-pretty {
 
     .front-page-main {
         @include flex(0 1 auto);
+        // workaround for a webkit/blink bug -- flexbox items have an implied
+        // `min-width: auto;` which more or less does the right thing, but
+        // webkit/blink don't implement this and don't understand `auto` as a
+        // min-width.  luckily, `min-content` is the same as `auto` in the
+        // absence of any other sizing information
+        // ref: https://code.google.com/p/chromium/issues/detail?id=426898
+        min-width: -webkit-min-content;
     }
     .front-page-sidebar {
         @include flex(none);
