@@ -390,7 +390,7 @@ table.table-pretty {
     @include flexbox;
 
     .front-page-main {
-        @include flex(0 1 auto);
+        @include flex(1);
         // workaround for a webkit/blink bug -- flexbox items have an implied
         // `min-width: auto;` which more or less does the right thing, but
         // webkit/blink don't implement this and don't understand `auto` as a
