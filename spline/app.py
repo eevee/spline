@@ -75,6 +75,8 @@ def main(global_settings, **settings):
         # TODO: pyramid_scss should learn to do asset specs in imports as well,
         # but scss needs import hooking for that to work
         'scss.asset_path':
+            # TODO floraverse
+            'floraverse_com:assets/scss\n' +
             'spline:assets/scss\n' +
             os.path.join(os.getcwd(), '../archetype.git/scss'),
 
