@@ -10,52 +10,52 @@
     font-weight: normal;
 }
 .comic-page-controls {
-	@include flexbox;
-	@include align-items(center);
-	@include justify-content(space-between);
-	font-size: 1.33em;
+    @include flexbox;
+    @include align-items(center);
+    @include justify-content(space-between);
+    font-size: 1.33em;
     margin: 1rem;
-	color: #999;
-	line-height: 1;
+    color: #999;
+    line-height: 1;
 
-	.-combined {
-		font-size: 2em;
-	}
+    .-combined {
+        font-size: 2em;
+    }
 
-	.-prev,
-	.-next {
-		@include flex(1);
-		a {
-			display: block;
-			text-decoration: none;
-		}
-	}
-	.-next {
-		text-align: right;
-	}
-	.-date {
-		@include flex(1);
-		text-align: center;
-	}
+    .-prev,
+    .-next {
+        @include flex(1);
+        a {
+            display: block;
+            text-decoration: none;
+        }
+    }
+    .-next {
+        text-align: right;
+    }
+    .-date {
+        @include flex(1);
+        text-align: center;
+    }
 }
 
 .comic-page-image-container {
-	@include flexbox;
+    @include flexbox;
     @include align-items(center);
     @include flex-direction(column);
 
-	box-sizing: border-box;
+    box-sizing: border-box;
     margin: 1em auto;
 
     // Fallback for browsers without min-content; little janky, though.
-	// TODO is there any better way to do this?  at all?  all i want is for the
-	// meta stuff at the bottom to be the same width as the comic when possible
+    // TODO is there any better way to do this?  at all?  all i want is for the
+    // meta stuff at the bottom to be the same width as the comic when possible
     width: 800px;
     width: -moz-min-content;
     width: -webkit-min-content;
     width: min-content;
     min-width: 600px;
-	max-width: 100%;
+    max-width: 100%;
 }
 .comic-page-image {
     background: white;
@@ -65,12 +65,12 @@
 }
 .comic-page-meta {
     @include flexbox;
-	@include align-self(stretch);
+    @include align-self(stretch);
     @include justify-content(space-between);
     margin-top: 0.33em;
 
-	> .-title {
-		text-align: left;
-		font-style: italic;
-	}
+    > .-title {
+        text-align: left;
+        font-style: italic;
+    }
 }
