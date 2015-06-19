@@ -405,51 +405,6 @@ table.table-pretty {
     }
 }
 
-// -----------------------------------------------------------------------------
-// comic stuff that shouldn't live here at all
-
-/*ol*/.comic-page-grid {
-    @include flexbox;
-    @include flex-wrap(wrap);
-    @include justify-content(space-between);
-    @include align-items(baseline);
-    list-style-type: none;
-    font-size: 1.5em;
-    margin: 0;
-    padding: 0;
-
-    > li {
-        @include flex(0);
-        margin: 0.5em;
-
-        > a {
-            display: block;
-            margin: 0;
-            vertical-align: middle;
-            text-align: center;
-
-            background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
-            border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
-
-            &:visited {
-                border-style: dotted;
-            }
-            &:hover {
-                background: scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
-            }
-
-            > img {
-                display: block;
-            }
-        }
-
-        &.privileged > a {
-            box-shadow: 0 0 0 2px $privileged-color;
-        }
-
-    }
-}
-
 
 // Add some default styling to markup blocks, since they can't easily change
 // styling themselves
