@@ -3,33 +3,44 @@
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
 
-<%block name="title">Archive for ${comic.title}</%block>
+<%block name="title">Archive</%block>
 
-% for comic in comics:
+% for folder in folders:
 <section>
-    <%
-        first_chapter_page = first_pages_by_comic[comic][0]
-        # TODO what i actually want here is the /last/ page of the last chapter
-        last_chapter_page = first_pages_by_comic[comic][-1]
-    %>
-    <h1 id="comic-${comic.title_slug}">
-        ${comic.title}
-        <span class="unheader">${format_date(first_chapter_page.local_date_published)} – ${format_date(last_chapter_page.local_date_published)}</span>
+    <h1 id="comic-${folder.title_slug}">
+        ${folder.title}
+        ## Won't be in the dict if the folder is empty!
+        % if folder in date_range_by_folder:
+            <span class="unheader">${format_date(date_range_by_folder[folder][0])} – ${format_date(date_range_by_folder[folder][1])}</span>
+        % endif
     </h1>
 
-            <ul class="comic-page-grid">
-            % for page in first_pages_by_comic[comic]:
-                <li
-                    % if page.is_queued:
-                    class="privileged"
-                    % endif
-                >
-                    <a href="${request.route_url('comic.page', page)}">
-        <img src="${page.file.url_from_request(request)}"
-            class="image-capped">
+    <ul class="comic-page-grid">
+    % for child_folder in folder.children:
+        <% page = first_page_by_folder.get(child_folder) %>
+        % if page:
+            ## If the first page is hidden, the whole folder (probably) is
+            <li class="chapter ${'privileged' if page.is_queued else ''}">
+                ## TODO this should prooobably link to the archive for the /folder/
+                <a href="${request.route_url('comic.page', page)}">
+                    <img src="${page.file.url_from_request(request)}"
+                        class="image-capped">
+                </a>
+            </li>
+        % endif
+    % endfor
+    ...
+    ## TODO not sure this ordering makes sense.  isn't the above early-first and this is recent-first?
+    ## TODO do i want some separation between these?  two separate rows, perhaps?
+    ## TODO really want to have a text-overflow sort of thing here
+    % for page in recent_pages_by_folder[folder]:
+        <li class="${'privileged' if page.is_queued else ''}">
+            <a href="${request.route_url('comic.page', page)}">
+                <img src="${page.file.url_from_request(request)}"
+                    class="image-capped">
             </a>
-                </li>
-            % endfor
-            </ul>
+        </li>
+    % endfor
+    </ul>
 </section>
 % endfor

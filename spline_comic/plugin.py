@@ -147,6 +147,7 @@ def configure_comic(self, config):
     config.add_route('comic.admin', '/@@admin')
     config.add_route('comic.save-queue', '/@@admin/queue')
     config.add_route('comic.upload', '/@@admin/upload')
+    config.add_route('comic.admin.folders', '/@@admin/folders')
 
     # TODO so where does this go, if anywhere?  really only existed to replace
     # the front page...

@@ -221,3 +221,32 @@
     </form>
 </section>
 
+<section id="manage-folders">
+    <h1>Manage folders</h1>
+    <p>Wow this isn't done at all!  In fact it's probably totally broken, maybe don't use it.</p>
+    <form action="${request.route_url('comic.admin.folders')}" method="POST">
+    <ul>
+    <% last = None %>
+    <% ancestry = [] %>
+    % for folder in chapters:
+        <%
+            if last and last.right > folder.left:
+                ancestry.append(last)
+            while ancestry and ancestry[-1].right < folder.left:
+                ancestry.pop()
+        %>
+        <li>
+            % for _ in ancestry:
+                —
+            % endfor
+            ${folder.id} | ${folder.left} ${folder.right} ${folder.title} ${folder.ancestors}
+            <button type="submit" name="${folder.id}" value="right">
+                ↓</button>
+            <button type="submit" name="${folder.id}" value="left">
+                ↑</button>
+        </li>
+        <% last = folder %>
+    % endfor
+    </ul>
+    </form>
+</section>

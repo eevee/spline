@@ -40,10 +40,12 @@ $privileged-color: hsl(45, 90%, 75%);
             }
         }
 
+        &.chapter > a {
+            box-shadow: 3px 3px 0 #aaa, 6px 6px 0 #ccc;
+        }
         &.privileged > a {
             box-shadow: 0 0 0 2px $privileged-color;
         }
-
     }
 }
 

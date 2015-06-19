@@ -10,13 +10,17 @@ from sqlalchemy import (
     Unicode,
     UnicodeText,
     UniqueConstraint,
+    and_,
+    func,
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import synonym
+from sqlalchemy.orm import foreign, remote
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.sql import select
 
 from spline.feature.core import feature_adapter
 from spline.feature.feed import IFeedItem
@@ -49,6 +53,7 @@ def get_current_publication_date(timezone):
         hour=0, minute=0, second=0, microsecond=0)
 
 
+# TODO i guess this is going to go away entirely, then
 class Comic(Base):
     __tablename__ = 'comics'
     __scope__ = 'comic'
@@ -89,22 +94,62 @@ class Comic(Base):
             hour=0, minute=0, second=0, microsecond=0)
 
 
-class ComicChapter(Base):
+class GalleryFolder(Base):
     __tablename__ = 'comic_chapters'
+    __table_args__ = (
+        # Ensure these are only checked at the end of the transaction, because
+        # otherwise it becomes very difficult to actually edit them
+        UniqueConstraint('left', deferrable=True, initially='DEFERRED'),
+        UniqueConstraint('right', deferrable=True, initially='DEFERRED'),
+    )
     __scope__ = 'comic-chapter'
 
     id = SurrogateKeyColumn()
     comic_id = Column(Integer, ForeignKey(Comic.id), nullable=False)
+    comic = relationship(Comic, backref='chapters')
+
     title = TitleColumn()
     title_slug = SlugColumn(title)
 
-    comic = relationship(Comic, backref='chapters')
+    # Nested set, whee.  Unique index created above!
+    left = Column(Integer, nullable=False)
+    right = Column(Integer, nullable=False)
+    ancestors = relationship(
+        'GalleryFolder',
+        primaryjoin=(remote(left) < foreign(left)) & (foreign(right) < remote(right)),
+        order_by=left.desc(),
+        viewonly=True,
+        uselist=True,
+    )
+    order = synonym('left')
 
-    # TODO reify
-    order = synonym('id')
+_folder_parent = GalleryFolder.__table__.alias()
+_folder_child = GalleryFolder.__table__.alias()
+_folder_bridge = (
+    select([_folder_child.c.id.label('child_id'), _folder_parent.c.id.label('parent_id')])
+    .where(and_(
+        _folder_parent.c.left < _folder_child.c.left,
+        _folder_child.c.right < _folder_parent.c.right,
+    ))
+    .order_by(_folder_child.c.id, _folder_parent.c.left)
+    .distinct(_folder_child.c.id)
+)
+GalleryFolder.parent = relationship(
+    GalleryFolder,
+    secondary=_folder_bridge,
+    primaryjoin=GalleryFolder.id == _folder_bridge.c.child_id,
+    secondaryjoin=_folder_bridge.c.parent_id == GalleryFolder.id,
+    remote_side=[_folder_bridge.c.parent_id],
+    viewonly=True,
+    uselist=False,
+    backref='children',
+)
+
+# TODO backcompat
+ComicChapter = GalleryFolder
 
 
-class ComicPage(Base):
+class GalleryItem(Base):
     __tablename__ = 'comic_pages'
     __scope__ = 'comic-page'
 
@@ -120,7 +165,8 @@ class ComicPage(Base):
     timezone = Column(Unicode, nullable=False)
 
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
+    folder_id = Column('chapter_id', ForeignKey(ComicChapter.id), nullable=False)
+    chapter_id = synonym('folder_id')
 
     # In theory, sequential with no gaps.  We try our best.
     page_number = Column(Integer, nullable=False)
@@ -129,19 +175,22 @@ class ComicPage(Base):
     # FK in this table, so whatever.
     order = Column(Integer, nullable=False)
 
+    # TODO so, since this is gonna need to be split off anyway, should it be a
+    # thing that just has its own table and lives in core?
     file = Column(StoredFile, nullable=False)
     title = TitleColumn()
     title_slug = SlugColumn(title)
     comment = ProseColumn()
 
     __table_args__ = (
-        UniqueConstraint(page_number, chapter_id, deferrable=True),
+        UniqueConstraint(page_number, folder_id, deferrable=True),
         UniqueConstraint(order, deferrable=True),
     )
 
     author = relationship(User, backref='comic_pages')
-    chapter = relationship(ComicChapter, backref='pages')
-    comic = association_proxy('chapter', 'comic')
+    folder = relationship(GalleryFolder, backref='pages')
+    chapter = synonym('folder')
+    comic = association_proxy('folder', 'comic')
 
     @hybrid_property
     def local_date_published(self):
@@ -157,6 +206,9 @@ class ComicPage(Base):
     @hybrid_property
     def is_queued(self):
         return self.date_published > datetime.now(pytz.utc)
+
+
+ComicPage = GalleryItem
 
 
 class ComicPageTranscript(Base):

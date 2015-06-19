@@ -136,15 +136,16 @@ ${no_label}
 </%def>
 
 <%def name="draw_comic_controls(page, adjacent_pages)">
+    ## TODO these should indicate when you're going to jump the border of a folder
     <div class="comic-page-controls">
       % if adjacent_pages.prev_by_date == adjacent_pages.prev_by_story:
         <div class="-prev -combined">
-            ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous', '◁ previous')}
+            ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous', '◁ first')}
         </div>
       % else:
         <div class="-prev">
-            ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous by date', '◁ previous by date')}
-            ${_maybe_page_link(adjacent_pages.prev_by_story, '◀ previous by story', '◁ previous by story')}
+            ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous by date', '◁ first by date')}
+            ${_maybe_page_link(adjacent_pages.prev_by_story, '◀ previous by story', '◁ last by story')}
         </div>
       % endif
 
@@ -154,12 +155,12 @@ ${no_label}
 
       % if adjacent_pages.next_by_date == adjacent_pages.next_by_story:
         <div class="-next -combined">
-            ${_maybe_page_link(adjacent_pages.next_by_date, 'next ▶', 'next ▷')}
+            ${_maybe_page_link(adjacent_pages.next_by_date, 'next ▶', 'last ▷')}
         </div>
       % else:
         <div class="-next">
-            ${_maybe_page_link(adjacent_pages.next_by_date, 'next by date ▶', 'next by date ▷')}
-            ${_maybe_page_link(adjacent_pages.next_by_story, 'next by story ▶', 'next by story ▷')}
+            ${_maybe_page_link(adjacent_pages.next_by_date, 'next by date ▶', 'last by date ▷')}
+            ${_maybe_page_link(adjacent_pages.next_by_story, 'next by story ▶', 'last by story ▷')}
         </div>
       % endif
     </div>

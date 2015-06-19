@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from datetime import time
 from datetime import timedelta
@@ -5,7 +6,8 @@ import os
 import os.path
 
 from sqlalchemy import func
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm import joinedload
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
@@ -17,6 +19,8 @@ from spline_comic.logic import get_adjacent_pages
 from spline_comic.models import Comic
 from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
+from spline_comic.models import GalleryFolder
+from spline_comic.models import GalleryItem
 from spline_comic.models import END_OF_TIME
 from spline_comic.models import XXX_HARDCODED_QUEUE
 from spline_comic.models import XXX_HARDCODED_TIMEZONE
@@ -91,12 +95,18 @@ def comic_page(page, request):
     request_method='GET',
     renderer='spline_comic:templates/archive.mako')
 def comic_archive(request):
-    q = (
-        session.query(ComicPage)
-        .join(ComicPage.chapter)
-        .order_by(ComicPage.order.asc())
-        .options(contains_eager(ComicPage.chapter))
+    folders = (
+        session.query(GalleryFolder)
+        .filter(GalleryFolder.parent == None)
+        .options(
+            joinedload(GalleryFolder.children)
+        )
+        .order_by(GalleryFolder.order)
+        .all()
     )
+    folder_ids = [folder.id for folder in folders]
+    child_folder_ids = [child.id for folder in folders for child in folder.children]
+    visible_folder_ids = folder_ids + child_folder_ids
 
     # TODO hmmm really need to fetch the first page of each chapter, soooomehow
     # TODO also: need to figure out how the title of a chapter works, since for
@@ -106,23 +116,67 @@ def comic_archive(request):
     # XXX
     comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
-    if not request.has_permission('queue', comic):
-        q = q.filter(~ ComicPage.is_queued)
+    # TODO this (and maybe other places) don't check for queued
+    recent_pages_by_folder = defaultdict(list)
+    if folder_ids:
+        recent_page_subq = (
+            session.query(
+                GalleryItem,
+                func.rank().over(partition_by=GalleryItem.folder_id, order_by=GalleryItem.order.desc()).label('rank'),
+            )
+            .filter(GalleryItem.folder_id.in_(folder_ids))
+            .subquery()
+        )
+        GalleryItem_alias = aliased(GalleryItem, recent_page_subq)
+        recent_page_q = (
+            session.query(GalleryItem_alias)
+            .filter(recent_page_subq.c.rank <= 5)
+        )
+        for item in recent_page_q:
+            recent_pages_by_folder[item.folder].append(item)
 
-    first_pages_by_comic = {}
-    seen_chapters = set()
-    for page in q:
-        if page.chapter in seen_chapters:
-            continue
-        seen_chapters.add(page.chapter)
-        first_pages_by_comic.setdefault(page.chapter.comic, []).append(page)
-    comics = list(first_pages_by_comic)
-    comics.sort(key=lambda comic: comic.id)
+    first_page_by_folder = {}
+    if child_folder_ids:
+        recent_page_q = (
+            session.query(GalleryItem)
+            .filter(GalleryItem.folder_id.in_(child_folder_ids))
+            .order_by(GalleryItem.folder_id, GalleryItem.order.asc())
+            .distinct(GalleryItem.folder_id)
+        )
+        first_page_by_folder = {
+            page.folder: page
+            for page in recent_page_q
+        }
+
+    min_max_q = (
+        session.query(
+            GalleryFolder,
+            func.min(GalleryItem.date_published),
+            func.max(GalleryItem.date_published),
+        )
+        .join(GalleryFolder.pages)
+        .filter(GalleryItem.folder_id.in_(visible_folder_ids))
+        .group_by(GalleryFolder.id)
+    )
+    tz = XXX_HARDCODED_TIMEZONE
+    date_range_by_folder = {
+        folder: (
+            tz.normalize(mindate.astimezone(tz)),
+            tz.normalize(maxdate.astimezone(tz)),
+        )
+        for (folder, mindate, maxdate) in min_max_q
+    }
+    print(folder_ids)
+    print(folders)
+    for folder in date_range_by_folder:
+        print(folder.id, folder)
 
     return dict(
         comic=comic,
-        first_pages_by_comic=first_pages_by_comic,
-        comics=comics,
+        folders=folders,
+        recent_pages_by_folder=recent_pages_by_folder,
+        first_page_by_folder=first_page_by_folder,
+        date_range_by_folder=date_range_by_folder,
     )
 
 
@@ -154,8 +208,10 @@ def comic_admin(request):
 
     chapters = (
         session.query(ComicChapter)
-        # TODO should be ordered in, um, order
-        .order_by(ComicChapter.id.desc())
+        .order_by(ComicChapter.order.asc())
+        .options(
+            joinedload('children')
+        )
         .all()
     )
 
@@ -349,3 +405,40 @@ def comic_upload_do(request):
     session.flush()
 
     return HTTPSeeOther(location=request.route_url('comic.page', page))
+
+
+@view_config(
+    route_name='comic.admin.folders',
+    permission='admin',
+    request_method='POST')
+def comic_admin_folders_do(request):
+    for folder_id, direction in request.POST.items():
+        folder = session.query(ComicChapter).get(folder_id)
+
+        # TODO this should verify, somehow, that there's actually something to the left or right to move to
+        if direction == "left":
+            # Move the folder leftwards, so that its new "right" is one less than its current "left"
+            diff = (folder.left - 1) - folder.right
+        elif direction == "right":
+            # Move the folder rightwards, so that its new "left" is one more than its current "right"
+            diff = (folder.right + 1) - folder.left
+        else:
+            continue
+
+        # TODO this assumes one direction only...  or does it?
+        (
+            session.query(ComicChapter)
+            .filter(ComicChapter.left.between(
+                *sorted((folder.left, folder.left + diff))))
+            .update({
+                ComicChapter.left: ComicChapter.left - diff,
+                ComicChapter.right: ComicChapter.right - diff,
+            }, synchronize_session=False)
+        )
+
+        folder.left += diff
+        folder.right += diff
+        session.flush()
+
+    return HTTPSeeOther(
+        location=request.route_url('comic.admin') + '#manage-folders')
