@@ -92,6 +92,10 @@ ${main_section(prev_page, page, next_page, transcript)}
     <div class="comic-page-image-container">
         <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#brokentoy-part4" frameborder="0" allowfullscreen></iframe>
     </div>
+    % elif page.id == 319:
+    <div class="comic-page-image-container">
+        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#brokentoy-part5" frameborder="0" allowfullscreen></iframe>
+    </div>
     % endif
 
     ${draw_comic_controls(prev_page, page, next_page)}
