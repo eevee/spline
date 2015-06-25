@@ -95,15 +95,28 @@ def comic_page(page, request):
     request_method='GET',
     renderer='spline_comic:templates/archive.mako')
 def comic_archive(request):
+    return _comic_archive_shared(None, request)
+
+
+@view_config(
+    context=GalleryFolder,
+    request_method='GET',
+    renderer='spline_comic:templates/archive.mako')
+def comic_browse(context, request):
+    return _comic_archive_shared(context, request)
+
+
+def _comic_archive_shared(context, request):
     folders = (
         session.query(GalleryFolder)
-        .filter(GalleryFolder.parent == None)
+        .filter(GalleryFolder.parent == context)
         .options(
             joinedload(GalleryFolder.children)
         )
         .order_by(GalleryFolder.order)
         .all()
     )
+    print(folders)
     folder_ids = [folder.id for folder in folders]
     child_folder_ids = [child.id for folder in folders for child in folder.children]
     visible_folder_ids = folder_ids + child_folder_ids
@@ -166,10 +179,6 @@ def comic_archive(request):
         )
         for (folder, mindate, maxdate) in min_max_q
     }
-    print(folder_ids)
-    print(folders)
-    for folder in date_range_by_folder:
-        print(folder.id, folder)
 
     return dict(
         comic=comic,

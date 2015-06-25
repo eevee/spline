@@ -15,12 +15,15 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
+import sqlalchemy.ext.compiler as compiler
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import synonym
 from sqlalchemy.orm import foreign, remote
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import select
+from sqlalchemy.sql import table
 
 from spline.feature.core import feature_adapter
 from spline.feature.feed import IFeedItem
@@ -51,6 +54,35 @@ def get_current_publication_date(timezone):
     """
     return datetime.now(timezone).replace(
         hour=0, minute=0, second=0, microsecond=0)
+
+
+# Via: https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
+class CreateView(DDLElement):
+    def __init__(self, name, selectable):
+        self.name = name
+        self.selectable = selectable
+
+class DropView(DDLElement):
+    def __init__(self, name):
+        self.name = name
+
+@compiler.compiles(CreateView)
+def compile(element, compiler, **kw):
+    return "CREATE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
+
+@compiler.compiles(DropView)
+def compile(element, compiler, **kw):
+    return "DROP VIEW %s" % (element.name)
+
+def view(name, metadata, selectable):
+    # Deviation from the wiki recipe -- copy the columns (into dummy columns)
+    # here to avoid wacky self-referential aliasing problems such as:
+    # https://bitbucket.org/zzzeek/sqlalchemy/issue/3458/super-self-referential-m2m-joins-need-to
+    t = table(name, *(c.copy() for c in selectable.c))
+
+    CreateView(name, selectable).execute_at('after-create', metadata)
+    DropView(name).execute_at('before-drop', metadata)
+    return t
 
 
 # TODO i guess this is going to go away entirely, then
@@ -125,21 +157,28 @@ class GalleryFolder(Base):
 
 _folder_parent = GalleryFolder.__table__.alias()
 _folder_child = GalleryFolder.__table__.alias()
-_folder_bridge = (
+folder_parentage = view(
+    'gallery_folder__parent',
+    Base.metadata,
     select([_folder_child.c.id.label('child_id'), _folder_parent.c.id.label('parent_id')])
-    .where(and_(
-        _folder_parent.c.left < _folder_child.c.left,
-        _folder_child.c.right < _folder_parent.c.right,
-    ))
+    .select_from(
+        _folder_child.join(
+            _folder_parent,
+            and_(
+                _folder_parent.c.left < _folder_child.c.left,
+                _folder_child.c.right < _folder_parent.c.right,
+            ),
+        )
+    )
     .order_by(_folder_child.c.id, _folder_parent.c.left)
     .distinct(_folder_child.c.id)
 )
 GalleryFolder.parent = relationship(
     GalleryFolder,
-    secondary=_folder_bridge,
-    primaryjoin=GalleryFolder.id == _folder_bridge.c.child_id,
-    secondaryjoin=_folder_bridge.c.parent_id == GalleryFolder.id,
-    remote_side=[_folder_bridge.c.parent_id],
+    secondary=folder_parentage,
+    primaryjoin=GalleryFolder.id == folder_parentage.c.child_id,
+    secondaryjoin=GalleryFolder.id == folder_parentage.c.parent_id,
+    foreign_keys=[folder_parentage.c.child_id, folder_parentage.c.parent_id],
     viewonly=True,
     uselist=False,
     backref='children',

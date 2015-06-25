@@ -27,6 +27,7 @@ $privileged-color: hsl(45, 90%, 75%);
 
             background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
             border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
+            box-shadow: 1px 1px 2px #ccc;
 
             &:visited {
                 border-style: dotted;
@@ -41,7 +42,7 @@ $privileged-color: hsl(45, 90%, 75%);
         }
 
         &.chapter > a {
-            box-shadow: 3px 3px 0 #aaa, 6px 6px 0 #ccc;
+            box-shadow: 1px 1px 2px #ccc, 3px 3px 0 #aaa, 6px 6px 0 #ccc;
         }
         &.privileged > a {
             box-shadow: 0 0 0 2px $privileged-color;

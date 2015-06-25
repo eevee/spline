@@ -67,6 +67,81 @@ def build_menu(event):
         event.add_item("{} comic".format(comic.title), 'comic.most-recent', comic)
 
 
+# -----------------
+# resource stuff, maybe worth its own module, also needs cleaning up
+
+class DummyGalleryRoot:
+    def __init__(self, request):
+        self.request = request
+
+    def __getitem__(self, key):
+        return FolderResource(key)
+
+class GalleryTraverser:
+    def __init__(self, root):
+        pass
+
+    def __call__(self, request):
+        path = request.matchdict['traverse']
+        vpath_tuple = split_path_info(path)
+        print(vpath_tuple)
+
+        comic_slugs = []
+        remainder = []
+        for i, part in enumerate(vpath_tuple):
+            if path.startswith('@@'):
+                remainder = vpath_tuple[i:]
+                break
+            maybe_page_id, _, maybe_page_slug = part.partition('-')
+            try:
+                int(maybe_page_id)
+            except ValueError:
+                comic_slugs.append(part)
+            else:
+                return self.fetch_page
+
+
+        {'context':ob,
+        'view_name':segment[2:],
+        'subpath':vpath_tuple[i+1:],
+        'traversed':vpath_tuple[:vroot_idx+i+1],
+        'virtual_root':vroot,
+        'virtual_root_path':vroot_tuple,
+        'root':root}
+
+        return self.fetch_folder
+
+
+
+
+
+class FolderResource:
+    def __init__(self, *slugs):
+        self.slugs = slugs
+
+    def __getitem__(self, key):
+        return FolderResource(*(self.slugs + (key,)))
+
+
+class GalleryFolderURL:
+    def __init__(self, route_prefix, folder, request):
+        # TODO i think "virtual" path refers to the X-Vhm-Root header
+        self.virtual_path_tuple = (route_prefix,) + tuple(
+            anc.title_slug for anc in folder.ancestors) + (folder.title_slug,)
+        self.physical_path_tuple = self.virtual_path_tuple
+
+        self.virtual_path = self.physical_path = '/' + '/'.join(self.virtual_path_tuple)
+
+
+class GalleryItemURL:
+    def __init__(self, route_prefix, item, request):
+        folder_url = GalleryFolderURL(route_prefix, item.folder, request)
+        self.virtual_path_tuple = folder_url.virtual_path_tuple + (item.title_slug,)
+        self.physical_path_tuple = self.virtual_path_tuple
+
+        self.virtual_path = self.physical_path = '/' + '/'.join(self.virtual_path_tuple)
+
+
 class Plugin:
     """Represents a plugin.
 
@@ -153,8 +228,24 @@ def configure_comic(self, config):
     # the front page...
     config.add_route('comic.most-recent', '/most-recent/')
 
+    def folder_route_factory(request):
+        path_parts = request.matchdict['folder_path'].split('/')
+        print(path_parts)
+        # TODO fix incorrect urls
+        # TODO catch exception here
+        folder = session.query(ComicChapter).filter_by(title_slug=path_parts[-1]).one()
+        print(folder)
+        return folder
+
+    config.add_route(
+        'comic.browse',
+        '/{folder_path:.+}/',
+        factory=folder_route_factory,
+        use_global_views=True,
+    )
+
     drc = DatabaseRouteConnector('comic_id', Comic.title_slug)
-    config.add_route('comic.browse', '/{comic_id}/', **drc.kwargs)
+    #config.add_route('comic.browse', '/{comic_id}/', **drc.kwargs)
 
     # TODO oh yeah this is completely fucking wrong now.  really SHOULD have a
     # chapter in it somewhere, but the problem is that "transparent" chapters
@@ -163,6 +254,9 @@ def configure_comic(self, config):
     # maybe i want to just suck it up and allow infinite nesting here haha.  :S
     drc2 = drc.derive('page_id', ComicPage.id, slug=ComicPage.title_slug, relchain=(ComicPage.chapter, ComicChapter.comic))
     config.add_route('comic.page', '/{comic_id}/page/{page_id}/', **drc2.kwargs)
+
+    config.add_resource_url_adapter(lambda *a: GalleryFolderURL(config.route_prefix, *a), ComicChapter)
+    config.add_resource_url_adapter(lambda *a: GalleryItemURL(config.route_prefix, *a), ComicPage)
 
     # TODO lol this is catastrophically bad
     # TODO maybe add a method for adding more paths?  or reuse some of
