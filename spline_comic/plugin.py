@@ -1,4 +1,5 @@
 from collections import namedtuple
+from functools import partial
 
 from pyramid.events import subscriber
 
@@ -7,7 +8,6 @@ from spline.events import FrontPageLayout
 from spline.events import BuildMenu
 from spline.feature.feed import Feed
 from spline.models import session
-from spline.routing import DatabaseRouteConnector
 from spline_comic.logic import get_recent_pages
 from spline_comic.logic import get_latest_page_per_comic
 from spline_comic.logic import get_first_pages_for_chapters
@@ -67,79 +67,40 @@ def build_menu(event):
         event.add_item("{} comic".format(comic.title), 'comic.most-recent', comic)
 
 
-# -----------------
-# resource stuff, maybe worth its own module, also needs cleaning up
+# Resource stuff -- violently jam my ideas into Pyramid
+# TODO document, clean up a bit
 
-class DummyGalleryRoot:
-    def __init__(self, request):
-        self.request = request
-
-    def __getitem__(self, key):
-        return FolderResource(key)
-
-class GalleryTraverser:
-    def __init__(self, root):
-        pass
-
-    def __call__(self, request):
-        path = request.matchdict['traverse']
-        vpath_tuple = split_path_info(path)
-        print(vpath_tuple)
-
-        comic_slugs = []
-        remainder = []
-        for i, part in enumerate(vpath_tuple):
-            if path.startswith('@@'):
-                remainder = vpath_tuple[i:]
-                break
-            maybe_page_id, _, maybe_page_slug = part.partition('-')
-            try:
-                int(maybe_page_id)
-            except ValueError:
-                comic_slugs.append(part)
-            else:
-                return self.fetch_page
+class DummyResourceURL(namedtuple('_DummyResourceURL', [
+        'virtual_path', 'virtual_path_tuple',
+        'physical_path', 'physical_path_tuple',
+        ])):
+    def __new__(cls, *path_parts):
+        if path_parts and path_parts[-1] != '':
+            path_parts += ('',)
+        # NOTE: "virtual" means the X-Vhm-Root header, which i don't care about
+        path = '/' + '/'.join(path_parts)
+        return super().__new__(cls, path, path_parts, path, path_parts)
 
 
-        {'context':ob,
-        'view_name':segment[2:],
-        'subpath':vpath_tuple[i+1:],
-        'traversed':vpath_tuple[:vroot_idx+i+1],
-        'virtual_root':vroot,
-        'virtual_root_path':vroot_tuple,
-        'root':root}
-
-        return self.fetch_folder
+def _gallery_folder_path(route_prefix, folder):
+    ret = [route_prefix]
+    for anc in folder.ancestors:
+        ret.append(anc.title_slug)
+    ret.append(folder.title_slug)
+    return ret
 
 
+def make_gallery_folder_url(route_prefix, folder, request):
+    return DummyResourceURL(*_gallery_folder_path(route_prefix, folder))
 
 
-
-class FolderResource:
-    def __init__(self, *slugs):
-        self.slugs = slugs
-
-    def __getitem__(self, key):
-        return FolderResource(*(self.slugs + (key,)))
-
-
-class GalleryFolderURL:
-    def __init__(self, route_prefix, folder, request):
-        # TODO i think "virtual" path refers to the X-Vhm-Root header
-        self.virtual_path_tuple = (route_prefix,) + tuple(
-            anc.title_slug for anc in folder.ancestors) + (folder.title_slug,)
-        self.physical_path_tuple = self.virtual_path_tuple
-
-        self.virtual_path = self.physical_path = '/' + '/'.join(self.virtual_path_tuple)
-
-
-class GalleryItemURL:
-    def __init__(self, route_prefix, item, request):
-        folder_url = GalleryFolderURL(route_prefix, item.folder, request)
-        self.virtual_path_tuple = folder_url.virtual_path_tuple + (item.title_slug,)
-        self.physical_path_tuple = self.virtual_path_tuple
-
-        self.virtual_path = self.physical_path = '/' + '/'.join(self.virtual_path_tuple)
+def make_gallery_item_url(route_prefix, item, request):
+    folder_path = _gallery_folder_path(route_prefix, item.folder)
+    if item.title_slug:
+        folder_path.append("{0.id}-{0.title_slug}".format(item))
+    else:
+        folder_path.append("{0.id}".format(item))
+    return DummyResourceURL(*folder_path)
 
 
 class Plugin:
@@ -230,13 +191,26 @@ def configure_comic(self, config):
 
     def folder_route_factory(request):
         path_parts = request.matchdict['folder_path'].split('/')
-        print(path_parts)
         # TODO fix incorrect urls
         # TODO catch exception here
         folder = session.query(ComicChapter).filter_by(title_slug=path_parts[-1]).one()
-        print(folder)
         return folder
 
+    def page_route_factory(request):
+        # TODO fix incorrect urls
+        page_id = int(request.matchdict['page_id'])
+        # TODO catch exception here
+        page = session.query(ComicPage).filter_by(id=page_id).one()
+        return page
+
+    # TODO one teeny problem here is that a folder whose name starts with a
+    # number is completely inaccessible
+    config.add_route(
+        'comic.page',
+        '/{folder_path:.+}/{page_id:\d+}{page_slug:(?:-[^/]*)?}/',
+        factory=page_route_factory,
+        use_global_views=True,
+    )
     config.add_route(
         'comic.browse',
         '/{folder_path:.+}/',
@@ -244,19 +218,14 @@ def configure_comic(self, config):
         use_global_views=True,
     )
 
-    drc = DatabaseRouteConnector('comic_id', Comic.title_slug)
-    #config.add_route('comic.browse', '/{comic_id}/', **drc.kwargs)
-
-    # TODO oh yeah this is completely fucking wrong now.  really SHOULD have a
-    # chapter in it somewhere, but the problem is that "transparent" chapters
-    # would mean we sometimes have /comic/chapter/page/ and sometimes have
-    # /comic/page/ and dealing with that is too hard so i'm not bothering yet.
-    # maybe i want to just suck it up and allow infinite nesting here haha.  :S
-    drc2 = drc.derive('page_id', ComicPage.id, slug=ComicPage.title_slug, relchain=(ComicPage.chapter, ComicChapter.comic))
-    config.add_route('comic.page', '/{comic_id}/page/{page_id}/', **drc2.kwargs)
-
-    config.add_resource_url_adapter(lambda *a: GalleryFolderURL(config.route_prefix, *a), ComicChapter)
-    config.add_resource_url_adapter(lambda *a: GalleryItemURL(config.route_prefix, *a), ComicPage)
+    config.add_resource_url_adapter(
+        partial(make_gallery_folder_url, config.route_prefix),
+        ComicChapter,
+    )
+    config.add_resource_url_adapter(
+        partial(make_gallery_item_url, config.route_prefix),
+        ComicPage,
+    )
 
     # TODO lol this is catastrophically bad
     # TODO maybe add a method for adding more paths?  or reuse some of

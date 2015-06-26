@@ -38,7 +38,7 @@ ${main_section(page, adjacent_pages, transcript)}
               % endif
             </div>
             <div class="-chapter-page">
-                <a href="${request.route_url('comic.archive')}#chapter-${page.chapter.title_slug}">${page.chapter.title}</a>, page ${page.page_number}
+                <a href="${request.resource_url(page.folder)}">${page.chapter.title}</a>, page ${page.page_number}
             </div>
         </div>
     </div>
@@ -112,8 +112,8 @@ ${main_section(page, adjacent_pages, transcript)}
         ## TODO need a standard html-safe jsonify thing (or a block that changes the filter, like buck's JS?)
         ## TODO do something so that dev doesn't snag the url first?  or is that not a problem with full uri?
         <% import json %>
-        var disqus_identifier = ${json.dumps(request.route_url('comic.page', page))|n};
-        var disqus_url = ${json.dumps(request.route_url('comic.page', page))|n};
+        var disqus_identifier = ${json.dumps(request.resource_url(page))|n};
+        var disqus_url = ${json.dumps(request.resource_url(page))|n};
         var disqus_title = ${json.dumps(title_for_page(page))|n};
         (function() {
             var dsq = document.createElement('script');
@@ -131,7 +131,7 @@ ${main_section(page, adjacent_pages, transcript)}
 % if page is None:
 ${no_label}
 % else:
-<a href="${request.route_url('comic.page', page)}">${yes_label}</a>
+<a href="${request.resource_url(page)}">${yes_label}</a>
 % endif
 </%def>
 

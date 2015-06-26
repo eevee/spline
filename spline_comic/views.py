@@ -106,10 +106,10 @@ def comic_browse(context, request):
     return _comic_archive_shared(context, request)
 
 
-def _comic_archive_shared(context, request):
+def _comic_archive_shared(parent_folder, request):
     folders = (
         session.query(GalleryFolder)
-        .filter(GalleryFolder.parent == context)
+        .filter(GalleryFolder.parent == parent_folder)
         .options(
             joinedload(GalleryFolder.children)
         )
@@ -182,6 +182,7 @@ def _comic_archive_shared(context, request):
 
     return dict(
         comic=comic,
+        parent_folder=parent_folder,
         folders=folders,
         recent_pages_by_folder=recent_pages_by_folder,
         first_page_by_folder=first_page_by_folder,

@@ -3,9 +3,44 @@
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
 
-<%block name="title">Archive</%block>
+<%block name="title">
+% if parent_folder:
+    % for ancestor in parent_folder.ancestors:
+        ${ancestor.title} /
+    % endfor
+    ${parent_folder.title} -
+% endif
+Archive
+</%block>
 
-<%block name="header">Archive » <h1>${request.context}</h1></%block>
+<%block name="header">
+% if parent_folder:
+<h1>
+<a href="${request.route_url('comic.archive')}">Archive</a> »
+% for ancestor in parent_folder.ancestors:
+<a href="${request.resource_url(ancestor)}">${ancestor.title}</a> »
+% endfor
+${parent_folder.title}
+</h1>
+% else:
+<h1>Archive</h1>
+% endif
+</%block>
+
+% if parent_folder:
+<ul class="comic-page-grid">
+% for page in parent_folder.pages:
+    <li class="${'privileged' if page.is_queued else ''}">
+        <a href="${request.resource_url(page)}">
+            <img src="${page.file.url_from_request(request)}"
+                class="image-capped">
+
+            ${page.title} / ${page.page_number}
+        </a>
+    </li>
+% endfor
+</ul>
+% endif
 
 % for folder in folders:
 <section>
@@ -27,6 +62,8 @@
                 <a href="${request.resource_url(child_folder)}">
                     <img src="${page.file.url_from_request(request)}"
                         class="image-capped">
+
+                    ${page.title} / ${page.page_number}
                 </a>
             </li>
         % endif
@@ -40,6 +77,8 @@
             <a href="${request.resource_url(page)}">
                 <img src="${page.file.url_from_request(request)}"
                     class="image-capped">
+
+                ${page.title} / ${page.page_number}
             </a>
         </li>
     % endfor

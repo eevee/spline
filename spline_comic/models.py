@@ -227,7 +227,7 @@ class GalleryItem(Base):
     )
 
     author = relationship(User, backref='comic_pages')
-    folder = relationship(GalleryFolder, backref='pages')
+    folder = relationship(GalleryFolder, backref=backref('pages', order_by=order))
     chapter = synonym('folder')
     comic = association_proxy('folder', 'comic')
 

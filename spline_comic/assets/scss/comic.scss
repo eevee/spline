@@ -8,10 +8,10 @@ $privileged-color: hsl(45, 90%, 75%);
 /*ol*/.comic-page-grid {
     @include flexbox;
     @include flex-wrap(wrap);
-    @include justify-content(space-between);
+    @include justify-content(flex-start);
     @include align-items(baseline);
     list-style-type: none;
-    font-size: 1.5em;
+    //font-size: 1.5em;
     margin: 0;
     padding: 0;
 
@@ -25,10 +25,6 @@ $privileged-color: hsl(45, 90%, 75%);
             vertical-align: middle;
             text-align: center;
 
-            background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
-            border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
-            box-shadow: 1px 1px 2px #ccc;
-
             &:visited {
                 border-style: dotted;
             }
@@ -38,14 +34,24 @@ $privileged-color: hsl(45, 90%, 75%);
 
             > img {
                 display: block;
+                margin-bottom: 0.33em;
+
+                background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
+                border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
+                box-shadow: 1px 1px 2px #ccc;
             }
         }
 
-        &.chapter > a {
+        &.chapter > a img {
+            margin-bottom: 0.5em;
             box-shadow: 1px 1px 2px #ccc, 3px 3px 0 #aaa, 6px 6px 0 #ccc;
         }
-        &.privileged > a {
+        &.privileged > a img {
             box-shadow: 0 0 0 2px $privileged-color;
+        }
+
+        &:last-child {
+            margin-right: auto;
         }
     }
 }
