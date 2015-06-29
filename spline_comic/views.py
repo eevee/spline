@@ -117,15 +117,12 @@ def _comic_archive_shared(parent_folder, request):
         .all()
     )
     folder_ids = [folder.id for folder in folders]
-    child_folder_ids = [child.id for folder in folders for child in folder.children]
+    child_folder_ids = [
+        child.id for folder in folders for child in folder.children
+    ]
     visible_folder_ids = folder_ids + child_folder_ids
 
-    # TODO hmmm really need to fetch the first page of each chapter, soooomehow
-    # TODO also: need to figure out how the title of a chapter works, since for
-    # (most...) single-page faux chapters it'll be ignored, right?
-    # TODO empty chapters won't appear at all
-
-    # XXX
+    # XXX remove this; currently used by _base.mako
     comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
     # TODO this (and maybe other places) don't check for queued
@@ -134,8 +131,14 @@ def _comic_archive_shared(parent_folder, request):
         recent_page_subq = (
             session.query(
                 GalleryItem,
-                func.rank().over(partition_by=GalleryItem.folder_id, order_by=GalleryItem.order.asc()).label('rank_first'),
-                func.rank().over(partition_by=GalleryItem.folder_id, order_by=GalleryItem.order.desc()).label('rank_last'),
+                func.rank().over(
+                    partition_by=GalleryItem.folder_id,
+                    order_by=GalleryItem.order.asc(),
+                ).label('rank_first'),
+                func.rank().over(
+                    partition_by=GalleryItem.folder_id,
+                    order_by=GalleryItem.order.desc(),
+                ).label('rank_last'),
             )
             .filter(GalleryItem.folder_id.in_(folder_ids))
             .subquery()

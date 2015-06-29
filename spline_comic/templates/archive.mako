@@ -72,9 +72,6 @@ ${parent_folder.title}
             </li>
         % endif
     % endfor
-    ## TODO not sure this ordering makes sense.  isn't the above early-first and this is recent-first?
-    ## TODO do i want some separation between these?  two separate rows, perhaps?
-    ## TODO really want to have a text-overflow sort of thing here
     % for page in recent_pages_by_folder[folder]:
         <li class="${'privileged' if page.is_queued else ''}">
             <a href="${request.resource_url(page)}">
