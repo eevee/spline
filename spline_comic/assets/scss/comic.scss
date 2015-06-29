@@ -1,6 +1,68 @@
+@import "vendor/flex";
+
+// TODO copied from layout.scss -- need this stuff to be in its own file oops
+// TODO also this is the floraverse value
+$secondary-accent: #4a9f7c;
+$privileged-color: hsl(45, 90%, 75%);
+
+/*ol*/.comic-page-grid {
+    @include flexbox;
+    @include flex-wrap(wrap);
+    @include align-items(baseline);
+    list-style-type: none;
+    margin: 1em;
+    padding: 0;
+
+    > li {
+        @include flex(1 0);
+        box-sizing: border-box;
+        text-align: center;
+
+        > a {
+            display: block;
+            padding: 0.5em;
+            min-width: 200px;
+            text-align: center;
+
+            &:visited {
+                border-style: dotted;
+            }
+            &:hover {
+                background: scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
+            }
+
+            > img {
+                display: block;
+                margin: 0 auto 0.33em;
+                min-width: 100px;
+                object-fit: cover;
+                object-position: top;
+
+                background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
+                border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
+                box-shadow: 1px 1px 2px #ccc;
+            }
+        }
+
+        &.chapter > a img {
+            margin-bottom: 0.5em;
+            box-shadow: 1px 1px 2px #ccc, 3px 3px 0 #aaa, 6px 6px 0 #ccc;
+        }
+        &.privileged > a img {
+            box-shadow: 0 0 0 2px $privileged-color;
+        }
+
+        &.-dummy {
+            // These exist just to keep the last row aligned to the grid; the
+            // width must match the width for the links above, and they must
+            // have no height
+            min-width: calc(200px + 0.5em);
+        }
+    }
+}
+
 .comic-page {
     margin: 1em auto;
-    text-align: center;
 }
 .comic-page h3 {
     font-size: 1.5em;
@@ -9,42 +71,52 @@
     font-weight: normal;
 }
 .comic-page-controls {
-    width: 600px;
-    margin: 1em auto;
-    text-align: center;
-}
-.comic-page-controls .-prev,
-.comic-page-controls .-next {
-    font-size: 2em;
-    line-height: 1;
-    display: inline-block;
+    @include flexbox;
+    @include align-items(center);
+    @include justify-content(space-between);
+    font-size: 1.33em;
+    margin: 1rem;
     color: #999;
+    line-height: 1;
+
+    .-combined {
+        font-size: 2em;
+    }
+
+    .-prev,
+    .-next {
+        @include flex(1);
+        a {
+            display: block;
+            text-decoration: none;
+        }
+    }
+    .-next {
+        text-align: right;
+    }
+    .-date {
+        @include flex(1);
+        text-align: center;
+    }
 }
-.comic-page-controls .-prev {
-    float: left;
-}
-.comic-page-controls .-next {
-    float: right;
-}
-.comic-page-controls .-prev a,
-.comic-page-controls .-next a {
-    text-decoration: none;
-}
-.comic-page-controls .-date {
-    line-height: 2;
-}
+
 .comic-page-image-container {
-    display: flex;
-    /* Fallback for browsers without min-content; little janky, though.
-        * TODO is there any better way to do this?  at all? */
+    @include flexbox;
+    @include align-items(center);
+    @include flex-direction(column);
+
+    box-sizing: border-box;
+    margin: 1em auto;
+
+    // Fallback for browsers without min-content; little janky, though.
+    // TODO is there any better way to do this?  at all?  all i want is for the
+    // meta stuff at the bottom to be the same width as the comic when possible
     width: 800px;
     width: -moz-min-content;
     width: -webkit-min-content;
     width: min-content;
     min-width: 600px;
-    flex-direction: column;
-    align-items: center;
-    margin: 1em auto;
+    max-width: 100%;
 }
 .comic-page-image {
     background: white;
@@ -53,12 +125,13 @@
     box-shadow: 0 1px 3px hsl(0, 0%, 90%);
 }
 .comic-page-meta {
-    align-self: stretch;
-    display: flex;
+    @include flexbox;
+    @include align-self(stretch);
+    @include justify-content(space-between);
     margin-top: 0.33em;
-    justify-content: space-between;
-}
-.comic-page-meta > .-title {
-    text-align: left;
-    font-style: italic;
+
+    > .-title {
+        text-align: left;
+        font-style: italic;
+    }
 }

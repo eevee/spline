@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from datetime import time
 from datetime import timedelta
@@ -5,7 +6,8 @@ import os
 import os.path
 
 from sqlalchemy import func
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm import joinedload
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
@@ -13,28 +15,34 @@ from pyramid.view import view_config
 import pytz
 
 from spline.models import session
-from spline_comic.logic import get_prev_next_page
+from spline_comic.logic import get_adjacent_pages
+from spline_comic.models import Comic
 from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
+from spline_comic.models import GalleryFolder
+from spline_comic.models import GalleryItem
 from spline_comic.models import END_OF_TIME
+from spline_comic.models import XXX_HARDCODED_QUEUE
+from spline_comic.models import XXX_HARDCODED_TIMEZONE
+from spline_comic.models import get_current_publication_date
 
 
 @view_config(
     route_name='comic.most-recent',
     request_method='GET')
-def comic_most_recent(comic, request):
+def comic_most_recent(request):
     page = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         # "Most recent" never includes the queue
         .filter(~ ComicPage.is_queued)
         .order_by(ComicPage.order.desc())
         .first()
     )
 
+    comic = page.chapter.comic
     include_queued = request.has_permission('queue', comic)
-    prev_page, next_page = get_prev_next_page(page, include_queued)
+    adjacent_pages = get_adjacent_pages(page, include_queued)
 
     # TODO this is duplicated below lol
     from spline_wiki.models import Wiki
@@ -45,8 +53,7 @@ def comic_most_recent(comic, request):
         comic=comic,
         page=page,
         transcript=transcript,
-        prev_page=prev_page,
-        next_page=next_page,
+        adjacent_pages=adjacent_pages,
     )
 
     # TODO sometime maybe the landing page will be a little more interesting
@@ -69,7 +76,7 @@ def comic_page(page, request):
         # 404 instead of 403 to prevent snooping
         return HTTPNotFound()
 
-    prev_page, next_page = get_prev_next_page(page, include_queued)
+    adjacent_pages = get_adjacent_pages(page, include_queued)
 
     from spline_wiki.models import Wiki
     wiki = Wiki(request.registry.settings['spline.wiki.root'])
@@ -79,8 +86,7 @@ def comic_page(page, request):
         comic=page.comic,
         page=page,
         transcript=transcript,
-        prev_page=prev_page,
-        next_page=next_page,
+        adjacent_pages=adjacent_pages,
     )
 
 
@@ -88,28 +94,106 @@ def comic_page(page, request):
     route_name='comic.archive',
     request_method='GET',
     renderer='spline_comic:templates/archive.mako')
-def comic_archive(comic, request):
-    q = (
-        session.query(ComicPage)
-        .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
-        .order_by(ComicPage.order.asc())
-        .options(contains_eager(ComicPage.chapter))
+def comic_archive(request):
+    return _comic_archive_shared(None, request)
+
+
+@view_config(
+    context=GalleryFolder,
+    request_method='GET',
+    renderer='spline_comic:templates/archive.mako')
+def comic_browse(context, request):
+    return _comic_archive_shared(context, request)
+
+
+def _comic_archive_shared(parent_folder, request):
+    folders = (
+        session.query(GalleryFolder)
+        .filter(GalleryFolder.parent == parent_folder)
+        .options(
+            joinedload(GalleryFolder.children)
+        )
+        .order_by(GalleryFolder.order)
+        .all()
     )
+    folder_ids = [folder.id for folder in folders]
+    child_folder_ids = [
+        child.id for folder in folders for child in folder.children
+    ]
+    visible_folder_ids = folder_ids + child_folder_ids
 
-    if not request.has_permission('queue', comic):
-        q = q.filter(~ ComicPage.is_queued)
+    # XXX remove this; currently used by _base.mako
+    comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
-    pages_by_chapter = {}
-    for page in q:
-        pages_by_chapter.setdefault(page.chapter, []).append(page)
-    chapters = list(pages_by_chapter.keys())
-    chapters.sort(key=lambda chapter: chapter.id)
+    # TODO this (and maybe other places) don't check for queued
+    recent_pages_by_folder = defaultdict(list)
+    if folder_ids:
+        recent_page_subq = (
+            session.query(
+                GalleryItem,
+                func.rank().over(
+                    partition_by=GalleryItem.folder_id,
+                    order_by=GalleryItem.order.asc(),
+                ).label('rank_first'),
+                func.rank().over(
+                    partition_by=GalleryItem.folder_id,
+                    order_by=GalleryItem.order.desc(),
+                ).label('rank_last'),
+            )
+            .filter(GalleryItem.folder_id.in_(folder_ids))
+            .subquery()
+        )
+        GalleryItem_alias = aliased(GalleryItem, recent_page_subq)
+        recent_page_q = (
+            session.query(GalleryItem_alias)
+            .filter(
+                (recent_page_subq.c.rank_last <= 5) |
+                (recent_page_subq.c.rank_first == 1)
+            )
+            .order_by(GalleryItem_alias.order.asc())
+        )
+        for item in recent_page_q:
+            recent_pages_by_folder[item.folder].append(item)
+
+    first_page_by_folder = {}
+    if child_folder_ids:
+        recent_page_q = (
+            session.query(GalleryItem)
+            .filter(GalleryItem.folder_id.in_(child_folder_ids))
+            .order_by(GalleryItem.folder_id, GalleryItem.order.asc())
+            .distinct(GalleryItem.folder_id)
+        )
+        first_page_by_folder = {
+            page.folder: page
+            for page in recent_page_q
+        }
+
+    min_max_q = (
+        session.query(
+            GalleryFolder,
+            func.min(GalleryItem.date_published),
+            func.max(GalleryItem.date_published),
+        )
+        .join(GalleryFolder.pages)
+        .filter(GalleryItem.folder_id.in_(visible_folder_ids))
+        .group_by(GalleryFolder.id)
+    )
+    tz = XXX_HARDCODED_TIMEZONE
+    date_range_by_folder = {
+        folder: (
+            tz.normalize(mindate.astimezone(tz)),
+            tz.normalize(maxdate.astimezone(tz)),
+        )
+        for (folder, mindate, maxdate) in min_max_q
+    }
 
     return dict(
         comic=comic,
-        pages_by_chapter=pages_by_chapter,
-        chapters=chapters,
+        parent_folder=parent_folder,
+        folders=folders,
+        recent_pages_by_folder=recent_pages_by_folder,
+        first_page_by_folder=first_page_by_folder,
+        date_range_by_folder=date_range_by_folder,
     )
 
 
@@ -118,10 +202,10 @@ def comic_archive(comic, request):
     permission='admin',
     request_method='GET',
     renderer='spline_comic:templates/admin.mako')
-def comic_admin(comic, request):
+def comic_admin(request):
     # Figure out the starting date for the calendar.  We want to show the
     # previous four weeks, and start at the beginning of the week.
-    today = comic.current_publication_date
+    today = get_current_publication_date(XXX_HARDCODED_TIMEZONE)
     weekday_offset = (today.weekday() - 6) % -7
     start = today + timedelta(days=weekday_offset - 7 * 4)
 
@@ -129,23 +213,22 @@ def comic_admin(comic, request):
     recent_pages = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         .filter(ComicPage.date_published >= start.astimezone(pytz.utc))
         .order_by(ComicPage.date_published.desc())
         .all()
     )
 
-    last_queued, queue_next_date = _get_last_queued_date(comic)
+    last_queued, queue_next_date = _get_last_queued_date()
     num_queued = sum(1 for page in recent_pages if page.is_queued)
 
     day_to_page = {page.date_published.date(): page for page in recent_pages}
-    from pprint import pprint; pprint(day_to_page)
 
     chapters = (
         session.query(ComicChapter)
-        .with_parent(comic)
-        # TODO should actually order by latest addition...  or maybe first?
-        .order_by(ComicChapter.id.desc())
+        .order_by(ComicChapter.order.asc())
+        .options(
+            joinedload('children')
+        )
         .all()
     )
 
@@ -156,6 +239,10 @@ def comic_admin(comic, request):
     calendar_end = today.date() + timedelta(days=7 * 4)
     if day_to_page:
         calendar_end = max(calendar_end, max(day_to_page) + timedelta(days=7))
+
+    # TODO really really really need to move configuration out of comics.  this
+    # was clever but not clever enough.
+    comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
     return dict(
         comic=comic,
@@ -171,11 +258,10 @@ def comic_admin(comic, request):
 
 
 # TODO this is crap
-def _get_last_queued_date(comic):
+def _get_last_queued_date():
     queued_q = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         .filter(ComicPage.is_queued)
     )
 
@@ -185,13 +271,13 @@ def _get_last_queued_date(comic):
         queue_end_date = last_queued.date_published
     else:
         queue_end_date = datetime.combine(
-            comic.current_publication_date.astimezone(pytz.utc),
+            get_current_publication_date(XXX_HARDCODED_TIMEZONE).astimezone(pytz.utc),
             time(),
         )
     if queue_end_date == END_OF_TIME:
         queue_next_date = None
     else:
-        weekdays = [int(wd) for wd in comic.config_queue]
+        weekdays = [int(wd) for wd in XXX_HARDCODED_QUEUE]
         queue_next_date = next(_generate_queue_dates(weekdays, start=queue_end_date))
 
     return last_queued, queue_next_date
@@ -223,7 +309,7 @@ def _generate_queue_dates(days_of_week, start):
     route_name='comic.save-queue',
     permission='admin',
     request_method='POST')
-def comic_queue_do(comic, request):
+def comic_queue_do(request):
     # TODO this would be easier with a real validator.
     weekdays = []
     for wd in request.POST.getall('weekday'):
@@ -233,17 +319,16 @@ def comic_queue_do(comic, request):
     queued = (
         session.query(ComicPage)
         .join(ComicPage.chapter)
-        .filter(ComicChapter.comic == comic)
         .filter(ComicPage.is_queued)
         .order_by(ComicPage.order.asc())
         .all()
     )
 
-    new_dates = _generate_queue_dates(weekdays, start=comic.current_publication_date)
+    new_dates = _generate_queue_dates(weekdays, start=get_current_publication_date(XXX_HARDCODED_TIMEZONE))
     for page, new_date in zip(queued, new_dates):
         page.date_published = datetime.combine(
             new_date, time()).replace(tzinfo=pytz.utc)
-        page.timezone = comic.timezone.zone
+        page.timezone = XXX_HARDCODED_TIMEZONE.zone
 
     comic.config_queue = ''.join(str(wd) for wd in sorted(weekdays))
 
@@ -255,7 +340,7 @@ def comic_queue_do(comic, request):
     route_name='comic.upload',
     permission='admin',
     request_method='POST')
-def comic_upload_do(comic, request):
+def comic_upload_do(request):
     # TODO validation and all that boring stuff
     file_upload = request.POST['file']
     fh = file_upload.file
@@ -278,10 +363,10 @@ def comic_upload_do(comic, request):
     if when == 'now':
         date_published = datetime.now(pytz.utc)
     elif when == 'queue':
-        last_queued, queue_next_date = _get_last_queued_date(comic)
+        last_queued, queue_next_date = _get_last_queued_date()
         date_published = datetime.combine(
             queue_next_date,
-            time(tzinfo=comic.timezone),
+            time(tzinfo=XXX_HARDCODED_TIMEZONE),
         )
         date_published = date_published.astimezone(pytz.utc)
 
@@ -324,7 +409,7 @@ def comic_upload_do(comic, request):
         chapter=last_chapter,
         author=request.user,
         date_published=date_published,
-        timezone=comic.timezone.zone,
+        timezone=XXX_HARDCODED_TIMEZONE.zone,
 
         order=next_order,
         page_number=next_page_number,
@@ -337,3 +422,40 @@ def comic_upload_do(comic, request):
     session.flush()
 
     return HTTPSeeOther(location=request.route_url('comic.page', page))
+
+
+@view_config(
+    route_name='comic.admin.folders',
+    permission='admin',
+    request_method='POST')
+def comic_admin_folders_do(request):
+    for folder_id, direction in request.POST.items():
+        folder = session.query(ComicChapter).get(folder_id)
+
+        # TODO this should verify, somehow, that there's actually something to the left or right to move to
+        if direction == "left":
+            # Move the folder leftwards, so that its new "right" is one less than its current "left"
+            diff = (folder.left - 1) - folder.right
+        elif direction == "right":
+            # Move the folder rightwards, so that its new "left" is one more than its current "right"
+            diff = (folder.right + 1) - folder.left
+        else:
+            continue
+
+        # TODO this assumes one direction only...  or does it?
+        (
+            session.query(ComicChapter)
+            .filter(ComicChapter.left.between(
+                *sorted((folder.left, folder.left + diff))))
+            .update({
+                ComicChapter.left: ComicChapter.left - diff,
+                ComicChapter.right: ComicChapter.right - diff,
+            }, synchronize_session=False)
+        )
+
+        folder.left += diff
+        folder.right += diff
+        session.flush()
+
+    return HTTPSeeOther(
+        location=request.route_url('comic.admin') + '#manage-folders')

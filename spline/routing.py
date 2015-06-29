@@ -2,12 +2,9 @@
 from pyramid.httpexceptions import HTTPNotFound
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import class_mapper
+from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm.exc import NoResultFound
-try:
-    from sqlalchemy.orm.properties import ColumnProperty
-except ImportError:
-    # < 0.9
-    from sqlalchemy.orm.properties import PropertyLoader as ColumnProperty
+from sqlalchemy.orm.properties import RelationshipProperty
 
 from spline.models import session
 
@@ -49,8 +46,9 @@ def _guess_relationship(child, parent):
     parent_mapper = class_mapper(parent)
 
     for prop in child_mapper.iterate_properties:
-        if isinstance(prop, ColumnProperty) and prop.mapper is parent_mapper:
-            return prop
+        if isinstance(prop, RelationshipProperty) and prop.mapper is parent_mapper:
+            # Be sure to turn it back into an attribute
+            return getattr(child, prop.key)
 
     raise InvalidRequestError(
         "Can't find a relationship from {0} to {1}"
@@ -86,6 +84,8 @@ class DatabaseRouteConnector(object):
         assert bool(parent) == bool(relchain)
         self.parent = parent
         self.relchain = relchain
+
+        configure_mappers()
 
     @property
     def table(self):

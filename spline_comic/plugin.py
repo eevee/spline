@@ -1,4 +1,5 @@
 from collections import namedtuple
+from functools import partial
 
 from pyramid.events import subscriber
 
@@ -7,12 +8,11 @@ from spline.events import FrontPageLayout
 from spline.events import BuildMenu
 from spline.feature.feed import Feed
 from spline.models import session
-from spline.routing import DatabaseRouteConnector
 from spline_comic.logic import get_recent_pages
 from spline_comic.logic import get_latest_page_per_comic
 from spline_comic.logic import get_first_pages_for_chapters
 from spline_comic.logic import get_first_pages_for_comics
-from spline_comic.logic import get_prev_next_page
+from spline_comic.logic import get_adjacent_pages
 from spline_comic.models import Comic, ComicChapter, ComicPage
 
 
@@ -61,8 +61,46 @@ def populate_feed(event):
 def build_menu(event):
     # TODO can these be...  cached?  but then how would it be busted.
     # TODO order?
+    # TODO this is pretty piss-poor now that "comic" has been kind of
+    # overloaded to mean not really that
     for comic in session.query(Comic):
         event.add_item("{} comic".format(comic.title), 'comic.most-recent', comic)
+
+
+# Resource stuff -- violently jam my ideas into Pyramid
+# TODO document, clean up a bit
+
+class DummyResourceURL(namedtuple('_DummyResourceURL', [
+        'virtual_path', 'virtual_path_tuple',
+        'physical_path', 'physical_path_tuple',
+        ])):
+    def __new__(cls, *path_parts):
+        if path_parts and path_parts[-1] != '':
+            path_parts += ('',)
+        # NOTE: "virtual" means the X-Vhm-Root header, which i don't care about
+        path = '/' + '/'.join(path_parts)
+        return super().__new__(cls, path, path_parts, path, path_parts)
+
+
+def _gallery_folder_path(route_prefix, folder):
+    ret = [route_prefix]
+    for anc in folder.ancestors:
+        ret.append(anc.title_slug)
+    ret.append(folder.title_slug)
+    return ret
+
+
+def make_gallery_folder_url(route_prefix, folder, request):
+    return DummyResourceURL(*_gallery_folder_path(route_prefix, folder))
+
+
+def make_gallery_item_url(route_prefix, item, request):
+    folder_path = _gallery_folder_path(route_prefix, item.folder)
+    if item.title_slug:
+        folder_path.append("{0.id}-{0.title_slug}".format(item))
+    else:
+        folder_path.append("{0.id}".format(item))
+    return DummyResourceURL(*folder_path)
 
 
 class Plugin:
@@ -124,17 +162,13 @@ def render_current_page(request):
     # TODO it would be nice, in theory, if there were a little plugin-scoped
     # bucket for storing data in, in case there's something expensive that
     # multiple blocks need
-    # TODO this is totally arbitrary (and will crash if there are no comics!!)
-    # but happens to work for floraverse
-    latest_page = get_latest_page_per_comic()[0]
+    latest_page = get_recent_pages().first()
 
-    prev_page, next_page = get_prev_next_page(
-        latest_page, include_queued=False)
+    adjacent_pages = get_adjacent_pages(latest_page, include_queued=False)
 
     return dict(
-        prev_page=prev_page,
         page=latest_page,
-        next_page=next_page,
+        adjacent_pages=adjacent_pages,
     )
 
 
@@ -144,15 +178,54 @@ def configure_comic(self, config):
 
     # Routing
     # TODO what goes on / now?
-    drc = DatabaseRouteConnector('comic_id', Comic.title_slug)
-    config.add_route('comic.most-recent', '/{comic_id}/', **drc.kwargs)
-    config.add_route('comic.admin', '/{comic_id}/admin/', **drc.kwargs)
-    config.add_route('comic.save-queue', '/{comic_id}/admin/queue/', **drc.kwargs)
-    config.add_route('comic.upload', '/{comic_id}/admin/upload/', **drc.kwargs)
-    config.add_route('comic.archive', '/{comic_id}/archive/', **drc.kwargs)
+    config.add_route('comic.archive', '/')
 
-    drc2 = drc.derive('page_id', ComicPage.id, slug=ComicPage.title_slug, relchain=(ComicPage.chapter, ComicChapter.comic))
-    config.add_route('comic.page', '/{comic_id}/page/{page_id}/', **drc2.kwargs)
+    config.add_route('comic.admin', '/@@admin')
+    config.add_route('comic.save-queue', '/@@admin/queue')
+    config.add_route('comic.upload', '/@@admin/upload')
+    config.add_route('comic.admin.folders', '/@@admin/folders')
+
+    # TODO so where does this go, if anywhere?  really only existed to replace
+    # the front page...
+    config.add_route('comic.most-recent', '/most-recent/')
+
+    def folder_route_factory(request):
+        path_parts = request.matchdict['folder_path'].split('/')
+        # TODO fix incorrect urls
+        # TODO catch exception here
+        folder = session.query(ComicChapter).filter_by(title_slug=path_parts[-1]).one()
+        return folder
+
+    def page_route_factory(request):
+        # TODO fix incorrect urls
+        page_id = int(request.matchdict['page_id'])
+        # TODO catch exception here
+        page = session.query(ComicPage).filter_by(id=page_id).one()
+        return page
+
+    # TODO one teeny problem here is that a folder whose name starts with a
+    # number is completely inaccessible
+    config.add_route(
+        'comic.page',
+        '/{folder_path:.+}/{page_id:\d+}{page_slug:(?:-[^/]*)?}/',
+        factory=page_route_factory,
+        use_global_views=True,
+    )
+    config.add_route(
+        'comic.browse',
+        '/{folder_path:.+}/',
+        factory=folder_route_factory,
+        use_global_views=True,
+    )
+
+    config.add_resource_url_adapter(
+        partial(make_gallery_folder_url, config.route_prefix),
+        ComicChapter,
+    )
+    config.add_resource_url_adapter(
+        partial(make_gallery_item_url, config.route_prefix),
+        ComicPage,
+    )
 
     # TODO lol this is catastrophically bad
     # TODO maybe add a method for adding more paths?  or reuse some of

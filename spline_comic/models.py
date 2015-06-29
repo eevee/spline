@@ -10,12 +10,20 @@ from sqlalchemy import (
     Unicode,
     UnicodeText,
     UniqueConstraint,
+    and_,
+    func,
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
+import sqlalchemy.ext.compiler as compiler
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import synonym
+from sqlalchemy.orm import foreign, remote
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.schema import DDLElement
+from sqlalchemy.sql import select
+from sqlalchemy.sql import table
 
 from spline.feature.core import feature_adapter
 from spline.feature.feed import IFeedItem
@@ -34,6 +42,50 @@ from spline.models.columns import TitleColumn
 END_OF_TIME = pytz.utc.localize(datetime.max)
 
 
+# XXX TODO XXX HAHA GIANT HACK, PLEASE GET THIS INTO A REAL PLACE SOMETIME
+XXX_HARDCODED_TIMEZONE = pytz.timezone('America/Los_Angeles')
+XXX_HARDCODED_QUEUE = '024'
+
+
+def get_current_publication_date(timezone):
+    """Return "today" localized to the given timezone and with the time set to
+    midnight.  This is the time at which a new comic is published, from the
+    publisher's perspective.
+    """
+    return datetime.now(timezone).replace(
+        hour=0, minute=0, second=0, microsecond=0)
+
+
+# Via: https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
+class CreateView(DDLElement):
+    def __init__(self, name, selectable):
+        self.name = name
+        self.selectable = selectable
+
+class DropView(DDLElement):
+    def __init__(self, name):
+        self.name = name
+
+@compiler.compiles(CreateView)
+def compile(element, compiler, **kw):
+    return "CREATE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
+
+@compiler.compiles(DropView)
+def compile(element, compiler, **kw):
+    return "DROP VIEW %s" % (element.name)
+
+def view(name, metadata, selectable):
+    # Deviation from the wiki recipe -- copy the columns (into dummy columns)
+    # here to avoid wacky self-referential aliasing problems such as:
+    # https://bitbucket.org/zzzeek/sqlalchemy/issue/3458/super-self-referential-m2m-joins-need-to
+    t = table(name, *(c.copy() for c in selectable.c))
+
+    CreateView(name, selectable).execute_at('after-create', metadata)
+    DropView(name).execute_at('before-drop', metadata)
+    return t
+
+
+# TODO i guess this is going to go away entirely, then
 class Comic(Base):
     __tablename__ = 'comics'
     __scope__ = 'comic'
@@ -55,8 +107,10 @@ class Comic(Base):
     # global default?  per-site?  ?????
     config_timezone = Column(Unicode, nullable=True)
 
+    # XXX TODO XXX HAHA GIANT HACK, PLEASE GET THIS INTO A REAL PLACE SOMETIME
     @property
     def timezone(self):
+        return XXX_HARDCODED_TIMEZONE
         if self.config_timezone in pytz.all_timezones_set:
             return pytz.timezone(self.config_timezone)
         else:
@@ -72,19 +126,69 @@ class Comic(Base):
             hour=0, minute=0, second=0, microsecond=0)
 
 
-class ComicChapter(Base):
+class GalleryFolder(Base):
     __tablename__ = 'comic_chapters'
+    __table_args__ = (
+        # Ensure these are only checked at the end of the transaction, because
+        # otherwise it becomes very difficult to actually edit them
+        UniqueConstraint('left', deferrable=True, initially='DEFERRED'),
+        UniqueConstraint('right', deferrable=True, initially='DEFERRED'),
+    )
     __scope__ = 'comic-chapter'
 
     id = SurrogateKeyColumn()
     comic_id = Column(Integer, ForeignKey(Comic.id), nullable=False)
+    comic = relationship(Comic, backref='chapters')
+
     title = TitleColumn()
     title_slug = SlugColumn(title)
 
-    comic = relationship(Comic, backref='chapters')
+    # Nested set, whee.  Unique index created above!
+    left = Column(Integer, nullable=False)
+    right = Column(Integer, nullable=False)
+    ancestors = relationship(
+        'GalleryFolder',
+        primaryjoin=(remote(left) < foreign(left)) & (foreign(right) < remote(right)),
+        order_by=left.desc(),
+        viewonly=True,
+        uselist=True,
+    )
+    order = synonym('left')
+
+_folder_parent = GalleryFolder.__table__.alias()
+_folder_child = GalleryFolder.__table__.alias()
+folder_parentage = view(
+    'gallery_folder__parent',
+    Base.metadata,
+    select([_folder_child.c.id.label('child_id'), _folder_parent.c.id.label('parent_id')])
+    .select_from(
+        _folder_child.join(
+            _folder_parent,
+            and_(
+                _folder_parent.c.left < _folder_child.c.left,
+                _folder_child.c.right < _folder_parent.c.right,
+            ),
+        )
+    )
+    .order_by(_folder_child.c.id, _folder_parent.c.left)
+    .distinct(_folder_child.c.id)
+)
+GalleryFolder.parent = relationship(
+    GalleryFolder,
+    secondary=folder_parentage,
+    primaryjoin=GalleryFolder.id == folder_parentage.c.child_id,
+    secondaryjoin=GalleryFolder.id == folder_parentage.c.parent_id,
+    foreign_keys=[folder_parentage.c.child_id, folder_parentage.c.parent_id],
+    viewonly=True,
+    uselist=False,
+    backref='children',
+)
+
+# TODO backcompat
+ComicChapter = GalleryFolder
 
 
-class ComicPage(Base):
+class GalleryItem(Base):
     __tablename__ = 'comic_pages'
     __scope__ = 'comic-page'
 
@@ -100,7 +204,8 @@ class ComicPage(Base):
     timezone = Column(Unicode, nullable=False)
 
     author_user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    chapter_id = Column(Integer, ForeignKey(ComicChapter.id), nullable=False)
+    folder_id = Column('chapter_id', ForeignKey(ComicChapter.id), nullable=False)
+    chapter_id = synonym('folder_id')
 
     # In theory, sequential with no gaps.  We try our best.
     page_number = Column(Integer, nullable=False)
@@ -109,19 +214,22 @@ class ComicPage(Base):
     # FK in this table, so whatever.
     order = Column(Integer, nullable=False)
 
+    # TODO so, since this is gonna need to be split off anyway, should it be a
+    # thing that just has its own table and lives in core?
     file = Column(StoredFile, nullable=False)
     title = TitleColumn()
     title_slug = SlugColumn(title)
     comment = ProseColumn()
 
     __table_args__ = (
-        UniqueConstraint(page_number, chapter_id, deferrable=True),
+        UniqueConstraint(page_number, folder_id, deferrable=True),
         UniqueConstraint(order, deferrable=True),
     )
 
     author = relationship(User, backref='comic_pages')
-    chapter = relationship(ComicChapter, backref='pages')
-    comic = association_proxy('chapter', 'comic')
+    folder = relationship(GalleryFolder, backref=backref('pages', order_by=order))
+    chapter = synonym('folder')
+    comic = association_proxy('folder', 'comic')
 
     @hybrid_property
     def local_date_published(self):
@@ -137,6 +245,9 @@ class ComicPage(Base):
     @hybrid_property
     def is_queued(self):
         return self.date_published > datetime.now(pytz.utc)
+
+
+ComicPage = GalleryItem
 
 
 class ComicPageTranscript(Base):

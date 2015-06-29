@@ -4,15 +4,17 @@
 
     from spline.format import format_date
     from spline_comic.models import END_OF_TIME
+    from spline_comic.models import get_current_publication_date
+    from spline_comic.models import XXX_HARDCODED_TIMEZONE
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
 
-<%block name="title">Administrate ${comic.title}</%block>
+<%block name="title">Administrate gallery</%block>
 
 <section>
     <h1>Queue</h1>
 
-    <p>Today's publication date is <b>${format_date(comic.current_publication_date)}</b>.</p>
+    <p>Today's publication date is <b>${format_date(get_current_publication_date(XXX_HARDCODED_TIMEZONE))}</b>.</p>
 
     % if num_queued and last_queued.date_published < END_OF_TIME:
     <p>You have <b>${num_queued}</b> queued pages, enough to last until ${format_date(last_queued.local_date_published)}.</p>
@@ -45,7 +47,7 @@
         background: hsl(60, 100%, 70%);
     }
     </style>
-    <form action="${request.route_url('comic.save-queue', comic)}" method="POST">
+    <form action="${request.route_url('comic.save-queue')}" method="POST">
         <table class="calendar comic-calendar">
             <caption>Post queued pages on:</caption>
             <thead>
@@ -114,7 +116,7 @@
 <section>
     <h1>Upload</h1>
 
-    <form action="${request.route_url('comic.upload', comic)}" method="POST" enctype="multipart/form-data">
+    <form action="${request.route_url('comic.upload')}" method="POST" enctype="multipart/form-data">
         <fieldset>
             <p><input type="file" name="file"></p>
             <p><input type="text" name="title" placeholder="Title (optional)"></p>
@@ -219,3 +221,32 @@
     </form>
 </section>
 
+<section id="manage-folders">
+    <h1>Manage folders</h1>
+    <p>Wow this isn't done at all!  In fact it's probably totally broken, maybe don't use it.</p>
+    <form action="${request.route_url('comic.admin.folders')}" method="POST">
+    <ul>
+    <% last = None %>
+    <% ancestry = [] %>
+    % for folder in chapters:
+        <%
+            if last and last.right > folder.left:
+                ancestry.append(last)
+            while ancestry and ancestry[-1].right < folder.left:
+                ancestry.pop()
+        %>
+        <li>
+            % for _ in ancestry:
+                —
+            % endfor
+            ${folder.id} | ${folder.left} ${folder.right} ${folder.title} ${folder.ancestors}
+            <button type="submit" name="${folder.id}" value="right">
+                ↓</button>
+            <button type="submit" name="${folder.id}" value="left">
+                ↑</button>
+        </li>
+        <% last = folder %>
+    % endfor
+    </ul>
+    </form>
+</section>
