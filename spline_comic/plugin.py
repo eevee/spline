@@ -1,6 +1,10 @@
 from collections import namedtuple
 from functools import partial
 
+from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.exc import NoResultFound
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.events import subscriber
 
 from spline.display.rendering import render_with_context
@@ -30,12 +34,14 @@ def offer_blocks(event):
     # old...?
     latest_pages = get_latest_page_per_comic()
 
-    first_pages = get_first_pages_for_chapters(page.chapter for page in latest_pages)
+    first_pages = get_first_pages_for_chapters(
+        page.chapter for page in latest_pages)
     chapter_to_first_page = dict(
         (page.chapter, page)
         for page in first_pages)
 
-    first_pages = get_first_pages_for_comics(page.comic for page in latest_pages)
+    first_pages = get_first_pages_for_comics(
+        page.comic for page in latest_pages)
     comic_to_first_page = dict(
         (page.comic, page)
         for page in first_pages)
@@ -64,12 +70,17 @@ def build_menu(event):
     # TODO this is pretty piss-poor now that "comic" has been kind of
     # overloaded to mean not really that
     for comic in session.query(Comic):
-        event.add_item("{} comic".format(comic.title), 'comic.most-recent', comic)
+        event.add_item(
+            "{} comic".format(comic.title),
+            'comic.most-recent',
+            comic,
+        )
 
 
 # Resource stuff -- violently jam my ideas into Pyramid
 # TODO document, clean up a bit
 
+# Generate URLs
 class DummyResourceURL(namedtuple('_DummyResourceURL', [
         'virtual_path', 'virtual_path_tuple',
         'physical_path', 'physical_path_tuple',
@@ -101,6 +112,47 @@ def make_gallery_item_url(route_prefix, item, request):
     else:
         folder_path.append("{0.id}".format(item))
     return DummyResourceURL(*folder_path)
+
+
+# Resolve URLs
+def canonicalize_resource_url(request, resource):
+    canon_url = request.resource_url(resource)
+    if canon_url != request.path_url:
+        if request.query_string:
+            canon_url += '?' + request.query_string
+        raise HTTPSeeOther(location=canon_url)
+
+
+def folder_route_factory(request):
+    path_parts = request.matchdict['folder_path'].split('/')
+    try:
+        folder = (
+            session.query(ComicChapter)
+            .filter_by(title_slug=path_parts[-1])
+            .options(joinedload('ancestors'))
+            .one()
+        )
+    except NoResultFound:
+        raise HTTPNotFound
+    else:
+        canonicalize_resource_url(request, folder)
+        return folder
+
+
+def page_route_factory(request):
+    page_id = int(request.matchdict['page_id'])
+    try:
+        page = (
+            session.query(ComicPage)
+            .filter_by(id=page_id)
+            .options(joinedload('folder').joinedload('ancestors'))
+            .one()
+        )
+    except NoResultFound:
+        raise HTTPNotFound
+    else:
+        canonicalize_resource_url(request, page)
+        return page
 
 
 class Plugin:
@@ -157,7 +209,9 @@ comic_plugin = Plugin('comic', __name__)
 # TODO how on earth will this still work when there are multiple comics going
 # on?  currently we just inject one block for every comic which isn't going to
 # work for a gallery-oriented thing either
-@comic_plugin.define_renderable('latest-page', 'spline_comic:templates/page#main_section.mako')
+@comic_plugin.define_renderable(
+    'latest-page',
+    'spline_comic:templates/page#main_section.mako')
 def render_current_page(request):
     # TODO it would be nice, in theory, if there were a little plugin-scoped
     # bucket for storing data in, in case there's something expensive that
@@ -188,20 +242,6 @@ def configure_comic(self, config):
     # TODO so where does this go, if anywhere?  really only existed to replace
     # the front page...
     config.add_route('comic.most-recent', '/most-recent/')
-
-    def folder_route_factory(request):
-        path_parts = request.matchdict['folder_path'].split('/')
-        # TODO fix incorrect urls
-        # TODO catch exception here
-        folder = session.query(ComicChapter).filter_by(title_slug=path_parts[-1]).one()
-        return folder
-
-    def page_route_factory(request):
-        # TODO fix incorrect urls
-        page_id = int(request.matchdict['page_id'])
-        # TODO catch exception here
-        page = session.query(ComicPage).filter_by(id=page_id).one()
-        return page
 
     # TODO one teeny problem here is that a folder whose name starts with a
     # number is completely inaccessible
