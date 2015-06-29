@@ -35,14 +35,18 @@ ${parent_folder.title}
             <img src="${page.file.url_from_request(request)}"
                 class="image-capped">
 
-            ${page.title} / ${page.page_number}
+            ${page.title or "page {}".format(page.page_number)}
         </a>
     </li>
+% endfor
+% for i in range(10):
+<li class="-dummy"></li>
 % endfor
 </ul>
 % endif
 
 % for folder in folders:
+% if folder.children or recent_pages_by_folder[folder]:
 <section>
     <h1 id="comic-${folder.title_slug}">
         <a href="${request.resource_url(folder)}">${folder.title}</a>
@@ -63,12 +67,11 @@ ${parent_folder.title}
                     <img src="${page.file.url_from_request(request)}"
                         class="image-capped">
 
-                    ${page.title} / ${page.page_number}
+                    ${child_folder.title}
                 </a>
             </li>
         % endif
     % endfor
-    ...
     ## TODO not sure this ordering makes sense.  isn't the above early-first and this is recent-first?
     ## TODO do i want some separation between these?  two separate rows, perhaps?
     ## TODO really want to have a text-overflow sort of thing here
@@ -78,10 +81,17 @@ ${parent_folder.title}
                 <img src="${page.file.url_from_request(request)}"
                     class="image-capped">
 
-                ${page.title} / ${page.page_number}
+                ${page.title or "page {}".format(page.page_number)}
             </a>
         </li>
     % endfor
+    ## Inject a row's worth of dummy zero-height elements -- this keeps the
+    ## last row from filling all available space (because these items will
+    ## invisibly share it)
+    % for i in range(10):
+    <li class="-dummy"></li>
+    % endfor
     </ul>
 </section>
+% endif
 % endfor

@@ -8,21 +8,21 @@ $privileged-color: hsl(45, 90%, 75%);
 /*ol*/.comic-page-grid {
     @include flexbox;
     @include flex-wrap(wrap);
-    @include justify-content(flex-start);
     @include align-items(baseline);
     list-style-type: none;
     //font-size: 1.5em;
-    margin: 0;
+    margin: 1em;
     padding: 0;
 
     > li {
-        @include flex(0);
-        margin: 0.5em;
+        @include flex(1 0);
+        box-sizing: border-box;
+        text-align: center;
 
         > a {
             display: block;
-            margin: 0;
-            vertical-align: middle;
+            padding: 0.5em;
+            min-width: 200px;
             text-align: center;
 
             &:visited {
@@ -34,7 +34,9 @@ $privileged-color: hsl(45, 90%, 75%);
 
             > img {
                 display: block;
-                margin-bottom: 0.33em;
+                margin: 0 auto 0.33em;
+                min-width: 100px;
+                object-fit: cover;
 
                 background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
                 border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
@@ -50,8 +52,11 @@ $privileged-color: hsl(45, 90%, 75%);
             box-shadow: 0 0 0 2px $privileged-color;
         }
 
-        &:last-child {
-            margin-right: auto;
+        &.-dummy {
+            // These exist just to keep the last row aligned to the grid; the
+            // width must match the width for the links above, and they must
+            // have no height
+            min-width: calc(200px + 0.5em);
         }
     }
 }

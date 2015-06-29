@@ -116,7 +116,6 @@ def _comic_archive_shared(parent_folder, request):
         .order_by(GalleryFolder.order)
         .all()
     )
-    print(folders)
     folder_ids = [folder.id for folder in folders]
     child_folder_ids = [child.id for folder in folders for child in folder.children]
     visible_folder_ids = folder_ids + child_folder_ids
@@ -135,7 +134,8 @@ def _comic_archive_shared(parent_folder, request):
         recent_page_subq = (
             session.query(
                 GalleryItem,
-                func.rank().over(partition_by=GalleryItem.folder_id, order_by=GalleryItem.order.desc()).label('rank'),
+                func.rank().over(partition_by=GalleryItem.folder_id, order_by=GalleryItem.order.asc()).label('rank_first'),
+                func.rank().over(partition_by=GalleryItem.folder_id, order_by=GalleryItem.order.desc()).label('rank_last'),
             )
             .filter(GalleryItem.folder_id.in_(folder_ids))
             .subquery()
@@ -143,7 +143,11 @@ def _comic_archive_shared(parent_folder, request):
         GalleryItem_alias = aliased(GalleryItem, recent_page_subq)
         recent_page_q = (
             session.query(GalleryItem_alias)
-            .filter(recent_page_subq.c.rank <= 5)
+            .filter(
+                (recent_page_subq.c.rank_last <= 5) |
+                (recent_page_subq.c.rank_first == 1)
+            )
+            .order_by(GalleryItem_alias.order.asc())
         )
         for item in recent_page_q:
             recent_pages_by_folder[item.folder].append(item)
