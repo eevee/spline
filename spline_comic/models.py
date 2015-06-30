@@ -4,14 +4,15 @@ import tzlocal
 import pytz
 from sqlalchemy import (
     Column,
-    DateTime,
+    Enum,
     ForeignKey,
     Integer,
+    Sequence,
+    Table,
     Unicode,
     UnicodeText,
     UniqueConstraint,
     and_,
-    func,
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -214,9 +215,6 @@ class GalleryItem(Base):
     # FK in this table, so whatever.
     order = Column(Integer, nullable=False)
 
-    # TODO so, since this is gonna need to be split off anyway, should it be a
-    # thing that just has its own table and lives in core?
-    file = Column(StoredFile, nullable=False)
     title = TitleColumn()
     title_slug = SlugColumn(title)
     comment = ProseColumn()
@@ -248,6 +246,45 @@ class GalleryItem(Base):
 
 
 ComicPage = GalleryItem
+
+
+# TODO it may or may not be nice to put this in core?  moving it with alembic
+# will be kind of tricky, but otoh i don't know how other plugins will need this
+class GalleryMedia(Base):
+    __tablename__ = 'gallery_media'
+    id = Column(Integer, nullable=False, primary_key=True)
+    discriminator = Column(
+        Enum('image', 'iframe', name='gallery_media__discriminator'),
+        nullable=False,
+    )
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
+
+class GalleryMedia_Image(GalleryMedia):
+    __mapper_args__ = {'polymorphic_identity': 'image'}
+    image_file = Column(StoredFile, nullable=True)
+    thumbnail_file = Column(StoredFile, nullable=True)
+
+
+class GalleryMedia_IFrame(GalleryMedia):
+    __mapper_args__ = {'polymorphic_identity': 'iframe'}
+    url = Column(Unicode, nullable=True)
+    height = Column(Integer, nullable=True)
+    width = Column(Integer, nullable=True)
+
+
+gallery_items_media = Table(
+    'gallery_items_media',
+    Base.metadata,
+    Column('gallery_item_id', ForeignKey(GalleryItem.id), primary_key=True),
+    Column('gallery_media_id', ForeignKey(GalleryMedia.id), primary_key=True),
+    Column('order', Integer, Sequence('gallery_items_media_order_seq'), nullable=False, unique=True, index=True),
+)
+GalleryItem.media = relationship(
+    GalleryMedia,
+    secondary=gallery_items_media,
+    order_by=gallery_items_media.c.order,
+)
 
 
 class ComicPageTranscript(Base):

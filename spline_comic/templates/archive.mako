@@ -15,13 +15,13 @@ Archive
 
 <%block name="header">
 % if parent_folder:
-<h1>
-<a href="${request.route_url('comic.archive')}">Archive</a> »
-% for ancestor in parent_folder.ancestors:
-<a href="${request.resource_url(ancestor)}">${ancestor.title}</a> »
-% endfor
-${parent_folder.title}
-</h1>
+<p>
+    <a href="${request.route_url('comic.archive')}">Archive</a> »
+    % for ancestor in parent_folder.ancestors:
+        <a href="${request.resource_url(ancestor)}">${ancestor.title}</a> »
+    % endfor
+</p>
+<h1>${parent_folder.title}</h1>
 % else:
 <h1>Archive</h1>
 % endif
@@ -32,7 +32,7 @@ ${parent_folder.title}
 % for page in parent_folder.pages:
     <li class="${'privileged' if page.is_queued else ''}">
         <a href="${request.resource_url(page)}">
-            <img src="${page.file.url_from_request(request)}"
+            <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
                 class="image-capped">
 
             ${page.title or "page {}".format(page.page_number)}
@@ -64,7 +64,7 @@ ${parent_folder.title}
             <li class="chapter ${'privileged' if page.is_queued else ''}">
                 ## TODO this should prooobably link to the archive for the /folder/
                 <a href="${request.resource_url(child_folder)}">
-                    <img src="${page.file.url_from_request(request)}"
+                    <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
                         class="image-capped">
 
                     ${child_folder.title}
@@ -75,7 +75,7 @@ ${parent_folder.title}
     % for page in recent_pages_by_folder[folder]:
         <li class="${'privileged' if page.is_queued else ''}">
             <a href="${request.resource_url(page)}">
-                <img src="${page.file.url_from_request(request)}"
+                <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
                     class="image-capped">
 
                 ${page.title or "page {}".format(page.page_number)}

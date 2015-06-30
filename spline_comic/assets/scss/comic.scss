@@ -14,7 +14,7 @@ $privileged-color: hsl(45, 90%, 75%);
     padding: 0;
 
     > li {
-        @include flex(1 0);
+        @include flex(1 0 calc(200px + 0.5em));
         box-sizing: border-box;
         text-align: center;
 
@@ -123,15 +123,4 @@ $privileged-color: hsl(45, 90%, 75%);
     padding: 3px;
     border: 1px solid hsl(0, 0%, 90%);
     box-shadow: 0 1px 3px hsl(0, 0%, 90%);
-}
-.comic-page-meta {
-    @include flexbox;
-    @include align-self(stretch);
-    @include justify-content(space-between);
-    margin-top: 0.33em;
-
-    > .-title {
-        text-align: left;
-        font-style: italic;
-    }
 }

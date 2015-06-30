@@ -19,6 +19,16 @@ def title_for_page(page):
 
 <%block name="title">${title_for_page(page)}</%block>
 
+<%block name="header">
+<p>
+    % for ancestor in page.folder.ancestors:
+        <a href="${request.resource_url(ancestor)}">${ancestor.title}</a> »
+    % endfor
+    <a href="${request.resource_url(page.folder)}">${page.folder.title}</a> »
+</p>
+<h1>${page.title or "page {}".format(page.page_number)}</h1>
+</%block>
+
 
 ${main_section(page, adjacent_pages, transcript)}
 
@@ -27,76 +37,16 @@ ${main_section(page, adjacent_pages, transcript)}
 <section class="comic-page">
     ${draw_comic_controls(page, adjacent_pages)}
 
+    % for medium in page.media:
     <div class="comic-page-image-container">
-        <img src="${page.file.url_from_request(request)}"
-            class="comic-page-image">
-
-        <div class="comic-page-meta">
-            <div class="-title">
-              % if page.title:
-                <q>${page.title}</q>
-              % endif
-            </div>
-            <div class="-chapter-page">
-                <a href="${request.resource_url(page.folder)}">${page.chapter.title}</a>, page ${page.page_number}
-            </div>
-        </div>
+        % if medium.discriminator == 'image':
+            <img src="${medium.image_file.url_from_request(request)}"
+                class="comic-page-image">
+        % elif medium.discriminator == 'iframe':
+            <iframe width="${medium.width}" height="${medium.height}" src="${medium.url}" frameborder="0" allowfullscreen></iframe>
+        % endif
     </div>
-
-    ## XXX FLORAVERSE i am human garbage.  please make this a real feature goddamn.
-    % if page.id == 292:
-    <div class="comic-page-image-container">
-        <iframe width="640" height="480" src="https://www.youtube.com/embed/UqrqZorg_78?rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 297:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-part1" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 298:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-part2" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 299:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-part3" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 300:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-part4" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 301:
-    <div class="comic-page-image-container">
-        <iframe width="640" height="480" src="https://www.youtube.com/embed/2DlzC2eAhOo?rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 303:
-    <div class="comic-page-image-container">
-        <iframe width="640" height="480" src="https://www.youtube.com/embed/Ii2ZYqP8vOU?rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 304:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#prompt2-itchyitchy-final" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 307:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#brokentoy-part1" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 310:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#brokentoy-part2" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 313:
-    <div class="comic-page-image-container">
-        <iframe width="640" height="480" src="https://www.youtube.com/embed/bhDraI1wjxE?rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 316:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#brokentoy-part4" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % elif page.id == 319:
-    <div class="comic-page-image-container">
-        <iframe width="800" height="600" src="http://apps.veekun.com/flora-cutscenes/#brokentoy-part5" frameborder="0" allowfullscreen></iframe>
-    </div>
-    % endif
+    % endfor
 
     ${draw_comic_controls(page, adjacent_pages)}
 </section>

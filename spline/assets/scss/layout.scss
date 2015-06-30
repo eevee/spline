@@ -181,6 +181,13 @@ main {
             font-weight: normal;
             border-bottom: 1px solid $h0-border;
         }
+        // Breadcrumbs
+        > p {
+            margin: 1rem 1rem 0;
+            + h1 {
+                margin-top: 0;
+            }
+        }
 
         // Section navigation, on the upper right
         nav {
