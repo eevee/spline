@@ -1,0 +1,23 @@
+// TODO would be nice for this to just be a normal override somehow and work
+// without a physical middle file?
+@import "def_overrides";
+
+// primary colors
+$primary-accent: hsl(225, 30%, 50%) !default;
+$secondary-accent: hsl(225, 10%, 40%) !default;
+$body-bg-color: scale-color($primary-accent, $saturation: -80%, $lightness: 85%) !default;
+
+$link-color: $secondary-accent !default;
+$link-visited-color: scale-color(adjust-hue($secondary-accent, 30deg), $lightness: -20%) !default;
+
+// detail colors (largely grays)
+$border-color: #e8e8e8 !default;
+$container-bg: #fcfcfc !default;
+
+$privileged-color: hsl(45, 90%, 75%) !default;
+
+// Headers, where zero is the page title
+$h0-color: $primary-accent !default;
+$h1-color: scale-color($primary-accent, $saturation: -50%) !default;
+$h0-border: scale-color($primary-accent, $saturation: -70%, $lightness: 80%) !default;
+$h1-border: scale-color($primary-accent, $saturation: -70%, $lightness: 90%) !default;

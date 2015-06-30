@@ -1,9 +1,5 @@
 @import "vendor/flex";
-
-// TODO copied from layout.scss -- need this stuff to be in its own file oops
-// TODO also this is the floraverse value
-$secondary-accent: #4a9f7c;
-$privileged-color: hsl(45, 90%, 75%);
+@import "defs";
 
 /*ol*/.comic-page-grid {
     @include flexbox;

@@ -66,7 +66,7 @@ def main(global_settings, **settings):
     # TODO is this where this kind of thing should go?  seems, y'know, clunky
     settings.update({
         'pyramid.default_locale_name': u'en',
-        'mako.directories': ['floraverse_com:templates', 'spline:templates'],
+        'mako.directories': ['spline:templates'],
         'mako.module_directory': str(datadir / '_mako_cache'),
         'mako.strict_undefined': True,
 
@@ -75,8 +75,6 @@ def main(global_settings, **settings):
         # TODO: pyramid_scss should learn to do asset specs in imports as well,
         # but scss needs import hooking for that to work
         'scss.asset_path':
-            # TODO floraverse
-            'floraverse_com:assets/scss\n' +
             'spline:assets/scss\n' +
             os.path.join(os.getcwd(), '../archetype.git/scss'),
 
@@ -154,14 +152,6 @@ def main(global_settings, **settings):
 
     # Static assets
     config.add_static_view('static', 'spline:assets', cache_max_age=3600)
-    # Use this instead of a separate static view so that everything lives in
-    # /static and it's possible to replace something without changing code.
-    # Note that the downside here is that you have to use 'spline:assets' even
-    # for assets that don't actually live there!
-    config.override_asset(
-        to_override='spline:assets/',
-        override_with='floraverse_com:assets/',
-    )
 
     # Load core stuff first
     config.include(core_plugin_includeme)

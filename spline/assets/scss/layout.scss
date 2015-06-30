@@ -1,44 +1,15 @@
 @import "vendor/flex";
-
-// -----------------------------------------------------------------------------
-// config
-
-// primary colors
-$primary-accent: hsl(225, 30%, 50%);
-$secondary-accent: hsl(225, 10%, 40%);
-// TODO FLORAVERSE
-// temp overrides for floraverse
-$primary-accent: #9c7873;
-$secondary-accent: #4a9f7c;
-
-$link-color: $secondary-accent;
-$link-visited-color: scale-color(adjust-hue($secondary-accent, 30deg), $lightness: -20%);
-
-// detail colors (largely grays)
-$border-color: #e8e8e8;
-$container-bg: #fcfcfc;
-
-$privileged-color: hsl(45, 90%, 75%);
-
-// Headers, where zero is the page title
-$h0-color: $primary-accent;
-$h1-color: scale-color($primary-accent, $saturation: -50%);
-$h0-border: scale-color($primary-accent, $saturation: -70%, $lightness: 80%);
-$h1-border: scale-color($primary-accent, $saturation: -70%, $lightness: 90%);
-
+@import "defs";
 
 // -----------------------------------------------------------------------------
 // main layout
 
 body {
-    $bg-color: scale-color($primary-accent, $saturation: -80%, $lightness: 85%);
-    // TODO FLORAVERSE
-    $bg-color: #e7ddd5;  // TODO recalculate primary accent from this?
-    background: url(/static/images/global-background-marble.png) $bg-color fixed;
+    background: url(/static/images/global-background-marble.png) $body-bg-color fixed;
     background:
         url(/static/images/global-background-grass.png) repeat-x,
         url(/static/images/global-background-marble.png) repeat,
-        $bg-color;
+        $body-bg-color;
 
     // TODO need a stick footer, but this is close enough for now
     margin-bottom: 8em;
