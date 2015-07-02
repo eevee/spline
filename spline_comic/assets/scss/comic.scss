@@ -30,9 +30,13 @@
             > img {
                 display: block;
                 margin: 0 auto 0.33em;
+                // TODO this stuff sounds awesome, and works well, but...
+                // generating thumbnails that are always 200px kinda fucks it up.
+                /*
                 min-width: 100px;
                 object-fit: cover;
                 object-position: top;
+                */
 
                 background: scale-color($secondary-accent, $saturation: -40%, $lightness: 95%);
                 border: 1px solid scale-color($secondary-accent, $saturation: -20%, $lightness: 90%);
