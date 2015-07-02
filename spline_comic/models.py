@@ -321,4 +321,4 @@ class ComicPage_FeedItem(object):
         return ret
 
     def generate_url(self, request):
-        return request.route_url('comic.page', self.page)
+        return request.resource_url(self.page)
