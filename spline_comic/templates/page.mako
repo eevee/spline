@@ -66,12 +66,15 @@ ${main_section(page, adjacent_pages, transcript)}
 
 ## TODO i don't like this globally-unique id thing, though, granted, it's
 ## unlikely there'd be more than one disqus thread on a single page
+% if 'spline_gallery.disqus' in request.registry.settings:
 <section class="comments">
     <h1>Comments</h1>
+    ## TODO this gunk might be nice to not have embedded here, maybe with a
+    ## widget sort of thing, could use for ads too
     <div id="disqus_thread"></div>
     <script type="text/javascript">
-        ## TODO FLORAVERSE
-        var disqus_shortname = 'floraverse';
+        ## TODO json-encode this
+        var disqus_shortname = '${request.registry.settings['spline_gallery.disqus']}';
         ## Note: this block might be included on pages that aren't the comic
         ## page (most notably the homepage!), so we mustn't assume the disqus
         ## defaults are okay
@@ -90,6 +93,7 @@ ${main_section(page, adjacent_pages, transcript)}
         })();
     </script>
 </section>
+% endif
 </%def>
 
 
