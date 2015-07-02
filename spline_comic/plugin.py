@@ -4,7 +4,7 @@ from functools import partial
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from pyramid.httpexceptions import HTTPNotFound
-from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.httpexceptions import HTTPMovedPermanently
 from pyramid.events import subscriber
 
 from spline.display.rendering import render_with_context
@@ -120,7 +120,7 @@ def canonicalize_resource_url(request, resource):
     if canon_url != request.path_url:
         if request.query_string:
             canon_url += '?' + request.query_string
-        raise HTTPSeeOther(location=canon_url)
+        raise HTTPMovedPermanently(location=canon_url)
 
 
 def folder_route_factory(request):
