@@ -29,6 +29,8 @@ from spline_comic.models import XXX_HARDCODED_QUEUE
 from spline_comic.models import XXX_HARDCODED_TIMEZONE
 from spline_comic.models import get_current_publication_date
 
+FOLDER_PREVIEW_PAGE_COUNT = 7
+
 
 @view_config(
     route_name='comic.most-recent',
@@ -123,13 +125,18 @@ def _comic_archive_shared(parent_folder, request):
     child_folder_ids = [
         child.id for folder in folders for child in folder.children
     ]
-    visible_folder_ids = folder_ids + child_folder_ids
 
-    # XXX remove this; currently used by _base.mako
+    # XXX remove this; currently used by _base.mako and the test below
     comic = session.query(Comic).order_by(Comic.id.asc()).first()
 
-    # TODO this (and maybe other places) don't check for queued
+    if request.has_permission('queue', comic):
+        queued_clause = True
+    else:
+        queued_clause = ~GalleryItem.is_queued
+
     recent_pages_by_folder = defaultdict(list)
+    date_range_by_folder = dict()
+    page_count_by_folder = dict()
     if folder_ids:
         recent_page_subq = (
             session.query(
@@ -144,13 +151,14 @@ def _comic_archive_shared(parent_folder, request):
                 ).label('rank_last'),
             )
             .filter(GalleryItem.folder_id.in_(folder_ids))
+            .filter(queued_clause)
             .subquery()
         )
         GalleryItem_alias = aliased(GalleryItem, recent_page_subq)
         recent_page_q = (
             session.query(GalleryItem_alias)
             .filter(
-                (recent_page_subq.c.rank_last <= 5) |
+                (recent_page_subq.c.rank_last <= FOLDER_PREVIEW_PAGE_COUNT) |
                 (recent_page_subq.c.rank_first == 1)
             )
             .order_by(GalleryItem_alias.order.asc())
@@ -158,11 +166,34 @@ def _comic_archive_shared(parent_folder, request):
         for item in recent_page_q:
             recent_pages_by_folder[item.folder].append(item)
 
+        # Snag the start/end dates for each folder and the number of items in
+        # each
+        group_q = (
+            session.query(
+                GalleryFolder,
+                func.min(GalleryItem.date_published),
+                func.max(GalleryItem.date_published),
+                func.count('*')
+            )
+            .join(GalleryFolder.pages)
+            .filter(GalleryItem.folder_id.in_(folder_ids))
+            .filter(queued_clause)
+            .group_by(GalleryFolder.id)
+        )
+        tz = XXX_HARDCODED_TIMEZONE
+        for folder, mindate, maxdate, count in group_q:
+            date_range_by_folder[folder] = (
+                tz.normalize(mindate.astimezone(tz)),
+                tz.normalize(maxdate.astimezone(tz)),
+            )
+            page_count_by_folder[folder] = count
+
     first_page_by_folder = {}
     if child_folder_ids:
         recent_page_q = (
             session.query(GalleryItem)
             .filter(GalleryItem.folder_id.in_(child_folder_ids))
+            .filter(queued_clause)
             .order_by(GalleryItem.folder_id, GalleryItem.order.asc())
             .distinct(GalleryItem.folder_id)
         )
@@ -171,25 +202,6 @@ def _comic_archive_shared(parent_folder, request):
             for page in recent_page_q
         }
 
-    min_max_q = (
-        session.query(
-            GalleryFolder,
-            func.min(GalleryItem.date_published),
-            func.max(GalleryItem.date_published),
-        )
-        .join(GalleryFolder.pages)
-        .filter(GalleryItem.folder_id.in_(visible_folder_ids))
-        .group_by(GalleryFolder.id)
-    )
-    tz = XXX_HARDCODED_TIMEZONE
-    date_range_by_folder = {
-        folder: (
-            tz.normalize(mindate.astimezone(tz)),
-            tz.normalize(maxdate.astimezone(tz)),
-        )
-        for (folder, mindate, maxdate) in min_max_q
-    }
-
     return dict(
         comic=comic,
         parent_folder=parent_folder,
@@ -197,6 +209,7 @@ def _comic_archive_shared(parent_folder, request):
         recent_pages_by_folder=recent_pages_by_folder,
         first_page_by_folder=first_page_by_folder,
         date_range_by_folder=date_range_by_folder,
+        page_count_by_folder=page_count_by_folder,
     )
 
 

@@ -1,5 +1,6 @@
 <%!
     from spline.format import format_date
+    from spline_comic.views import FOLDER_PREVIEW_PAGE_COUNT
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
 
@@ -72,7 +73,17 @@ Archive
             </li>
         % endif
     % endfor
-    % for page in recent_pages_by_folder[folder]:
+    ## We fetch the first page, plus the last N.  If that gives us N pages
+    ## total, none are missing.  Otherwise, elide the second one and show a link
+    ## instead.
+    % for i, page in enumerate(recent_pages_by_folder[folder]):
+        % if i == 1 and page_count_by_folder[folder] > FOLDER_PREVIEW_PAGE_COUNT + 1:
+        <li class="-elision">
+            <a href="${request.resource_url(folder)}">
+                ... ${page_count_by_folder[folder] - FOLDER_PREVIEW_PAGE_COUNT} more ...
+            </a>
+        </li>
+        % else:
         <li class="${'privileged' if page.is_queued else ''}">
             <a href="${request.resource_url(page)}">
                 <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
@@ -81,6 +92,7 @@ Archive
                 ${page.title or "page {}".format(page.page_number)}
             </a>
         </li>
+        % endif
     % endfor
     ## Inject a row's worth of dummy zero-height elements -- this keeps the
     ## last row from filling all available space (because these items will
