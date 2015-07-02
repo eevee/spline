@@ -1,6 +1,8 @@
 // TODO would be nice for this to just be a normal override somehow and work
 // without a physical middle file?
-@import "def_overrides";
+// TODO need this "/" to override pyscss's desire to search exactly the current
+// dir first, urgh
+@import "/defs--override";
 
 // primary colors
 $primary-accent: hsl(225, 30%, 50%) !default;

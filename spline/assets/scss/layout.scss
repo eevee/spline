@@ -6,10 +6,6 @@
 
 body {
     background: url(/static/images/global-background-marble.png) $body-bg-color fixed;
-    background:
-        url(/static/images/global-background-grass.png) repeat-x,
-        url(/static/images/global-background-marble.png) repeat,
-        $body-bg-color;
 
     // TODO need a stick footer, but this is close enough for now
     margin-bottom: 8em;
