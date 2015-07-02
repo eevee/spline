@@ -234,10 +234,21 @@ def configure_comic(self, config):
     # TODO what goes on / now?
     config.add_route('comic.archive', '/')
 
-    config.add_route('comic.admin', '/@@admin')
-    config.add_route('comic.save-queue', '/@@admin/queue')
-    config.add_route('comic.upload', '/@@admin/upload')
-    config.add_route('comic.admin.folders', '/@@admin/folders')
+    # There needs to be a context for the auth thing to work, because it looks
+    # at the context's __scope__ property to check for permission...  oops.
+    # TODO can i fix this?  what's the context for the admin pages?  is this a
+    # sign that something is just catastrophically wrong with this approach?
+    # or should there be a way to handle no context at all?
+    class DumbAdminPermissionHack:
+        __scope__ = 'comic'
+
+        def __init__(self, request):
+            pass
+
+    config.add_route('comic.admin', '/@@admin', factory=DumbAdminPermissionHack)
+    config.add_route('comic.save-queue', '/@@admin/queue', factory=DumbAdminPermissionHack)
+    config.add_route('comic.upload', '/@@admin/upload', factory=DumbAdminPermissionHack)
+    config.add_route('comic.admin.folders', '/@@admin/folders', factory=DumbAdminPermissionHack)
 
     # TODO so where does this go, if anywhere?  really only existed to replace
     # the front page...

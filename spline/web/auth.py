@@ -11,7 +11,6 @@ from spline.models import session
 @implementer(IAuthorizationPolicy)
 class RoleAuthorizationPolicy:
     def permits(self, context, principals, permission):
-        return True  # XXX comic admin needs its context fixed
         scope = context.__scope__
         return any(principal.can(scope, permission) for principal in principals)
 
