@@ -96,7 +96,7 @@
                             % endif
                         ">
                             % if calendar_date in day_to_page:
-                            <a href="${request.route_url('comic.page', day_to_page[calendar_date])}">
+                            <a href="${request.resource_url(day_to_page[calendar_date])}">
                             ${calendar_date.day}
                             </a>
                             % else:

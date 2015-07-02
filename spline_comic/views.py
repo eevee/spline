@@ -2,8 +2,10 @@ from collections import defaultdict
 from datetime import datetime
 from datetime import time
 from datetime import timedelta
+from io import BytesIO
 import os
 import os.path
+import subprocess
 
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
@@ -21,6 +23,7 @@ from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
 from spline_comic.models import GalleryFolder
 from spline_comic.models import GalleryItem
+from spline_comic.models import GalleryMedia_Image
 from spline_comic.models import END_OF_TIME
 from spline_comic.models import XXX_HARDCODED_QUEUE
 from spline_comic.models import XXX_HARDCODED_TIMEZONE
@@ -350,6 +353,12 @@ def comic_upload_do(request):
 
     _, ext = os.path.splitext(file_upload.filename)
     filename = storage.store(fh, ext)
+    # TODO ha ha this is stupid
+    # TODO very skinny images shouldn't be blindly made 200x200
+    fh.seek(0)
+    thumb = subprocess.check_output(['convert', '-', '-resize', '200x200', '-'], stdin=fh)
+    # TODO this interface is bad also
+    thumbname = storage.store(BytesIO(thumb), ext)
 
     # TODO wire into transaction so the file gets deleted on rollback
 
@@ -405,7 +414,6 @@ def comic_upload_do(request):
     )
 
     page = ComicPage(
-        file=os.path.basename(filename),
         chapter=last_chapter,
         author=request.user,
         date_published=date_published,
@@ -417,11 +425,18 @@ def comic_upload_do(request):
         # TODO more validation here too
         title=request.POST['title'],
         comment=request.POST['comment'],
+
+        media=[
+            GalleryMedia_Image(
+                image_file=os.path.basename(filename),
+                thumbnail_file=os.path.basename(thumbname),
+            )
+        ],
     )
     session.add(page)
     session.flush()
 
-    return HTTPSeeOther(location=request.route_url('comic.page', page))
+    return HTTPSeeOther(location=request.resource_url(page))
 
 
 @view_config(
