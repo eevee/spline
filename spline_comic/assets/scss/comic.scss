@@ -113,22 +113,8 @@
 }
 
 .comic-page-image-container {
-    @include flexbox;
-    @include align-items(center);
-    @include flex-direction(column);
-
-    box-sizing: border-box;
     margin: 1em auto;
-
-    // Fallback for browsers without min-content; little janky, though.
-    // TODO is there any better way to do this?  at all?  all i want is for the
-    // meta stuff at the bottom to be the same width as the comic when possible
-    width: 800px;
-    width: -moz-min-content;
-    width: -webkit-min-content;
-    width: min-content;
-    min-width: 600px;
-    max-width: 100%;
+    text-align: center;
 }
 .comic-page-image {
     background: white;
