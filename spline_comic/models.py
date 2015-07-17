@@ -290,7 +290,8 @@ GalleryItem.media = relationship(
 class ComicPageTranscript(Base):
     __tablename__ = 'comic_page_transcripts'
 
-    page = Relationship(
+    page_id = Column(Integer, ForeignKey(ComicPage.id), nullable=False, primary_key=False)
+    page = relationship(
         ComicPage, primary_key=True,
         backref=backref(
             'transcripts',

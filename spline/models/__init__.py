@@ -5,6 +5,7 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Table,
+    Integer,
     UnicodeText,
     Unicode,
 )
@@ -95,7 +96,8 @@ class GroupPermission(Base):
     __tablename__ = 'group_permissions'
 
     id = SurrogateKeyColumn()
-    group = Relationship(Group, backref='group_permissions')
+    group_id = Column(Integer, ForeignKey(Group.id), nullable=False, primary_key=False)
+    group = relationship(Group, backref='group_permissions')
     scope = Column(Unicode)
     permission = Column(Unicode)
 
