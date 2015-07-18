@@ -1,5 +1,3 @@
-Spline's readme.txt is a big liar, there is more work to do before you can get it to work. The following was tested in a Debian 8 VM.
-
 # Getting the goods
 
 ## Prerequisites
