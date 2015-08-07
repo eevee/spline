@@ -1,5 +1,8 @@
 <%namespace name="libcore" file="spline:templates/_lib.mako" />
-<%! import spline.format as libformat %>
+<%!
+    import spline.format as libformat
+    from spline.display.rendering import render_prose
+%>
 
 <%def name="render_activity(page)">
 <div class="-header">
@@ -15,43 +18,53 @@
 </div>
 </%def>
 
+## Render a thumbnail for a GalleryItem
+<%def name="thumbnail(item)">
+## TODO this heavily assumes the first item is an image, fix please <3
+<img src="${item.media[0].image_file.url_from_request(request)}" class="image-capped">
+</%def>
+
+
 <%def name="front_page_block(block)">
+## TODO not sure how to handle this; maybe i want to inject into global css
+<style>@import url(${request.route_url('pyscss', css_path='comic')});</style>
+
 <section>
-    <h1>
-        ${block.latest_page.comic.title} comic
-    </h1>
-    <div class="block-body media">
-        ## TODO fix this haha.
-        <img src="${block.chapter_cover_page.media[0].image_file.url_from_request(request)}"
-            class="media-inset image-capped">
+    <h1>Latest pages</h1>
+    % for page in block.recent_pages:
+    <div class="comic-block block-body media">
+        <a class="media-inset" href="${request.resource_url(page)}">
+            ${thumbnail(page)}
+        </a>
 
         <div class="media-body media-body--with-footer">
             <div class="media-body-main">
-                <%
-                    page = block.latest_page
-                    chapter = page.chapter
-                %>
+                <p style="float: right;">
+                    ${libformat.format_relative_date(page.date_published)}
+                    ·
+                    in <a href="${request.resource_url(page.chapter)}">
+                        ${page.chapter.title}
+                    </a>
+                </p>
                 <p>
-                    Latest page, posted
-                    ${libformat.format_relative_date(page.date_published)}:
-                    <br>
                     <a href="${request.resource_url(page)}">
-                        ${chapter.title}, page ${page.page_number}
                         % if page.title:
-                            — “${page.title}”
+                            “${page.title}”
+                        % else:
+                            untitled
                         % endif
                     </a>
                 </p>
-            </div>
-
-            <div class="media-body-footer">
-                <ul class="inline-list">
-                    <li><a href="${request.resource_url(block.comic_first_page)}">Start of the entire comic</li>
-                    <li><a href="${request.resource_url(block.chapter_cover_page)}">Start of this chapter</a></li>
-                    <li><a href="${request.route_url('comic.archive')}">Archive</a></li>
-                </ul>
+                <p>
+                    ${render_prose(page.comment)}
+                </p>
+                <p>
+                    —<em>${page.author.name}</em>
+                </p>
             </div>
         </div>
     </div>
+    % endfor
+    <p><a href="${request.route_url('comic.archive')}">See more in the archives</a></p>
 </section>
 </%def>

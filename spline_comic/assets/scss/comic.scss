@@ -1,6 +1,18 @@
 @import "vendor/flex";
 @import "defs";
 
+.comic-block {
+    margin-bottom: 1em;
+    padding-bottom: 1em;
+    border-bottom: 1px dotted #f4f4f4;
+
+    > .media-inset {
+        // must match the size of a thumbnail
+        width: 200px;
+        text-align: center;
+    }
+}
+
 /*ol*/.comic-page-grid {
     @include flexbox;
     @include flex-wrap(wrap);

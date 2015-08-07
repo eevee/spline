@@ -13,47 +13,30 @@ from spline.events import BuildMenu
 from spline.feature.feed import Feed
 from spline.models import session
 from spline_comic.logic import get_recent_pages
-from spline_comic.logic import get_latest_page_per_comic
-from spline_comic.logic import get_first_pages_for_chapters
-from spline_comic.logic import get_first_pages_for_comics
 from spline_comic.logic import get_adjacent_pages
 from spline_comic.models import Comic, ComicChapter, ComicPage
 
 
 FrontPageBlock = namedtuple('FrontPageBlock', [
     'renderer',
-    'latest_page',
-    'chapter_cover_page',
-    'comic_first_page',
+    'recent_pages',
 ])
 
 
 @subscriber(FrontPageLayout)
 def offer_blocks(event):
+    # TODO this used to get the most recent page from each comic, but that's a
+    # concept that's going away.  is there still some useful way to have
+    # multiple blocks like that?
     # TODO does this need a date filter too?  do something else if it's too
     # old...?
-    latest_pages = get_latest_page_per_comic()
+    recent_pages = get_recent_pages().limit(3)
 
-    first_pages = get_first_pages_for_chapters(
-        page.chapter for page in latest_pages)
-    chapter_to_first_page = dict(
-        (page.chapter, page)
-        for page in first_pages)
-
-    first_pages = get_first_pages_for_comics(
-        page.comic for page in latest_pages)
-    comic_to_first_page = dict(
-        (page.comic, page)
-        for page in first_pages)
-
-    for page in latest_pages:
-        block = FrontPageBlock(
-            renderer='spline_comic:templates/_lib#front_page_block.mako',
-            latest_page=page,
-            chapter_cover_page=chapter_to_first_page[page.chapter],
-            comic_first_page=comic_to_first_page[page.comic],
-        )
-        event.blocks.append(block)
+    block = FrontPageBlock(
+        renderer='spline_comic:templates/_lib#front_page_block.mako',
+        recent_pages=recent_pages,
+    )
+    event.blocks.append(block)
 
 
 @subscriber(Feed)
