@@ -117,9 +117,9 @@ ${no_label}
             ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous by date', '◁ first by date')}
             % if adjacent_pages.prev_by_story and adjacent_pages.prev_by_story.chapter != page.chapter:
                 <% story_name = adjacent_pages.prev_by_story.chapter.title %>
-                ${_maybe_page_link(adjacent_pages.prev_by_story, "◀ jump to {}".format(story_name), '◁ last by story')}
+                ${_maybe_page_link(adjacent_pages.prev_by_story, "◀ jump to {}".format(story_name), '◁ first by story')}
             % else:
-                ${_maybe_page_link(adjacent_pages.prev_by_story, '◀ previous by story', '◁ last by story')}
+                ${_maybe_page_link(adjacent_pages.prev_by_story, '◀ previous by story', '◁ first by story')}
             % endif
         </div>
       % endif

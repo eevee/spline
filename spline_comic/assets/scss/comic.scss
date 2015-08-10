@@ -109,7 +109,7 @@
 
     .-prev,
     .-next {
-        @include flex(1);
+        @include flex(2);
         a {
             display: block;
             text-decoration: none;
