@@ -10,7 +10,12 @@ from pyramid.decorator import reify
 # have the formatting problem)
 
 WIKI_ENCODING = 'UTF-8'
-SYSTEM_SIGNATURE = pygit2.Signature('System user', 'spline@localhost')
+
+
+def get_system_signature():
+    # The timestamp is assigned when this is created, so we can't reuse the
+    # same object forever
+    return pygit2.Signature('System user', 'spline@localhost')
 
 
 # TODO write an interface and use that to plug this into the registry
@@ -33,8 +38,8 @@ class Wiki(object):
             # TODO if users have email addresses then we can use those...
             self.repo.create_commit(
                 'refs/heads/master',
-                SYSTEM_SIGNATURE,
-                SYSTEM_SIGNATURE,
+                get_system_signature(),
+                get_system_signature(),
                 u'Initial commit of an empty wiki',
                 empty_tree,
                 [],  # parents
@@ -158,7 +163,7 @@ class WikiPage(object):
         self.wiki.repo.create_commit(
             'refs/heads/master',
             author,
-            SYSTEM_SIGNATURE,  # helps distinguish web commits from not
+            get_system_signature(),  # helps distinguish web commits from not
             message,
             new_tree_oid,
             [self.wiki.current_commit().oid],
