@@ -37,7 +37,7 @@ class Feed(object):
         # TODO should also cut off after so much time; no one cares about a
         # feed going back ten years (unless /everything/ is ten years old; be
         # clever)
-        items = items[100:]
+        items = items[:100]
         # TODO probably can avoid some db churn by exposing count/time limits
         # when collecting items
 
