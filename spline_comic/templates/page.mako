@@ -115,11 +115,17 @@ ${no_label}
       % else:
         <div class="-prev">
             ${_maybe_page_link(adjacent_pages.prev_by_date, '◀ previous by date', '◁ first by date')}
-            % if adjacent_pages.prev_by_story and adjacent_pages.prev_by_story.chapter != page.chapter:
-                <% story_name = adjacent_pages.prev_by_story.chapter.title %>
-                ${_maybe_page_link(adjacent_pages.prev_by_story, "◀ jump to {}".format(story_name), '◁ first by story')}
+            % if adjacent_pages.prev_by_story is None:
+                ◁ first in story order
             % else:
-                ${_maybe_page_link(adjacent_pages.prev_by_story, '◀ previous by story', '◁ first by story')}
+                <a href="${request.resource_url(adjacent_pages.prev_by_story)}">
+                % if adjacent_pages.prev_by_story.chapter == page.chapter:
+                ◀ previous in
+                % else:
+                ◀ jump to
+                % endif
+                ${adjacent_pages.prev_by_story.chapter.title}
+                </a>
             % endif
         </div>
       % endif
@@ -135,11 +141,17 @@ ${no_label}
       % else:
         <div class="-next">
             ${_maybe_page_link(adjacent_pages.next_by_date, 'next by date ▶', 'last by date ▷')}
-            % if adjacent_pages.next_by_story and adjacent_pages.next_by_story.chapter != page.chapter:
-                <% story_name = adjacent_pages.next_by_story.chapter.title %>
-                ${_maybe_page_link(adjacent_pages.next_by_story, "jump to {} ▶".format(story_name), 'last by story ▷')}
+            % if adjacent_pages.next_by_story is None:
+                last in story order ▷
             % else:
-                ${_maybe_page_link(adjacent_pages.next_by_story, 'next by story ▶', 'last by story ▷')}
+                <a href="${request.resource_url(adjacent_pages.next_by_story)}">
+                % if adjacent_pages.next_by_story.chapter == page.chapter:
+                next in
+                % else:
+                jump to
+                % endif
+                ${adjacent_pages.next_by_story.chapter.title} ▶
+                </a>
             % endif
         </div>
       % endif
