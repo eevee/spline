@@ -83,14 +83,9 @@ body > header {
     }
 }
 
-.front-page-layout section {
-    @extend .tile;
-    padding: 1em;
-    margin: 1em 0;
-}
-
 .ad {
     position: relative;
+    box-shadow: inset 0 0 0 1px rgba(black, 0.2);
 
     > a:only-of-type {
         display: block;
@@ -131,21 +126,38 @@ body > header {
     padding: 0;
 }
 
-.tile {
-    border: 1px solid scale-color($primary-accent, $lightness: 50%);
-    border-radius: 0.5em;
-    box-shadow: 1px 1px 3px rgba(gray, 0.3);
-    background: #fefefe;
-}
-
 main {
     position: relative;
     width: 90%;
     min-width: 990px;
     margin: 1em auto;
+}
+// Main top-level section
+.tile {
+    // Top-level doesn't need a horizontal margin of its own -- should be
+    // handled by the body or other container
+    margin: 1em 0;
+
+    border: 1px solid scale-color($primary-accent, $lightness: 50%);
+    border-radius: 0.5em;
+    box-shadow: 1px 1px 3px rgba(gray, 0.3);
+    background: #fefefe;
+
+    // This has happened before and is total nonsense so it would be nice to
+    // emphasize when it happens
+    .tile {
+        background: #faa;
+    }
+
+    // Apply margins to major block children, which is easier to override than
+    // if we had padding ourselves
+    > p, > section {
+        margin: 1rem;
+    }
 
     > header {
-        // Page title
+        // A tile using a header is assumed to be the page title, or at least a
+        // major title
         h1 {
             font-size: 2em;
             margin: 1rem;

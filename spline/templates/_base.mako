@@ -70,11 +70,16 @@
     </header>
 
     <%block name="main">
-    <main class="tile">
+    <main>
+    <%block name="default_tile">
+    <section class="tile">
         ## TODO i increasingly dislike how rigid this structure is, and how it
         ## ends up outside any section -- impossible for a page to make multiple
-        ## tiles this way.  in practice i think this gets factored out into a
-        ## common intermediate base template anyway, so...
+        ## tiles this way.  would really like to convert existing templates to
+        ## make their own tile, or maybe use this as a default only.  the main
+        ## problem with doing it as a default is that it becomes difficult for
+        ## an intermediate base template to specify a default section nav or
+        ## header
         <header>
             <nav>
                 <ul>
@@ -84,8 +89,11 @@
             <%block name="header"></%block>
         </header>
 
-        ${next.body()}
-
+        <%block name="default_tile_content">
+            ${next.body()}
+        </%block>
+    </section>
+    </%block>
     </main>
     </%block>
 
