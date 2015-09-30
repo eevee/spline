@@ -13,7 +13,8 @@
         </p>
         <p>
             <input type="text" name="message" size="50" placeholder="Describe your change">
-            <button type="submit">Save</button>
+            <button type="submit" name="action" value="save">Save</button>
+            <button type="submit" name="action" value="propose">Propose</button>
         </p>
     </form>
 </section>

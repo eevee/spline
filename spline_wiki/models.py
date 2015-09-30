@@ -131,18 +131,27 @@ class WikiPage(object):
         # TODO wrap in Unrenderable
         return self.blob.data.decode('utf8')
 
-    def write(self, new_data, author_name, author_email, message):
+    def write(self, new_data, author_name, author_email, message, *, branch='master'):
         assert self.path
+
+        if branch is None:
+            max_proposal_number = 0
+            for existing_branch in self.wiki.repo.listall_branches():
+                if existing_branch.startswith('proposals/'):
+                    try:
+                        max_proposal_number = max(max_proposal_number, int(existing_branch[10:]))
+                    except ValueError:
+                        pass
+
+            branch = "proposals/{}".format(max_proposal_number + 1)
+
+        # Create the file blob first
+        blob_oid = self.wiki.repo.create_blob(new_data.encode(WIKI_ENCODING))
+        new_tree_oid = None
 
         # Need to rebuild the tree from the bottom up.  Normally you'd do this
         # with an Index, which is considerably easier and understands paths and
         # all that, but this is a bare repo so there IS no index.
-        tree_path_up = list(reversed(self.tree_path))
-
-        # Create the file blob first, of course.
-        blob_oid = self.wiki.repo.create_blob(new_data.encode(WIKI_ENCODING))
-        new_tree_oid = None
-
         for old_tree, name in reversed(list(zip(self.tree_path, self.git_path))):
             if old_tree is None:
                 tb = self.wiki.repo.TreeBuilder()
@@ -161,7 +170,7 @@ class WikiPage(object):
         # TODO fix this to avoid the race condition when updating HEAD
         author = pygit2.Signature(author_name, author_email)
         self.wiki.repo.create_commit(
-            'refs/heads/master',
+            'refs/heads/' + branch,
             author,
             get_system_signature(),  # helps distinguish web commits from not
             message,

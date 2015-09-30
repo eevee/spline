@@ -86,12 +86,25 @@ def wiki_edit__do(page, request):
     # TODO try HARD to do something useful in the case of conflicts!
     # TODO also, notice conflicts.
     # TODO consider wiring the commit process into `transaction`
-    page.write(
-        request.POST['content'],
-        request.user.name,
-        request.user.email,
-        request.POST['message'],
-    )
+
+    if request.POST['action'] == 'save':
+        page.write(
+            request.POST['content'],
+            request.user.name,
+            request.user.email,
+            request.POST['message'],
+        )
+    elif request.POST['action'] == 'propose':
+        page.write(
+            request.POST['content'],
+            request.user.name,
+            request.user.email,
+            request.POST['message'],
+            branch=None,
+        )
+    else:
+        # TODO uhh
+        pass
 
     return HTTPSeeOther(location=request.resource_url(page))
 
