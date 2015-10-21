@@ -178,6 +178,28 @@ class WikiPage(object):
             [self.wiki.current_commit().oid],
         )
 
+    def iter_branches(self, prefix=''):
+        for branch_name in self.wiki.repo.listall_branches():
+            if not branch_name.startswith(prefix):
+                continue
+
+            head = self.wiki.repo.lookup_reference('refs/heads/' + branch_name)
+            # TODO actually need to walk all commits not on master, but I'm not
+            # entirely sure how to do that atm
+            commit = head.peel()
+            tree = commit.tree
+            for part in self.git_path:
+                if part not in tree:
+                    continue
+                tree = self.wiki.repo[tree[part].id]
+
+            # If we got here, we exist in this commit
+            # TODO we really want to yield, like, the user and the message...
+            # but there could be multiple commits so...  where does that all
+            # go...  also there's no comment mechanism at the moment here
+            # whoops
+            yield branch_name, commit.author.email
+
     def get_history(self):
         # TODO this needs a billion things.  limiting + pagination, looking up
         # users...  well maybe that's it actually

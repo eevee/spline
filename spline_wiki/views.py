@@ -131,3 +131,14 @@ def wiki_history(page, request):
         page=page,
         history=history,
     )
+
+
+@view_config(
+    context=WikiPage,
+    name='proposals',
+    request_method='GET',
+    renderer='spline_wiki:templates/proposals.mako')
+def wiki_proposals(page, request):
+    return dict(
+        page=page,
+    )
