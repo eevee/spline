@@ -152,6 +152,7 @@ class WikiPage(object):
         # Need to rebuild the tree from the bottom up.  Normally you'd do this
         # with an Index, which is considerably easier and understands paths and
         # all that, but this is a bare repo so there IS no index.
+        # TODO actually i don't think that's true!
         for old_tree, name in reversed(list(zip(self.tree_path, self.git_path))):
             if old_tree is None:
                 tb = self.wiki.repo.TreeBuilder()
@@ -187,6 +188,13 @@ class WikiPage(object):
             # TODO actually need to walk all commits not on master, but I'm not
             # entirely sure how to do that atm
             commit = head.peel()
+
+            walker = self.wiki.repo.walk(commit.id, pygit2.GIT_SORT_TOPOLOGICAL)
+            walker.hide(self.wiki.repo.head.peel().id)
+            commits = list(walker)
+
+            # TODO should check that we're touched anywhere in any of the
+            # commits...
             tree = commit.tree
             for part in self.git_path:
                 if part not in tree:
@@ -198,7 +206,7 @@ class WikiPage(object):
             # but there could be multiple commits so...  where does that all
             # go...  also there's no comment mechanism at the moment here
             # whoops
-            yield branch_name, commit.author.email
+            yield branch_name, commit.author.email, commits, self.wiki.repo.diff(self.wiki.repo.head.peel().tree, commit.tree)
 
     def get_history(self):
         # TODO this needs a billion things.  limiting + pagination, looking up

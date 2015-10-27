@@ -142,3 +142,39 @@ def wiki_proposals(page, request):
     return dict(
         page=page,
     )
+
+
+# TODO what are the permissions here?  there's no "wiki admin" role or anything
+@view_config(
+    context=WikiPage,
+    name='proposals',
+    request_method='POST')
+def wiki_proposals_do(page, request):
+    branch_name = request.POST['branch']
+    # TODO more better error handling
+    if not branch_name.startswith('proposals/'):
+        raise HTTPNotFound
+
+    head = page.wiki.repo.lookup_branch(branch_name)
+    new_index = page.wiki.repo.merge_commits(page.wiki.repo.head, head)
+    print(new_index)
+
+    # TODO much, much more better error handling
+    if new_index.conflicts:
+        raise RuntimeError("conflicts!!")
+
+
+    # TODO fix this to avoid the race condition when updating HEAD
+    from spline_wiki.models import get_system_signature
+    new_tree = new_index.write_tree(page.wiki.repo)
+    page.wiki.repo.create_commit(
+        'refs/heads/' + 'master',
+        get_system_signature(),
+        get_system_signature(),  # helps distinguish web commits from not
+        "Merge proposal {}".format(branch_name),
+        [page.wiki.current_commit().oid, head.peel().oid],
+    )
+    page.wiki.repo.index.read_tree(new_tree)
+    head.delete()
+
+    return HTTPSeeOther(location=request.resource_url(page))
