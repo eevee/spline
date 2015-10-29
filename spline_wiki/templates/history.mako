@@ -12,7 +12,7 @@
       <tbody>
       % for change in history:
         <tr>
-            <td>${lib.timestamp(change.time)}</td>
+            <td>${lib.relative_timestamp(change.timestamp)}</td>
             <td>
                 % if change.author:
                 ${lib.user(change.author)}

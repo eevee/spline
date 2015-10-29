@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pygit2
 from pyramid.decorator import reify
+import pytz
 
 # TODO this all cannot possibly work with distributed git.  the only way it
 # could is to have a separate service in front of git that does all the db
@@ -220,7 +221,7 @@ class WikiPage(object):
         return history
 
 
-WikiChange = namedtuple('WikiChange', ('time', 'author', 'git_author', 'committer', 'git_committer', 'message'))
+WikiChange = namedtuple('WikiChange', ('timestamp', 'author', 'git_author', 'committer', 'git_committer', 'message'))
 
 
 class WikiHistory:
@@ -237,7 +238,8 @@ class WikiHistory:
     def __iter__(self):
         for commit in self.commits:
             yield WikiChange(
-                time=datetime.utcfromtimestamp(commit.commit_time),
+                timestamp=pytz.utc.localize(
+                    datetime.utcfromtimestamp(commit.commit_time)),
                 author=self.native_email_map.get(commit.author.email),
                 git_author=commit.author,
                 committer=self.native_email_map.get(commit.committer.email),
