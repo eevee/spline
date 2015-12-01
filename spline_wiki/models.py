@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pygit2
 from pyramid.decorator import reify
+import pytz
 
 # TODO this all cannot possibly work with distributed git.  the only way it
 # could is to have a separate service in front of git that does all the db
@@ -10,7 +11,12 @@ from pyramid.decorator import reify
 # have the formatting problem)
 
 WIKI_ENCODING = 'UTF-8'
-SYSTEM_SIGNATURE = pygit2.Signature('System user', 'spline@localhost')
+
+
+def get_system_signature():
+    # The timestamp is assigned when this is created, so we can't reuse the
+    # same object forever
+    return pygit2.Signature('System user', 'spline@localhost')
 
 
 # TODO write an interface and use that to plug this into the registry
@@ -33,8 +39,8 @@ class Wiki(object):
             # TODO if users have email addresses then we can use those...
             self.repo.create_commit(
                 'refs/heads/master',
-                SYSTEM_SIGNATURE,
-                SYSTEM_SIGNATURE,
+                get_system_signature(),
+                get_system_signature(),
                 u'Initial commit of an empty wiki',
                 empty_tree,
                 [],  # parents
@@ -126,18 +132,28 @@ class WikiPage(object):
         # TODO wrap in Unrenderable
         return self.blob.data.decode('utf8')
 
-    def write(self, new_data, author_name, author_email, message):
+    def write(self, new_data, author_name, author_email, message, *, branch='master'):
         assert self.path
+
+        if branch is None:
+            max_proposal_number = 0
+            for existing_branch in self.wiki.repo.listall_branches():
+                if existing_branch.startswith('proposals/'):
+                    try:
+                        max_proposal_number = max(max_proposal_number, int(existing_branch[10:]))
+                    except ValueError:
+                        pass
+
+            branch = "proposals/{}".format(max_proposal_number + 1)
+
+        # Create the file blob first
+        blob_oid = self.wiki.repo.create_blob(new_data.encode(WIKI_ENCODING))
+        new_tree_oid = None
 
         # Need to rebuild the tree from the bottom up.  Normally you'd do this
         # with an Index, which is considerably easier and understands paths and
         # all that, but this is a bare repo so there IS no index.
-        tree_path_up = list(reversed(self.tree_path))
-
-        # Create the file blob first, of course.
-        blob_oid = self.wiki.repo.create_blob(new_data.encode(WIKI_ENCODING))
-        new_tree_oid = None
-
+        # TODO actually i don't think that's true!
         for old_tree, name in reversed(list(zip(self.tree_path, self.git_path))):
             if old_tree is None:
                 tb = self.wiki.repo.TreeBuilder()
@@ -156,13 +172,42 @@ class WikiPage(object):
         # TODO fix this to avoid the race condition when updating HEAD
         author = pygit2.Signature(author_name, author_email)
         self.wiki.repo.create_commit(
-            'refs/heads/master',
+            'refs/heads/' + branch,
             author,
-            SYSTEM_SIGNATURE,  # helps distinguish web commits from not
+            get_system_signature(),  # helps distinguish web commits from not
             message,
             new_tree_oid,
             [self.wiki.current_commit().oid],
         )
+
+    def iter_branches(self, prefix=''):
+        for branch_name in self.wiki.repo.listall_branches():
+            if not branch_name.startswith(prefix):
+                continue
+
+            head = self.wiki.repo.lookup_reference('refs/heads/' + branch_name)
+            # TODO actually need to walk all commits not on master, but I'm not
+            # entirely sure how to do that atm
+            commit = head.peel()
+
+            walker = self.wiki.repo.walk(commit.id, pygit2.GIT_SORT_TOPOLOGICAL)
+            walker.hide(self.wiki.repo.head.peel().id)
+            commits = list(walker)
+
+            # TODO should check that we're touched anywhere in any of the
+            # commits...
+            tree = commit.tree
+            for part in self.git_path:
+                if part not in tree:
+                    continue
+                tree = self.wiki.repo[tree[part].id]
+
+            # If we got here, we exist in this commit
+            # TODO we really want to yield, like, the user and the message...
+            # but there could be multiple commits so...  where does that all
+            # go...  also there's no comment mechanism at the moment here
+            # whoops
+            yield branch_name, commit.author.email, commits, self.wiki.repo.diff(self.wiki.repo.head.peel().tree, commit.tree)
 
     def get_history(self):
         # TODO this needs a billion things.  limiting + pagination, looking up
@@ -176,7 +221,7 @@ class WikiPage(object):
         return history
 
 
-WikiChange = namedtuple('WikiChange', ('time', 'author', 'git_author', 'committer', 'git_committer', 'message'))
+WikiChange = namedtuple('WikiChange', ('timestamp', 'author', 'git_author', 'committer', 'git_committer', 'message'))
 
 
 class WikiHistory:
@@ -193,7 +238,8 @@ class WikiHistory:
     def __iter__(self):
         for commit in self.commits:
             yield WikiChange(
-                time=datetime.utcfromtimestamp(commit.commit_time),
+                timestamp=pytz.utc.localize(
+                    datetime.utcfromtimestamp(commit.commit_time)),
                 author=self.native_email_map.get(commit.author.email),
                 git_author=commit.author,
                 committer=self.native_email_map.get(commit.committer.email),

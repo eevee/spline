@@ -5,7 +5,7 @@
 <section>
     <h1>Register</h1>
 
-    <form action="${request.route_url('__core__.auth.register')}" method="POST">
+    <%lib:form action="${request.route_url('__core__.auth.register')}">
         <fieldset>
             <dl class="horizontal">
                 <dt>Log in with</dt>
@@ -22,5 +22,5 @@
                 <dd><button type="submit">Register and log in</button></dd>
             </dl>
         </fieldset>
-    </form>
+    </%lib:form>
 </section>

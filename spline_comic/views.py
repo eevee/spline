@@ -5,6 +5,7 @@ from datetime import timedelta
 from io import BytesIO
 import os
 import os.path
+import re
 import subprocess
 
 from sqlalchemy import func
@@ -24,6 +25,7 @@ from spline_comic.models import ComicPage
 from spline_comic.models import GalleryFolder
 from spline_comic.models import GalleryItem
 from spline_comic.models import GalleryMedia_Image
+from spline_comic.models import GalleryMedia_IFrame
 from spline_comic.models import END_OF_TIME
 from spline_comic.models import XXX_HARDCODED_QUEUE
 from spline_comic.models import XXX_HARDCODED_TIMEZONE
@@ -446,6 +448,31 @@ def comic_upload_do(request):
             )
         ],
     )
+
+    if request.POST.get('iframe_url'):
+        url = request.POST['iframe_url']
+        # If it's a YouTube URL, convert to the embed URL automatically
+        # TODO this seems like a neat thing to do for many other services and
+        # make a tiny library out of, if it's not done already?
+        m = re.match(
+            '^(?:https?://)?(?:www[.])?youtube[.]com/watch[?]v=(\\w+)(?:&|$)',
+            url)
+        if m:
+            ytid = m.group(1)
+            url = "https://www.youtube.com/embed/{}?rel=0".format(ytid)
+
+        try:
+            width = int(request.POST['iframe_width'])
+        except (KeyError, ValueError):
+            width = 800
+        try:
+            height = int(request.POST['iframe_height'])
+        except (KeyError, ValueError):
+            height = 600
+
+        page.media.append(GalleryMedia_IFrame(
+            url=url, width=width, height=height))
+
     session.add(page)
     session.flush()
 

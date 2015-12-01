@@ -1,11 +1,12 @@
 <%inherit file="/_base.mako"/>
+<%namespace name="lib" file="/_lib.mako" />
 
 <%block name="title">♥</%block>
 
 <section>
     <h1>Send some love</h1>
 
-    <form action="${request.route_url('love.express')}" method="POST">
+    <%lib:form action="${request.route_url('love.express')}">
         <fieldset>
             <dl class="horizontal">
                 <dt><label>Send love to</label></dt>
@@ -17,5 +18,5 @@
                 <dd><button type="submit">♥ ♡ ♥</button></dd>
             </dl>
         </fieldset>
-    </form>
+    </%lib:form>
 </section>

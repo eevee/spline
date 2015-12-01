@@ -2,6 +2,7 @@
 
 from pyramid.interfaces import IAuthenticationPolicy
 from pyramid.interfaces import IAuthorizationPolicy
+from pyramid.session import check_csrf_token
 from zope.interface import implementer
 
 from spline.models import User
@@ -46,3 +47,14 @@ class DatabaseAuthenticationPolicy:
 
     def unauthenticated_userid(self, request):
         return request.session.get(self.userid_key)
+
+
+def csrf_tween_factory(handler, registry):
+    """Checks for CSRF on all POST requests."""
+
+    def csrf_tween(request):
+        if request.method not in ('GET', 'HEAD'):
+            check_csrf_token(request)
+        return handler(request)
+
+    return csrf_tween

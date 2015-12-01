@@ -321,5 +321,9 @@ class ComicPage_FeedItem(object):
             ret += u": " + self.page.title
         return ret
 
+    @property
+    def author_name(self):
+        return self.page.author.name
+
     def generate_url(self, request):
         return request.resource_url(self.page)

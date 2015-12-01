@@ -8,6 +8,7 @@
     from spline_comic.models import XXX_HARDCODED_TIMEZONE
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
+<%namespace name="lib" file="/_lib.mako" />
 
 <%block name="title">Administrate gallery</%block>
 
@@ -47,7 +48,7 @@
         background: hsl(60, 100%, 70%);
     }
     </style>
-    <form action="${request.route_url('comic.save-queue')}" method="POST">
+    <%lib:form action="${request.route_url('comic.save-queue')}">
         <table class="calendar comic-calendar">
             <caption>Post queued pages on:</caption>
             <thead>
@@ -110,13 +111,13 @@
             </tbody>
         </table>
         <p><button type="submit">Save and update queue</button></p>
-    </form>
+    </%lib:form>
 </section>
 
 <section>
     <h1>Upload</h1>
 
-    <form action="${request.route_url('comic.upload')}" method="POST" enctype="multipart/form-data">
+    <%lib:form action="${request.route_url('comic.upload')}" upload="${True}">
         <fieldset>
             <p><input type="file" name="file"></p>
             <p><input type="text" name="title" placeholder="Title (optional)"></p>
@@ -138,6 +139,7 @@
             <style>
                 .js-markdown-preview {
                     display: flex;
+                    margin-bottom: 1em;
                 }
                 .js-markdown-preview textarea {
                     display: block;
@@ -192,6 +194,13 @@
             </div>
 
             <p>
+                Optional iframe (e.g., YouTube): <br>
+                <input type="text" name="iframe_url" size="40" placeholder="URL">
+                <input type="text" name="iframe_width" size="3" value="800">
+                × <input type="text" name="iframe_height" size="3" value="600">
+            </p>
+
+            <p>
                 <label>
                     <input type="radio" name="when" value="queue" checked>
                     <span class="checked-label">
@@ -218,13 +227,13 @@
 
             <footer><button type="submit">Upload and add to queue</button></footer>
         </fieldset>
-    </form>
+    </%lib:form>
 </section>
 
 <section id="manage-folders">
     <h1>Manage folders</h1>
     <p>Wow this isn't done at all!  In fact it's probably totally broken, maybe don't use it.</p>
-    <form action="${request.route_url('comic.admin.folders')}" method="POST">
+    <%lib:form action="${request.route_url('comic.admin.folders')}">
     <ul>
     <% last = None %>
     <% ancestry = [] %>
@@ -248,5 +257,5 @@
         <% last = folder %>
     % endfor
     </ul>
-    </form>
+    </%lib:form>
 </section>

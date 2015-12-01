@@ -3,6 +3,7 @@
     from spline_comic.views import FOLDER_PREVIEW_PAGE_COUNT
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
+<%namespace name="lib" file="spline_comic:templates/_lib.mako" />
 
 <%block name="title">
 % if parent_folder:
@@ -33,9 +34,7 @@ Archive
 % for page in parent_folder.pages:
     <li class="${'privileged' if page.is_queued else ''}">
         <a href="${request.resource_url(page)}">
-            <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
-                class="image-capped">
-
+            ${lib.thumbnail(page)}
             ${page.title or "page {}".format(page.page_number)}
         </a>
     </li>

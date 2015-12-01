@@ -1,11 +1,12 @@
 <%inherit file="/_base.mako"/>
+<%namespace name="lib" file="/_lib.mako" />
 
 <%block name="title">new paste</%block>
 
 <section>
     <h1>Paste a thing</h1>
 
-    <form action="${request.route_url('pastebin.new')}" method="POST">
+    <%lib:form action="${request.route_url('pastebin.new')}">
         <textarea name="content" rows="24" cols="80"></textarea>
 
         <fieldset>
@@ -34,5 +35,5 @@
                 <dd><button type="submit">Paste</button></dd>
             </dl>
         </fieldset>
-    </form>
+    </%lib:form>
 </section>

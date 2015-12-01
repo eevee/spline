@@ -79,19 +79,35 @@ def wiki_edit(page, request):
 @view_config(
     context=WikiPage,
     name='edit',
-    permission='edit',
     request_method='POST')
 def wiki_edit__do(page, request):
     # TODO what if it's not writable?  should we check that now?
     # TODO try HARD to do something useful in the case of conflicts!
     # TODO also, notice conflicts.
     # TODO consider wiring the commit process into `transaction`
-    page.write(
-        request.POST['content'],
-        request.user.name,
-        request.user.email,
-        request.POST['message'],
-    )
+
+    if request.POST['action'] == 'save':
+        if not request.user.can('wiki', 'edit'):
+            raise HTTPForbidden
+        page.write(
+            request.POST['content'],
+            request.user.name,
+            request.user.email,
+            request.POST['message'],
+        )
+    elif request.POST['action'] == 'propose':
+        if not request.user.can('wiki', 'propose'):
+            raise HTTPForbidden
+        page.write(
+            request.POST['content'],
+            request.user.name,
+            request.user.email,
+            request.POST['message'],
+            branch=None,
+        )
+    else:
+        # TODO uhh
+        pass
 
     return HTTPSeeOther(location=request.resource_url(page))
 
@@ -118,3 +134,50 @@ def wiki_history(page, request):
         page=page,
         history=history,
     )
+
+
+@view_config(
+    context=WikiPage,
+    name='proposals',
+    permission='merge',
+    request_method='GET',
+    renderer='spline_wiki:templates/proposals.mako')
+def wiki_proposals(page, request):
+    return dict(
+        page=page,
+    )
+
+
+# TODO what are the permissions here?  there's no "wiki admin" role or anything
+@view_config(
+    context=WikiPage,
+    name='proposals',
+    permission='merge',
+    request_method='POST')
+def wiki_proposals_do(page, request):
+    branch_name = request.POST['branch']
+    # TODO more better error handling
+    if not branch_name.startswith('proposals/'):
+        raise HTTPNotFound
+
+    head = page.wiki.repo.lookup_branch(branch_name)
+    new_index = page.wiki.repo.merge_commits(page.wiki.repo.head, head)
+
+    # TODO much, much more better error handling
+    if new_index.conflicts:
+        raise RuntimeError("conflicts!!")
+
+    # TODO fix this to avoid the race condition when updating HEAD
+    from spline_wiki.models import get_system_signature
+    new_tree = new_index.write_tree(page.wiki.repo)
+    page.wiki.repo.create_commit(
+        'refs/heads/' + 'master',
+        get_system_signature(),
+        get_system_signature(),  # helps distinguish web commits from not
+        "Merge proposal {}".format(branch_name),
+        [page.wiki.current_commit().oid, head.peel().oid],
+    )
+    page.wiki.repo.index.read_tree(new_tree)
+    head.delete()
+
+    return HTTPSeeOther(location=request.resource_url(page))

@@ -41,6 +41,8 @@ def core_plugin_includeme(config):
     # Routes
     # TODO i'm increasingly unsure about using @@ for everything but also i
     # don't want to clobber any routes the wiki might use.
+    # TODO i'm even more unsure now!  maybe there should be, like, a /core/
+    # namespace or something.
     config.add_route('__core__.home', '/')
     config.add_route('__core__.search', '/@@search')
     config.add_route('__core__.feed', '/@@feed')
@@ -48,6 +50,15 @@ def core_plugin_includeme(config):
     config.add_route('__core__.auth.login', '/@@auth/login/')
     config.add_route('__core__.auth.logout', '/@@auth/logout/')
     config.add_route('__core__.auth.register', '/@@auth/register/')
+
+    # TODO god damn i hate this hack
+    class StupidContextHack:
+        __scope__ = 'core'
+        def __init__(self, request):
+            pass
+    config.add_route('__core__.admin.permissions', '/admin/permissions/', factory=StupidContextHack)
+    config.add_route('__core__.admin.permissions.grant', '/admin/permissions/grant', factory=StupidContextHack)
+    config.add_route('__core__.admin.permissions.revoke', '/admin/permissions/revoke', factory=StupidContextHack)
 
     config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
 
@@ -141,6 +152,7 @@ def main(global_settings, **settings):
     # Sessions
     config.include(pyramid_beaker)
     config.set_session_factory(session_factory)
+    config.add_tween('spline.web.auth.csrf_tween_factory')
 
     # Auth
     config.set_authentication_policy(DatabaseAuthenticationPolicy())
