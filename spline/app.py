@@ -41,6 +41,8 @@ def core_plugin_includeme(config):
     # Routes
     # TODO i'm increasingly unsure about using @@ for everything but also i
     # don't want to clobber any routes the wiki might use.
+    # TODO i'm even more unsure now!  maybe there should be, like, a /core/
+    # namespace or something.
     config.add_route('__core__.home', '/')
     config.add_route('__core__.search', '/@@search')
     config.add_route('__core__.feed', '/@@feed')
@@ -48,6 +50,10 @@ def core_plugin_includeme(config):
     config.add_route('__core__.auth.login', '/@@auth/login/')
     config.add_route('__core__.auth.logout', '/@@auth/logout/')
     config.add_route('__core__.auth.register', '/@@auth/register/')
+
+    config.add_route('__core__.admin.permissions', '/admin/permissions/')
+    config.add_route('__core__.admin.permissions.grant', '/admin/permissions/grant')
+    config.add_route('__core__.admin.permissions.revoke', '/admin/permissions/revoke')
 
     config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
 
