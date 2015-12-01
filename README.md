@@ -13,7 +13,7 @@ Use apt or your favorite package installer to get those:
 - libffi-dev
 - libxslt1-dev
 - libxml2-dev
-- postegresql
+- postgresql
 - postgresql-client
 - libpq-dev
 - python3-pip
