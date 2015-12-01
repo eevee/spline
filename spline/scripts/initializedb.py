@@ -76,6 +76,12 @@ def initdb(**settings):
             g = Group(id=1, name='admin')
             g.users.append(u)
             session.add(g)
+        try:
+            gp0 = session.query(GroupPermission).filter_by(id=1).one()
+        except:
+            gp0 = GroupPermission(id=1, scope='core', permission='admin')
+            gp0.group = g
+            session.add(gp0)
         # Only needed if the comic plugin is loaded
         if 'spline_comic' in plugin_list:
             from spline_comic.models import Comic, ComicChapter
