@@ -345,6 +345,11 @@ ul.inline-list {
 }
 
 
+form.inline {
+    display: inline-block;
+}
+
+
 /// TODO this is precisely the sort of thing that should live in archetype
 table.table-pretty {
     > tbody {

@@ -1,4 +1,5 @@
 <%inherit file="/_base.mako"/>
+<%namespace name="lib" file="/_lib.mako" />
 
 <%block name="title">Privileges</%block>
 
@@ -18,20 +19,20 @@
                 % if (scope, priv) in group_privileges:
                     <% group_privileges.remove((scope, priv)) %>
                     ${scope} / ${priv}
-                    <form style="display: inline-block;" method="POST" action="${request.route_url('__core__.admin.permissions.revoke')}">
+                    <%lib:form action="${request.route_url('__core__.admin.permissions.revoke')}" class_="inline">
                         <input type="hidden" name="group" value="${group.id}">
                         <input type="hidden" name="scope" value="${scope}">
                         <input type="hidden" name="priv" value="${priv}">
                         <button type="submit">revoke</button>
-                    </form>
+                    </%lib:form>
                 % else:
                     <s>${scope} / ${priv}</s>
-                    <form style="display: inline-block;" method="POST" action="${request.route_url('__core__.admin.permissions.grant')}">
+                    <%lib:form action="${request.route_url('__core__.admin.permissions.grant')}" class_="inline">
                         <input type="hidden" name="group" value="${group.id}">
                         <input type="hidden" name="scope" value="${scope}">
                         <input type="hidden" name="priv" value="${priv}">
                         <button type="submit">grant</button>
-                    </form>
+                    </%lib:form>
                 % endif
                 ## TODO list remaining group privs maybe?
             </li>

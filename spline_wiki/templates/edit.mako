@@ -1,4 +1,5 @@
 <%inherit file="/_base.mako" />
+<%namespace name="lib" file="/_lib.mako" />
 
 ## TODO title might be nice here instead, but we have to parse the whole page
 ## to get it
@@ -7,7 +8,7 @@
 <section>
     <h1>Edit /${page.path}</h1>
 
-    <form action="" method="POST">
+    <%lib:form action="">
         <p>
             <textarea class="fill" name="content" rows="30" cols="100">${raw_content}</textarea>
         </p>
@@ -20,5 +21,5 @@
             <button type="submit" name="action" value="propose">Propose</button>
             % endif
         </p>
-    </form>
+    </%lib:form>
 </section>

@@ -1,3 +1,4 @@
+<%namespace name="lib" file="/_lib.mako" />
 <!DOCTYPE html>
 <html class="no-js" lang="en">
 <head>
@@ -50,9 +51,9 @@
                         ## TODO rel isn't actually valid on form; how else to do this?
                         ## TODO sigh get this style outta here.  also button
                         ## turns white-text on hover for some reason.
-                        <form rel="logout" style="display: inline-block;" action="${request.route_url('__core__.auth.logout')}" method="POST">
+                        <%lib:form rel="logout" action="${request.route_url('__core__.auth.logout')}" class_="inline">
                             <button type="submit">log out</button>
-                        </form>
+                        </%lib:form>
                     </span>
                 % else:
                     <a rel="login" href="${request.route_url('__core__.auth.login')}"

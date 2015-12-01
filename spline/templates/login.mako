@@ -1,11 +1,12 @@
 <%inherit file="/_base.mako"/>
+<%namespace name="lib" file="/_lib.mako" />
 
 <%block name="title">log in</%block>
 
 <section>
     <h1>Log in</h1>
 
-    <form action="" method="POST">
+    <%lib:form action="">
         <fieldset>
             <dl class="horizontal">
                 <dt><label>Name</label></dt>
@@ -17,5 +18,5 @@
                 <dd><button type="submit">Log in</button></dd>
             </dl>
         </fieldset>
-    </form>
+    </%lib:form>
 </section>

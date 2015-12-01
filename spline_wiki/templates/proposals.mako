@@ -1,4 +1,5 @@
 <%inherit file="/_base.mako" />
+<%namespace name="lib" file="/_lib.mako" />
 
 ## TODO title might be nice here instead, but we have to parse the whole page
 ## to get it
@@ -31,13 +32,12 @@
     <section>
         ## TODO get user object outta this
         <h1><code>${branch_name}</code> via ${proposer}</h1>
-        ## TODO where is csrf oh no
-        <form action="" method="POST">
+        <%lib:form action="">
             <p>
                 <input type="hidden" name="branch" value="${branch_name}">
                 <button type="submit">approve</button>
             </p>
-        </form>
+        </%lib:form>
         % for patch in diff:
             <h2><code>${patch.delta.new_file.path}</code></h2>
             % if patch.delta.new_file.path != patch.delta.old_file.path:

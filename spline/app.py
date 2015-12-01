@@ -152,6 +152,7 @@ def main(global_settings, **settings):
     # Sessions
     config.include(pyramid_beaker)
     config.set_session_factory(session_factory)
+    config.add_tween('spline.web.auth.csrf_tween_factory')
 
     # Auth
     config.set_authentication_policy(DatabaseAuthenticationPolicy())
