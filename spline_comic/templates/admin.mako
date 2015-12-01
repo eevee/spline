@@ -139,6 +139,7 @@
             <style>
                 .js-markdown-preview {
                     display: flex;
+                    margin-bottom: 1em;
                 }
                 .js-markdown-preview textarea {
                     display: block;
@@ -191,6 +192,13 @@
             <div class="js-markdown-preview">
                 <textarea name="comment" placeholder="Comment (optional)"></textarea>
             </div>
+
+            <p>
+                Optional iframe (e.g., YouTube): <br>
+                <input type="text" name="iframe_url" size="40" placeholder="URL">
+                <input type="text" name="iframe_width" size="3" value="800">
+                × <input type="text" name="iframe_height" size="3" value="600">
+            </p>
 
             <p>
                 <label>
