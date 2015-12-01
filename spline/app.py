@@ -51,9 +51,14 @@ def core_plugin_includeme(config):
     config.add_route('__core__.auth.logout', '/@@auth/logout/')
     config.add_route('__core__.auth.register', '/@@auth/register/')
 
-    config.add_route('__core__.admin.permissions', '/admin/permissions/')
-    config.add_route('__core__.admin.permissions.grant', '/admin/permissions/grant')
-    config.add_route('__core__.admin.permissions.revoke', '/admin/permissions/revoke')
+    # TODO god damn i hate this hack
+    class StupidContextHack:
+        __scope__ = 'core'
+        def __init__(self, request):
+            pass
+    config.add_route('__core__.admin.permissions', '/admin/permissions/', factory=StupidContextHack)
+    config.add_route('__core__.admin.permissions.grant', '/admin/permissions/grant', factory=StupidContextHack)
+    config.add_route('__core__.admin.permissions.revoke', '/admin/permissions/revoke', factory=StupidContextHack)
 
     config.add_route('__core__.api.render-markdown', '/api/render-markdown/')
 

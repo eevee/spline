@@ -11,8 +11,9 @@ from spline.models import Group, GroupPermission, session
 # also i never figured out how to add special things like "owner only" or
 # scoped to specific objects like subforums
 ALL_KNOWN_PERMISSIONS_XXX = dict(
-    wiki=['edit', 'propose'],
+    core=['admin'],
     comic=['admin', 'queue'],
+    wiki=['edit', 'merge', 'propose'],
 )
 
 
@@ -23,6 +24,7 @@ ALL_KNOWN_PERMISSIONS_XXX = dict(
 # TODO no group inheritance
 @view_config(
     route_name='__core__.admin.permissions',
+    permission='admin',
     request_method='GET',
     renderer='/admin/permissions.mako')
 def permissions(request):
@@ -43,6 +45,7 @@ def permissions(request):
 
 @view_config(
     route_name='__core__.admin.permissions.grant',
+    permission='admin',
     request_method='POST')
 def permissions_grant(request):
     # TODO error checking, eh.  is there even a flash thing yet, haha
@@ -62,6 +65,7 @@ def permissions_grant(request):
 
 @view_config(
     route_name='__core__.admin.permissions.revoke',
+    permission='admin',
     request_method='POST')
 def permissions_revoke(request):
     # TODO error checking, eh.  is there even a flash thing yet, haha

@@ -13,8 +13,12 @@
         </p>
         <p>
             <input type="text" name="message" size="50" placeholder="Describe your change">
+            % if request.user and request.user.can('wiki', 'edit'):
             <button type="submit" name="action" value="save">Save</button>
+            % endif
+            % if request.user and request.user.can('wiki', 'propose'):
             <button type="submit" name="action" value="propose">Propose</button>
+            % endif
         </p>
     </form>
 </section>

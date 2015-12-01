@@ -79,7 +79,6 @@ def wiki_edit(page, request):
 @view_config(
     context=WikiPage,
     name='edit',
-    permission='edit',
     request_method='POST')
 def wiki_edit__do(page, request):
     # TODO what if it's not writable?  should we check that now?
@@ -88,6 +87,8 @@ def wiki_edit__do(page, request):
     # TODO consider wiring the commit process into `transaction`
 
     if request.POST['action'] == 'save':
+        if not request.user.can('wiki', 'edit'):
+            raise HTTPForbidden
         page.write(
             request.POST['content'],
             request.user.name,
@@ -95,6 +96,8 @@ def wiki_edit__do(page, request):
             request.POST['message'],
         )
     elif request.POST['action'] == 'propose':
+        if not request.user.can('wiki', 'propose'):
+            raise HTTPForbidden
         page.write(
             request.POST['content'],
             request.user.name,
@@ -136,6 +139,7 @@ def wiki_history(page, request):
 @view_config(
     context=WikiPage,
     name='proposals',
+    permission='merge',
     request_method='GET',
     renderer='spline_wiki:templates/proposals.mako')
 def wiki_proposals(page, request):
@@ -148,6 +152,7 @@ def wiki_proposals(page, request):
 @view_config(
     context=WikiPage,
     name='proposals',
+    permission='merge',
     request_method='POST')
 def wiki_proposals_do(page, request):
     branch_name = request.POST['branch']
@@ -157,12 +162,10 @@ def wiki_proposals_do(page, request):
 
     head = page.wiki.repo.lookup_branch(branch_name)
     new_index = page.wiki.repo.merge_commits(page.wiki.repo.head, head)
-    print(new_index)
 
     # TODO much, much more better error handling
     if new_index.conflicts:
         raise RuntimeError("conflicts!!")
-
 
     # TODO fix this to avoid the race condition when updating HEAD
     from spline_wiki.models import get_system_signature
