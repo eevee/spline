@@ -21,7 +21,7 @@
 ## Render a thumbnail for a GalleryItem
 <%def name="thumbnail(item)">
 ## TODO this heavily assumes the first item is an image, fix please <3
-<img src="${item.media[0].image_file.url_from_request(request)}" class="image-capped">
+<img src="${item.media[0].thumbnail_file.url_from_request(request)}" class="image-capped">
 </%def>
 
 

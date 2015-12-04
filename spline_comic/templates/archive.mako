@@ -62,11 +62,8 @@ Archive
         % if page:
             ## If the first page is hidden, the whole folder (probably) is
             <li class="chapter ${'privileged' if page.is_queued else ''}">
-                ## TODO this should prooobably link to the archive for the /folder/
                 <a href="${request.resource_url(child_folder)}">
-                    <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
-                        class="image-capped">
-
+                    ${lib.thumbnail(page)}
                     ${child_folder.title}
                 </a>
             </li>
@@ -85,9 +82,7 @@ Archive
         % else:
         <li class="${'privileged' if page.is_queued else ''}">
             <a href="${request.resource_url(page)}">
-                <img src="${page.media[0].thumbnail_file.url_from_request(request)}"
-                    class="image-capped">
-
+                ${lib.thumbnail(page)}
                 ${page.title or "page {}".format(page.page_number)}
             </a>
         </li>
