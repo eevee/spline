@@ -458,8 +458,11 @@ def comic_upload_do(request):
             '^(?:https?://)?(?:www[.])?youtube[.]com/watch[?]v=(\\w+)(?:&|$)',
             url)
         if m:
-            ytid = m.group(1)
-            url = "https://www.youtube.com/embed/{}?rel=0".format(ytid)
+            url = "https://www.youtube.com/embed/{}?rel=0".format(m.group(1))
+
+        m = re.match('^(?:https?://)?youtu[.]be/(\\w+)(?:[?]|$)', url)
+        if m:
+            url = "https://www.youtube.com/embed/{}?rel=0".format(m.group(1))
 
         try:
             width = int(request.POST['iframe_width'])
