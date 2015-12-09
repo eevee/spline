@@ -1,5 +1,6 @@
 <%!
     import calendar
+    import json
     from datetime import timedelta
 
     from spline.format import format_date
@@ -155,6 +156,7 @@
             </style>
             <script>
                 // TODO hey you know what would be great?  coffeescript.
+                ## TODO this should fire onload too if the browser populates the textarea
                 $(function() {
                     $('.js-markdown-preview').each(function() {
                         var $preview = $('<div>', { 'class': 'js-markdown-preview--preview' });
@@ -168,6 +170,8 @@
                                 url: '/api/render-markdown/',
                                 method: 'POST',
                                 data: {markdown: markdown},
+                                ## TODO ugly
+                                headers: { 'X-CSRF-Token': ${json.dumps(request.session.get_csrf_token())|n} },
                             });
 
                             req.done(function(resp) {
