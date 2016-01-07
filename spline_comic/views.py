@@ -24,6 +24,7 @@ from spline_comic.models import ComicChapter
 from spline_comic.models import ComicPage
 from spline_comic.models import GalleryFolder
 from spline_comic.models import GalleryItem
+from spline_comic.models import GalleryMedia
 from spline_comic.models import GalleryMedia_Image
 from spline_comic.models import GalleryMedia_IFrame
 from spline_comic.models import END_OF_TIME
@@ -139,6 +140,7 @@ def _comic_archive_shared(parent_folder, request):
     recent_pages_by_folder = defaultdict(list)
     date_range_by_folder = dict()
     page_count_by_folder = dict()
+    all_seen_items = set()
     if folder_ids:
         recent_page_subq = (
             session.query(
@@ -167,6 +169,7 @@ def _comic_archive_shared(parent_folder, request):
         )
         for item in recent_page_q:
             recent_pages_by_folder[item.folder].append(item)
+            all_seen_items.add(item)
 
         # Snag the start/end dates for each folder and the number of items in
         # each
@@ -203,6 +206,17 @@ def _comic_archive_shared(parent_folder, request):
             page.folder: page
             for page in recent_page_q
         }
+        all_seen_items.update(first_page_by_folder.values())
+
+    # Eagerload media rows for every item we've seen
+    (
+        session.query(GalleryItem)
+        .options(
+            joinedload(GalleryItem.media)
+        )
+        .filter(GalleryItem.id.in_([item.id for item in all_seen_items]))
+        .all()
+    )
 
     return dict(
         comic=comic,

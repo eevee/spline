@@ -260,7 +260,10 @@ class GalleryMedia(Base):
         Enum('image', 'iframe', name='gallery_media__discriminator'),
         nullable=False,
     )
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    __mapper_args__ = {
+        'polymorphic_on': discriminator,
+        'with_polymorphic': '*',
+    }
 
 
 class GalleryMedia_Image(GalleryMedia):
