@@ -182,7 +182,10 @@ GalleryFolder.parent = relationship(
     foreign_keys=[folder_parentage.c.child_id, folder_parentage.c.parent_id],
     viewonly=True,
     uselist=False,
-    backref='children',
+    backref=backref(
+        'children',
+        order_by=GalleryFolder.left,
+    ),
 )
 
 # TODO backcompat
