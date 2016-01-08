@@ -67,6 +67,14 @@ def logout__do(request):
         return HTTPSeeOther(return_url, headers=headers)
 
 
+@view_config(route_name='__core__.auth.logout', request_method='GET')
+def logout(request):
+    headers = forget(request)
+    request.session.pop('pending_auth')
+
+    # TODO return to same url?
+    return_url = request.route_url('__core__.home')
+    return HTTPSeeOther(return_url, headers=headers)
 
 
 @view_config(

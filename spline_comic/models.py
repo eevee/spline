@@ -69,11 +69,11 @@ class DropView(DDLElement):
 
 @compiler.compiles(CreateView)
 def compile(element, compiler, **kw):
-    return "CREATE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
+    return "CREATE OR REPLACE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
 
 @compiler.compiles(DropView)
 def compile(element, compiler, **kw):
-    return "DROP VIEW %s" % (element.name)
+    return "DROP VIEW IF EXISTS %s" % (element.name)
 
 def view(name, metadata, selectable):
     # Deviation from the wiki recipe -- copy the columns (into dummy columns)
@@ -290,8 +290,9 @@ GalleryItem.media = relationship(
 class ComicPageTranscript(Base):
     __tablename__ = 'comic_page_transcripts'
 
-    page = Relationship(
-        ComicPage, primary_key=True,
+    page_id = Column(Integer, ForeignKey(ComicPage.id), nullable=False, primary_key=True)
+    page = relationship(
+        ComicPage,
         backref=backref(
             'transcripts',
             collection_class=attribute_mapped_collection('language'),
