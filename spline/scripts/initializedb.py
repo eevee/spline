@@ -3,8 +3,8 @@ import importlib
 import logging
 import transaction
 
+import coloredlogs
 from pyramid.config import Configurator
-
 from sqlalchemy import engine_from_config
 
 from bcrypt import (
@@ -39,7 +39,7 @@ def initdb(**settings):
     config = Configurator(settings=settings)
 
     # Logging
-    config.include('spline.lib.logging')
+    coloredlogs.install(level=logging.INFO)
 
     # Plugin loading
     debug = settings.get('spline.debug')

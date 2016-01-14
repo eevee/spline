@@ -8,21 +8,22 @@ README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-    'pyramid',
-    'SQLAlchemy',
-    'transaction',
     'bcrypt',
+    'coloredlogs',
     'lxml',
     'mako>=0.7.0',
+    'pyramid',
     'pyramid_beaker',
     'pyramid_debugtoolbar',
     'pyramid_scss',
     'pyramid_tm',
     'pytz',
+    'sqlalchemy',
+    'transaction',
     'tzlocal',
-    'zope.sqlalchemy',
     'waitress',
     'whoosh',
+    'zope.sqlalchemy',
 ]
 
 # pypi versions of stdlib packages

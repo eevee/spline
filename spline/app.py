@@ -1,6 +1,8 @@
+import logging
 import os
 from pathlib import Path
 
+import coloredlogs
 from pyramid.config import Configurator
 from pyramid.events import BeforeRender
 from pyramid.security import authenticated_userid
@@ -67,6 +69,10 @@ def core_plugin_includeme(config):
 
 
 def main(global_settings, **settings):
+    # TODO should allow end user to configure logging, of course; this is just
+    # a nice default
+    coloredlogs.install(level=logging.INFO)
+
     # TODO this doesn't actually work as a paste entry point, because the ini
     # values need converting  :S
     datadir = Path(settings['spline.datadir'])
@@ -143,11 +149,6 @@ def main(global_settings, **settings):
     filestore_dir = (datadir / 'filestore').resolve()
     config.registry.registerUtility(FilesystemStorage(filestore_dir), IStorage)
     config.add_static_view('filestore', str(filestore_dir))
-
-    # Logging
-    # TODO neeed to somehow specify whether this is debug land or not; want
-    # sane defaults but not always the same
-    config.include('spline.lib.logging')
 
     # Sessions
     config.include(pyramid_beaker)
