@@ -1,5 +1,5 @@
-Splinte README
-==================
+Spline README
+=============
 
 Getting Started
 ---------------
