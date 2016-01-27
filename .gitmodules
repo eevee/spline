@@ -1,0 +1,3 @@
+[submodule "spline/assets/vendor/archetype"]
+	path = spline/assets/vendor/archetype
+	url = https://github.com/eevee/archetype

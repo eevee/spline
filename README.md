@@ -9,6 +9,8 @@ As a secondary goal, it should be easy to spin up a trivial new website, without
 
 ## Getting the goods
 
+**NOTE:** There's a submodule!  You _must_ run `git submodule update --init` after cloning, or intermittently after pulling.  If your CSS seems to be broken, that's why.
+
 ### Prerequisites
 
 Use apt or your favorite package installer to get these:

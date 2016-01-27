@@ -87,13 +87,12 @@ def main(global_settings, **settings):
         'mako.module_directory': str(datadir / '_mako_cache'),
         'mako.strict_undefined': True,
 
-        # TODO: should not need to hardcode a weird archetype path here  :)
         # TODO i am not thrilled that only a string works here
         # TODO: pyramid_scss should learn to do asset specs in imports as well,
         # but scss needs import hooking for that to work
         'scss.asset_path':
-            'spline:assets/scss\n' +
-            os.path.join(os.getcwd(), '../archetype.git/scss'),
+            'spline:assets/scss\n'
+            'spline:assets/vendor/archetype/scss',
 
         # These are reversed in debug mode
         # TODO scss should really be built and served directly in production
