@@ -18,6 +18,7 @@ requires = [
     'pyramid_scss',
     'pyramid_tm',
     'pytz',
+    'simplejson',
     'sqlalchemy',
     'transaction',
     'tzlocal',

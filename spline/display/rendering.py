@@ -1,6 +1,7 @@
 import markdown
 from markupsafe import Markup
 from pyramid.renderers import get_renderer
+import simplejson
 
 
 def render_with_context(context, renderer_name, *args, **kwargs):
@@ -14,6 +15,11 @@ def render_with_context(context, renderer_name, *args, **kwargs):
 
     target.render_context(context, *args, **kwargs)
     return u''
+
+
+def render_json(data):
+    encoder = simplejson.JSONEncoderForHTML()
+    return Markup(encoder.encode(data))
 
 
 class RenderedMarkdown(Markup):

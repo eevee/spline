@@ -1,8 +1,8 @@
 <%!
     import calendar
-    import json
     from datetime import timedelta
 
+    from spline.display.rendering import render_json as j
     from spline.format import format_date
     from spline_comic.models import END_OF_TIME
     from spline_comic.models import get_current_publication_date
@@ -170,8 +170,7 @@
                                 url: '/api/render-markdown/',
                                 method: 'POST',
                                 data: {markdown: markdown},
-                                ## TODO ugly
-                                headers: { 'X-CSRF-Token': ${json.dumps(request.session.get_csrf_token())|n} },
+                                headers: { 'X-CSRF-Token': ${request.session.get_csrf_token()|j} },
                             });
 
                             req.done(function(resp) {
