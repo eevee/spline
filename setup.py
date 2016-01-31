@@ -55,7 +55,5 @@ setup(
     entry_points="""\
         [paste.app_factory]
         main = spline.app:main
-        [console_scripts]
-        initialize_spline_db = spline.scripts.initializedb:main
     """,
 )

@@ -1,25 +1,14 @@
-"""Entry point for running spline as a web app."""
-# NOTE: this code CANNOT EVER go in spline/app.py; running that directly will
-# change its name to __main__ which will make pyramid confused and unhappy.
+"""CLI entry point."""
+from spline.cli.main import make_arg_parser
 
-import waitress
-
-import spline.app
-
-from spline.lib.parsing import (
-    make_parser
-)
 
 def main():
-    parser = make_parser()
+    parser = make_arg_parser()
     args = parser.parse_args()
 
-    app = spline.app.main({}, **vars(args))
-    if args.bind:
-        waitress.serve(app, **args.bind)
-    else:
-        return app
+    return args.func(parser, args)
 
 
 if __name__ == '__main__':
+    # This is for WSGI runners, in the case of `spline run`
     application = main()

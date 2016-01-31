@@ -1,20 +1,12 @@
 import sys
+import getpass
 import importlib
 import logging
-import transaction
 
+import bcrypt
 import coloredlogs
-from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
-
-from bcrypt import (
-    hashpw,
-    gensalt
-)
-
-from spline.lib.parsing import (
-    make_parser
-)
+import transaction
 
 from spline.models import (
     session,
@@ -25,35 +17,47 @@ from spline.models import (
     )
 
 
-def main(argv=sys.argv):
-    parser = make_parser(True)
-    args = parser.parse_args()
-    initdb(**vars(args))
+def configure_parser(subparser):
+    p_initdb = subparser.add_parser('init-db')
+    p_initdb.set_defaults(func=init_db)
+
+    p_newuser = subparser.add_parser('create-user')
+    p_newuser.set_defaults(func=create_user)
 
 
-def initdb(**settings):
-
-    engine = engine_from_config(settings, 'sqlalchemy.')
-    session.configure(bind=engine)
-
-    config = Configurator(settings=settings)
-
-    # Logging
-    coloredlogs.install(level=logging.INFO)
-
-    # Plugin loading
-    debug = settings.get('spline.debug')
-    if debug:
-        logging.basicConfig()
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+def import_plugins(plugin_specs):
     plugin_list = []
     try:
-        for plugins in settings.get('spline.plugins', ()):
-            plugin, route_prefix = plugins.split(':', 1)
+        for spec in plugin_specs:
+            plugin, route_prefix = spec.split(':', 1)
             importlib.import_module(plugin)
             plugin_list.append(plugin)
     except TypeError:
         pass
+
+    return plugin_list
+
+
+def _add_permission(permission, group):
+    pass
+
+
+def init_db(parser, args):
+    settings = vars(args)
+
+    # Logging
+    # TODO this should probably go in the main entry point
+    coloredlogs.install(level=logging.INFO)
+    # TODO what is this for, it was debug-only, is there any reason we wouldn't want it
+    #logging.basicConfig()
+    #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+    # Plugin loading
+    plugin_list = import_plugins(settings.get('spline.plugins', ()))
+
+    engine = engine_from_config(settings, 'sqlalchemy.')
+    session.configure(bind=engine)
+
     Base.metadata.create_all(engine, checkfirst=True)
 
     adm_name = settings.get('spline.admin_name')
@@ -62,7 +66,7 @@ def initdb(**settings):
     comic_title = settings.get('spline.comic_name')
     chapter_title = settings.get('spline.chapter_name')
     p = adm_pw.encode('utf8')
-    pw = hashpw(p, gensalt(14))
+    pw = bcrypt.hashpw(p, bcrypt.gensalt(14))
 
     with transaction.manager:
         try:
@@ -110,3 +114,47 @@ def initdb(**settings):
                 gp2 = GroupPermission(id=2, scope='wiki', permission='edit')
                 gp2.group = g
                 session.add(gp2)
+
+
+def create_user(parser, args):
+    engine = engine_from_config(vars(args), 'sqlalchemy.')
+    session.configure(bind=engine)
+
+    with transaction.manager:
+        all_groups = {
+            group.name: group
+            for group in session.query(Group)
+        }
+
+    username = input('username: ').strip()
+    email = input('email: ').strip()
+    password = getpass.getpass('password: ')
+    password2 = getpass.getpass('confirm password: ')
+
+    if password != password2:
+        print("passwords don't match!")
+        sys.exit(1)
+
+    group_names = []
+    if all_groups:
+        print()
+        print("available groups: {}".format(', '.join(all_groups)))
+        group_names = input('comma-separated list of groups to add to: ').strip().split(',')
+
+    with transaction.manager:
+        pwhash = bcrypt.hashpw(
+            password.encode('utf8'),
+            bcrypt.gensalt(14),
+        ).decode('ascii')
+
+        # TODO would be neat to have a password field that hashes on assignment
+        # and does the right thing with equality check
+        user = User(name=username, email=email, password=pwhash, groups=[])
+        for group_name in group_names:
+            user.groups.append(all_groups[group_name])
+        session.add(user)
+        session.flush()
+        userid = user.id
+
+    print()
+    print("created user {} with id {}".format(username, userid))

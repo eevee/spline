@@ -84,19 +84,23 @@ cd ../spline
 
 We're almost ready. We need to create the database and populate it. You may want to change some parameters before running it, check them with
 ```
-../bin/initialize_spline_db -h
+../bin/python -m spline -h
 ```
 We'll go with the defaults here
 ```
-../bin/initialize_spline_db --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com
+../bin/python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com init-db
 ```
+
+Then you can create a new user:
+
+    ../bin/python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb create-user
 
 ## Run, Forr-- Spline, run !
 
 Woo.
 Now, start the server with
 ```
-../bin/python spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com --data-dir data 0.0.0.0:6543
+../bin/python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com run --data-dir data 0.0.0.0:6543
 ```
 
 ### Adding an image
@@ -116,12 +120,6 @@ In the reason box, write ```Initial version```.
 
 Submit. Tada !
 
-### Password change
-If you want to change the admin password (I used https://www.dailycred.com/article/bcrypt-calculator to generate the test password):
-```
-sudo su - splineuser
-psql splinedb < "update users set password = '<password encrypted with bcrypt here>' where id=1;
-```
 
 [Pyramid]: http://pyramid.readthedocs.org/en/latest/
 [Floraverse]: http://floraverse.com/
