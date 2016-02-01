@@ -60,25 +60,14 @@ def init_db(parser, args):
 
     Base.metadata.create_all(engine, checkfirst=True)
 
-    adm_name = settings.get('spline.admin_name')
-    adm_pw = settings.get('spline.admin_pw')
-    adm_email = settings.get('spline.admin_email')
     comic_title = settings.get('spline.comic_name')
     chapter_title = settings.get('spline.chapter_name')
-    p = adm_pw.encode('utf8')
-    pw = bcrypt.hashpw(p, bcrypt.gensalt(14))
 
     with transaction.manager:
-        try:
-            u = session.query(User).filter_by(id=1).one()
-        except:
-            u = User(id=1, email=adm_email, name=adm_name, password=pw.decode('ascii'))
-            session.add(u)
         try:
             g = session.query(Group).filter_by(id=1).one()
         except:
             g = Group(id=1, name='admin')
-            g.users.append(u)
             session.add(g)
         try:
             gp0 = session.query(GroupPermission).filter_by(id=1).one()
