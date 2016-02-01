@@ -468,13 +468,14 @@ def comic_upload_do(request):
         # If it's a YouTube URL, convert to the embed URL automatically
         # TODO this seems like a neat thing to do for many other services and
         # make a tiny library out of, if it's not done already?
+        # TODO why doesn't this use urlparse???
         m = re.match(
-            '^(?:https?://)?(?:www[.])?youtube[.]com/watch[?]v=(\\w+)(?:&|$)',
+            '^(?:https?://)?(?:www[.])?youtube[.]com/watch[?]v=([-_0-9a-zA-Z]+)(?:&|$)',
             url)
         if m:
             url = "https://www.youtube.com/embed/{}?rel=0".format(m.group(1))
 
-        m = re.match('^(?:https?://)?youtu[.]be/(\\w+)(?:[?]|$)', url)
+        m = re.match('^(?:https?://)?youtu[.]be/([-_0-9a-zA-Z]+)(?:[?]|$)', url)
         if m:
             url = "https://www.youtube.com/embed/{}?rel=0".format(m.group(1))
 
