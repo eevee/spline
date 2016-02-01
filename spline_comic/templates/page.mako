@@ -1,8 +1,9 @@
+<%inherit file="spline_comic:templates/_base.mako" />
+<%namespace file="spline:templates/_lib.mako" name="lib" />
 <%!
     from spline.display.rendering import render_prose
     from spline.format import format_date
 %>
-<%inherit file="spline_comic:templates/_base.mako" />
 
 <%!
 def title_for_page(page):
@@ -64,34 +65,14 @@ ${main_section(page, adjacent_pages, transcript)}
 </section>
 % endif
 
-## TODO i don't like this globally-unique id thing, though, granted, it's
-## unlikely there'd be more than one disqus thread on a single page
 % if 'spline_gallery.disqus' in request.registry.settings:
 <section class="comments">
     <h1>Comments</h1>
-    ## TODO this gunk might be nice to not have embedded here, maybe with a
-    ## widget sort of thing, could use for ads too
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        ## TODO json-encode this
-        var disqus_shortname = '${request.registry.settings['spline_gallery.disqus']}';
-        ## Note: this block might be included on pages that aren't the comic
-        ## page (most notably the homepage!), so we mustn't assume the disqus
-        ## defaults are okay
-        ## TODO need a standard html-safe jsonify thing (or a block that changes the filter, like buck's JS?)
-        ## TODO do something so that dev doesn't snag the url first?  or is that not a problem with full uri?
-        <% import json %>
-        var disqus_identifier = ${json.dumps(request.resource_url(page))|n};
-        var disqus_url = ${json.dumps(request.resource_url(page))|n};
-        var disqus_title = ${json.dumps(title_for_page(page))|n};
-        (function() {
-            var dsq = document.createElement('script');
-            dsq.type = 'text/javascript';
-            dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
+    ${lib.disqus(
+        request.registry.settings['spline_gallery.disqus'],
+        request.resource_url(page),
+        title_for_page(page),
+    )}
 </section>
 % endif
 </%def>

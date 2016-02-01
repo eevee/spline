@@ -1,4 +1,5 @@
 <%inherit file="/_base.mako" />
+<%namespace file="spline:templates/_lib.mako" name="lib" />
 <%!
     import spline.format as libfmt
     from spline.display.rendering import render_html
@@ -16,3 +17,16 @@
     </header>
     <div>${render_html(post.content)}</div>
 </section>
+
+## TODO ok i guess this shouldn't be specific to spline_gallery...  (really it
+## should be specific to a disqus plugin)
+% if 'spline_gallery.disqus' in request.registry.settings:
+<section class="comments">
+    <h1>Comments</h1>
+    ${lib.disqus(
+        request.registry.settings['spline_gallery.disqus'],
+        request.route_url('blog.view', post_id=post.id),
+        post.title,
+    )}
+</section>
+% endif
