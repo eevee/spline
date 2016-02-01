@@ -1,3 +1,4 @@
+import bleach
 import markdown
 from markupsafe import Markup
 from pyramid.renderers import get_renderer
@@ -45,3 +46,27 @@ def render_prose(prose):
     # We trust the Markdown implementation to jettison any unexpected HTML.
     # Fingers crossed.
     return RenderedMarkdown(rendered, metadata=getattr(renderer, 'Meta', {}))
+
+
+def render_html(html):
+    # Idempotence
+    if isinstance(html, Markup):
+        return html
+
+    return Markup(bleach.clean(
+        html,
+        tags=(
+            'section',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'p', 'blockquote',
+            'a', 'img',
+            'abbr', 'acronym', 'code',
+            'em', 'i', 'strong', 'b',
+            'ul', 'ol', 'li',
+            'hr', 'table', 'tr', 'td', 'th',
+        ),
+        attributes={
+            '*': ['class'],
+            'img': ['src', 'alt'],
+        },
+    ))

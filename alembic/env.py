@@ -18,6 +18,7 @@ fileConfig(config.config_file_name)
 # TODO this should really import only the configured plugins...  or they should
 # be split up
 import spline.models
+import spline_blog.models
 import spline_comic.models
 import spline_love.models
 import spline_pastebin.models
