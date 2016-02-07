@@ -58,7 +58,7 @@ def render_html(html):
         tags=(
             'section',
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'p', 'blockquote',
+            'p', 'blockquote', 'br', 'hr',
             'a', 'img',
             'abbr', 'acronym', 'code',
             'em', 'i', 'strong', 'b',
@@ -67,6 +67,7 @@ def render_html(html):
         ),
         attributes={
             '*': ['class'],
+            'a': ['href'],
             'img': ['src', 'alt'],
         },
     ))
