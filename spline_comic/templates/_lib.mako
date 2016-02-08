@@ -2,6 +2,7 @@
 <%!
     import spline.format as libformat
     from spline.display.rendering import render_prose
+    from spline.display.rendering import trim_html
 %>
 
 <%def name="render_activity(page)">
@@ -55,9 +56,9 @@
                         % endif
                     </a>
                 </p>
-                <p>
-                    ${render_prose(page.comment)}
-                </p>
+                <div class="prose">
+                    ${trim_html(render_prose(page.comment))}
+                </div>
                 <p>
                     —<em>${page.author.name}</em>
                 </p>
