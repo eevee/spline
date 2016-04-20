@@ -22,7 +22,7 @@
     padding: 0;
 
     > li {
-        @include flex(1 0 calc(200px + 0.5em));
+        @include flex(1 0 calc(200px + 1em));  // width + 2 * padding of <a>
         box-sizing: border-box;
         text-align: center;
 
@@ -74,13 +74,6 @@
         }
         &.privileged > a img {
             box-shadow: 0 0 0 2px $privileged-color;
-        }
-
-        &.-dummy {
-            // These exist just to keep the last row aligned to the grid; the
-            // width must match the width for the links above, and they must
-            // have no height
-            min-width: calc(200px + 0.5em);
         }
     }
 }
