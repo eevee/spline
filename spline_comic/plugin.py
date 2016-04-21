@@ -214,8 +214,8 @@ def configure_comic(self, config):
     config.register_spline_plugin(self)
 
     # Routing
-    # TODO what goes on / now?
     config.add_route('comic.archive', '/')
+    config.add_route('comic.archive.by-date', '/@@by-date/')
 
     # There needs to be a context for the auth thing to work, because it looks
     # at the context's __scope__ property to check for permission...  oops.
@@ -235,6 +235,7 @@ def configure_comic(self, config):
 
     # TODO so where does this go, if anywhere?  really only existed to replace
     # the front page...
+    # TODO also conflicts with folder paths, boo, booooo
     config.add_route('comic.most-recent', '/most-recent/')
 
     # TODO one teeny problem here is that a folder whose name starts with a

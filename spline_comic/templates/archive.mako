@@ -29,6 +29,10 @@ Archive
 % endif
 </%block>
 
+<p class="gallery-archive-top-links">
+    Archive by folder · <a href="${request.route_url('comic.archive.by-date')}">Archive by date</a>
+</p>
+
 % if parent_folder:
 <ul class="comic-page-grid">
 % for page in parent_folder.pages:

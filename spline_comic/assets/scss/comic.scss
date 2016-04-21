@@ -127,3 +127,48 @@
     border: 1px solid hsl(0, 0%, 90%);
     box-shadow: 0 1px 3px hsl(0, 0%, 90%);
 }
+
+.gallery-archive-top-links {
+    text-align: center;
+}
+
+table.gallery-archive-by-date {
+    width: 100%;
+    table-layout: fixed;
+
+    td, th {
+        padding: 0.25em;
+    }
+
+    th {
+        vertical-align: top;
+    }
+
+    col.-month { width: 8em; }
+    col.-folder { width: 40%; }
+    col.-page { width: 60%; }
+
+    th.-month {
+        text-align: left;
+    }
+    th.-folder {
+        text-align: left;
+        font-weight: normal;
+        font-style: italic;
+    }
+
+    tr.-new-month {
+        border-top: 1px solid scale-color($secondary-accent, $lightness: 33%);
+    }
+    tr.-new-year,
+    tr:first-child {
+        border-top-width: 3px;
+    }
+    tr.-folder-group-2 {
+        background: scale-color($secondary-accent, $lightness: 95%);
+    }
+
+    tr:hover {
+        background: scale-color($secondary-accent, $lightness: 90%);
+    }
+}

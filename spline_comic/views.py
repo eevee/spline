@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import time
 from datetime import timedelta
 from io import BytesIO
+import itertools
 import os
 import os.path
 import re
@@ -226,6 +227,32 @@ def _comic_archive_shared(parent_folder, request):
         first_page_by_folder=first_page_by_folder,
         date_range_by_folder=date_range_by_folder,
         page_count_by_folder=page_count_by_folder,
+    )
+
+
+@view_config(
+    route_name='comic.archive.by-date',
+    request_method='GET',
+    renderer='spline_comic:templates/archive-date.mako')
+def comic_archive_by_date(request):
+    # XXX remove this; currently used by _base.mako
+    comic = session.query(Comic).order_by(Comic.id.asc()).first()
+
+    if request.has_permission('queue', comic):
+        queued_clause = True
+    else:
+        queued_clause = ~GalleryItem.is_queued
+
+    items = (
+        session.query(GalleryItem)
+        .order_by(GalleryItem.date_published)
+        .filter(queued_clause)
+        .all()
+    )
+
+    return dict(
+        comic=comic,
+        items=items,
     )
 
 
