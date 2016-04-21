@@ -37,17 +37,16 @@ def get_adjacent_pages(page, include_queued):
     if not include_queued:
         q = q.filter(~ ComicPage.is_queued)
 
-    # TODO humble suggestion: perhaps ordering by date should order by, you know...  date?
     prev_by_date = (
         q
-        .filter(ComicPage.order < page.order)
-        .order_by(ComicPage.order.desc())
+        .filter(ComicPage.date_published < page.date_published)
+        .order_by(ComicPage.date_published.desc())
         .first()
     )
     next_by_date = (
         q
-        .filter(ComicPage.order > page.order)
-        .order_by(ComicPage.order.asc())
+        .filter(ComicPage.date_published > page.date_published)
+        .order_by(ComicPage.date_published.asc())
         .first()
     )
 
@@ -55,14 +54,16 @@ def get_adjacent_pages(page, include_queued):
     # 1. If there's a prev/next page in this folder, use that.
     # 2. Otherwise, if there's a prev/next folder, use the
     # last/first page of it.
+    # Folders are sorted by their /right/ edge so that a page in a folder comes
+    # after every page in any subfolders, just like the archive view shows.
     prev_by_story = (
         q
         .filter(ComicChapter.comic_id == page.chapter.comic_id)
         .filter(or_(
-            ComicChapter.order < page.chapter.order,
+            ComicChapter.right < page.chapter.right,
             and_(ComicChapter.id == page.chapter.id, ComicPage.order < page.order),
         ))
-        .order_by(ComicChapter.order.desc(), ComicPage.order.desc())
+        .order_by(ComicChapter.right.desc(), ComicPage.order.desc())
         .first()
     )
     next_by_story = (
@@ -72,7 +73,7 @@ def get_adjacent_pages(page, include_queued):
             ComicChapter.right > page.chapter.right,
             and_(ComicChapter.id == page.chapter.id, ComicPage.order > page.order),
         ))
-        .order_by(ComicChapter.order.asc(), ComicPage.order.asc())
+        .order_by(ComicChapter.right.asc(), ComicPage.order.asc())
         .first()
     )
 
