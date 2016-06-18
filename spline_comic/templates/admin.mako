@@ -2,7 +2,6 @@
     import calendar
     from datetime import timedelta
 
-    from spline.display.rendering import render_json as j
     from spline.format import format_date
     from spline_comic.models import END_OF_TIME
     from spline_comic.models import get_current_publication_date
@@ -10,6 +9,11 @@
 %>
 <%inherit file="spline_comic:templates/_base.mako" />
 <%namespace name="lib" file="/_lib.mako" />
+
+<%block name="head_extra">
+    <script src="${request.static_url('spline_comic:assets/js/admin.js')}"></script>
+    ${parent.head_extra()}
+</%block>
 
 <%block name="title">Administrate gallery</%block>
 
@@ -26,29 +30,6 @@
     <p>Your queue is empty.  No new pages will be posted until you add more.</p>
     % endif
 
-    <style>
-    .calendar {
-        margin-bottom: 1em;
-
-        text-align: center;
-    }
-    .calendar td {
-        width: 2em;
-        border: 1px solid #e0e0e0;
-    }
-    .calendar .calendar-month-0 {
-        background: white;
-    }
-    .calendar .calendar-month-1 {
-        background: #f6f6f6;
-    }
-    .calendar .calendar-month-name {
-        transform: rotate(-90deg);
-    }
-    .calendar .calendar-today {
-        background: hsl(60, 100%, 70%);
-    }
-    </style>
     <%lib:form action="${request.route_url('comic.save-queue')}">
         <table class="calendar comic-calendar">
             <caption>Post queued pages on:</caption>
@@ -125,73 +106,27 @@
 
             <p>
                 Chapter: <select name="chapter">
-                    % for chapter in chapters:
+                  <% stack = [] %>
+                  % for chapter in chapters:
+                    <%
+                        while stack and chapter.left > stack[-1].right:
+                            stack.pop()
+                        stack.append(chapter)
+                    %>
                     <option value="${chapter.id}"
                             % if loop.first:
                             selected
                             % endif
                         >
+                        % for _ in range(len(stack) - 1):
+                        &nbsp;&nbsp;
+                        % endfor
                         ${chapter.title}
                     </option>
-                    % endfor
+                  % endfor
                 </select>
             </p>
 
-            <style>
-                .js-markdown-preview {
-                    display: flex;
-                    margin-bottom: 1em;
-                }
-                .js-markdown-preview textarea {
-                    display: block;
-                    flex: 1;
-
-                    ## TODO move to somewhere global
-                    height: 16em;
-                }
-                .js-markdown-preview .js-markdown-preview--preview {
-                    flex: 1;
-                    margin-left: 1em;
-                }
-            </style>
-            <script>
-                // TODO hey you know what would be great?  coffeescript.
-                ## TODO this should fire onload too if the browser populates the textarea
-                $(function() {
-                    $('.js-markdown-preview').each(function() {
-                        var $preview = $('<div>', { 'class': 'js-markdown-preview--preview' });
-                        $(this).append($preview);
-                        var $el = $(this);
-                        var timer = null;
-                        var req = null;
-                        var render = function(markdown) {
-                            timer = null;
-                            req = $.ajax({
-                                url: '/api/render-markdown/',
-                                method: 'POST',
-                                data: {markdown: markdown},
-                                headers: { 'X-CSRF-Token': ${request.session.get_csrf_token()|j} },
-                            });
-
-                            req.done(function(resp) {
-                                timer = null;
-                                req = null;
-                                $preview.html(resp.markup);
-                                // TODO try to scroll to show the same part
-                                // of the text the user is typing in
-                            });
-                            // TODO uhh failure
-                        };
-                        $(this).find('textarea').on('keypress', function(ev) {
-                            var $textarea = $(this);
-                            if (timer || req) {
-                                return;
-                            }
-                            timer = setTimeout(function() { render($textarea.val()); }, 1000);
-                        });
-                    });
-                });
-            </script>
             <div class="js-markdown-preview">
                 <textarea name="comment" placeholder="Comment (optional)"></textarea>
             </div>

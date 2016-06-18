@@ -266,5 +266,6 @@ def configure_comic(self, config):
     # TODO maybe add a method for adding more paths?  or reuse some of
     # pyramid's existing static plumbing?
     config.registry.settings['scss.asset_path'] += '\nspline_comic:assets/scss'
+    config.add_static_view('static', 'spline_comic:assets', cache_max_age=3600)
 
     config.scan('spline_comic')

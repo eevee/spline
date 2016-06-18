@@ -1,3 +1,6 @@
+<%!
+    from spline.display.rendering import render_json as j
+%>
 <%namespace name="lib" file="/_lib.mako" />
 <!DOCTYPE html>
 <html class="no-js" lang="en">
@@ -16,6 +19,7 @@
     <link rel="stylesheet" type="text/css" href="${request.static_url('spline:assets/vendor/chosen-1.1.0/chosen.min.css')}">
     <script src="${request.static_url('spline:assets/vendor/chosen-1.1.0/chosen.jquery.min.js')}"></script>
     <script>
+        var spline_csrf_token = ${request.session.get_csrf_token()|j};
         $(function() {
             $('select').chosen();
         });

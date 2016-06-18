@@ -172,3 +172,46 @@ table.gallery-archive-by-date {
         background: scale-color($secondary-accent, $lightness: 90%);
     }
 }
+
+
+// -----------------------------------------------------------------------------
+// Admin
+
+.calendar {
+    margin-bottom: 1em;
+    text-align: center;
+
+    td {
+        width: 2em;
+        border: 1px solid #e0e0e0;
+    }
+    .calendar-month-0 {
+        background: white;
+    }
+    .calendar-month-1 {
+        background: #f6f6f6;
+    }
+    .calendar-month-name {
+        transform: rotate(-90deg);
+    }
+    .calendar-today {
+        background: hsl(60, 100%, 70%);
+    }
+}
+
+.js-markdown-preview {
+    display: flex;
+    margin-bottom: 1em;
+
+    textarea {
+        display: block;
+        flex: 1;
+
+        // TODO move to somewhere global
+        height: 16em;
+    }
+    .js-markdown-preview--preview {
+        flex: 1;
+        margin-left: 1em;
+    }
+}
