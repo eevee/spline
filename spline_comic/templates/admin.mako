@@ -12,10 +12,34 @@
 
 <%block name="head_extra">
     <script src="${request.static_url('spline_comic:assets/js/admin.js')}"></script>
+    <script src="${request.static_url('spline_comic:assets/vendor/jquery-sortable-0.9.13/jquery-sortable-min.js')}"></script>
     ${parent.head_extra()}
 </%block>
 
 <%block name="title">Administrate gallery</%block>
+
+<%def name="folder_select(chapters, name)">
+<select name="${name}">
+    <% stack = [] %>
+    % for chapter in chapters:
+    <%
+        while stack and chapter.left > stack[-1].right:
+            stack.pop()
+        stack.append(chapter)
+    %>
+    <option value="${chapter.id}"
+            % if loop.first:
+            selected
+            % endif
+        >
+        % for _ in range(len(stack) - 1):
+        &nbsp;&nbsp;
+        % endfor
+        ${chapter.title}
+    </option>
+    % endfor
+</select>
+</%def>
 
 <section>
     <h1>Queue</h1>
@@ -104,28 +128,7 @@
             <p><input type="file" name="file"></p>
             <p><input type="text" name="title" placeholder="Title (optional)"></p>
 
-            <p>
-                Chapter: <select name="chapter">
-                  <% stack = [] %>
-                  % for chapter in chapters:
-                    <%
-                        while stack and chapter.left > stack[-1].right:
-                            stack.pop()
-                        stack.append(chapter)
-                    %>
-                    <option value="${chapter.id}"
-                            % if loop.first:
-                            selected
-                            % endif
-                        >
-                        % for _ in range(len(stack) - 1):
-                        &nbsp;&nbsp;
-                        % endfor
-                        ${chapter.title}
-                    </option>
-                  % endfor
-                </select>
-            </p>
+            <p>Chapter: ${folder_select(chapters, name='chapter')}</p>
 
             <div class="js-markdown-preview">
                 <textarea name="comment" placeholder="Comment (optional)"></textarea>
@@ -170,30 +173,57 @@
 
 <section id="manage-folders">
     <h1>Manage folders</h1>
-    <p>Wow this isn't done at all!  In fact it's probably totally broken, maybe don't use it.</p>
-    <%lib:form action="${request.route_url('comic.admin.folders')}">
-    <ul>
+    <p>Wow this isn't done at all!  In fact it's probably totally broken, maybe don't use it.  The 'new folder' stuff below is good though.</p>
+    <ol class="comic-folder-hierarchy">
     <% last = None %>
     <% ancestry = [] %>
     % for folder in chapters:
         <%
+            is_first_child = False
             if last and last.right > folder.left:
-                ancestry.append(last)
+                is_first_child = True
             while ancestry and ancestry[-1].right < folder.left:
                 ancestry.pop()
+                context.write('</ol></li>')
+            ancestry.append(folder)
         %>
         <li>
-            % for _ in ancestry:
-                —
-            % endfor
-            ${folder.id} | ${folder.left} ${folder.right} ${folder.title} ${folder.ancestors}
-            <button type="submit" name="${folder.id}" value="right">
-                ↓</button>
-            <button type="submit" name="${folder.id}" value="left">
-                ↑</button>
-        </li>
+            <div style="float: right;">
+                <%lib:form action="${request.route_url('comic.admin.folders')}">
+                    <input type="hidden" name="folder_id" value="${folder.id}">
+                    <button type="submit" name="action" value="down" title="Move down">
+                        ↓</button>
+                    <button type="submit" name="action" value="up" title="Move up">
+                        ↑</button>
+                    <button type="submit" name="action" value="child-down">
+                        ↘</button>
+                    <button type="submit" name="action" value="child-up">
+                        ↗</button>
+                </%lib:form>
+            </div>
+            <p>${folder.title}</p>
+            <ol>
         <% last = folder %>
     % endfor
-    </ul>
+    % for _ in ancestry:
+        </ol></li>
+    % endfor
+    </ol>
+    <script>$('.comic-folder-hierarchy').sortable();</script>
+
+    <h2>New folder</h2>
+    <%lib:form action="${request.route_url('comic.admin.folders.new')}">
+    <p>
+        Create a new folder named
+        <input type="text" name="title">
+        and place it
+        <select name="where">
+            <option value="before">before</option>
+            <option value="after">after</option>
+            <option value="child">as a child of</option>
+        </select>
+        ${folder_select(chapters, 'relativeto')}.
+        <button type="submit">Do that</button>
+    </p>
     </%lib:form>
 </section>

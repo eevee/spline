@@ -12,6 +12,7 @@ import subprocess
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import joinedload
+from pyramid.httpexceptions import HTTPBadRequest
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.renderers import render_to_response
@@ -529,33 +530,90 @@ def comic_upload_do(request):
     permission='admin',
     request_method='POST')
 def comic_admin_folders_do(request):
-    for folder_id, direction in request.POST.items():
-        folder = session.query(ComicChapter).get(folder_id)
+    folder = session.query(ComicChapter).get(request.POST['folder_id'])
+    action = request.POST['action']
+    # Prevent accidents
+    return HTTPSeeOther(
+        location=request.route_url('comic.admin') + '#manage-folders')
 
-        # TODO this should verify, somehow, that there's actually something to the left or right to move to
-        if direction == "left":
-            # Move the folder leftwards, so that its new "right" is one less than its current "left"
-            diff = (folder.left - 1) - folder.right
-        elif direction == "right":
-            # Move the folder rightwards, so that its new "left" is one more than its current "right"
-            diff = (folder.right + 1) - folder.left
-        else:
-            continue
+    # TODO this should verify, somehow, that there's actually something to the left or right to move to
+    # TODO ha ha this doesn't work if the chosen folder has children, dummy!
+    if direction == "left":
+        # Move the folder leftwards, so that its new "right" is one less than its current "left"
+        diff = (folder.left - 1) - folder.right
+    elif direction == "right":
+        # Move the folder rightwards, so that its new "left" is one more than its current "right"
+        diff = (folder.right + 1) - folder.left
+    else:
+        continue
 
-        # TODO this assumes one direction only...  or does it?
-        (
-            session.query(ComicChapter)
-            .filter(ComicChapter.left.between(
-                *sorted((folder.left, folder.left + diff))))
-            .update({
-                ComicChapter.left: ComicChapter.left - diff,
-                ComicChapter.right: ComicChapter.right - diff,
-            }, synchronize_session=False)
-        )
+    # TODO this assumes one direction only...  or does it?
+    (
+        session.query(ComicChapter)
+        .filter(ComicChapter.left.between(
+            *sorted((folder.left, folder.left + diff))))
+        .update({
+            ComicChapter.left: ComicChapter.left - diff,
+            ComicChapter.right: ComicChapter.right - diff,
+        }, synchronize_session=False)
+    )
 
-        folder.left += diff
-        folder.right += diff
+    folder.left += diff
+    folder.right += diff
+
+    return HTTPSeeOther(
+        location=request.route_url('comic.admin') + '#manage-folders')
+
+
+@view_config(
+    route_name='comic.admin.folders.new',
+    permission='admin',
+    request_method='POST')
+def comic_admin_folders_new_do(request):
+    # TODO error checking...  might be no POSTs, for example
+    folder = session.query(GalleryFolder).get(request.POST['relativeto'])
+    if not folder:
+        # TODO
+        raise HTTPBadRequest
+
+    where = request.POST['where']
+    if where == 'before':
+        # "Before" really means taking its place, so the target folder and
+        # every subsequent folder should scoot forwards two places
+        left = folder.left
+    elif where == 'after':
+        # New folder's left should immediately follow the target folder's right
+        left = folder.right + 1
+    elif where == 'child':
+        # Target folder needs to widen by 2, then the new folder should go just
+        # before its right -- in case there are already children, this puts the
+        # new folder last
+        folder.right += 2
         session.flush()
+        left = folder.right - 2
+    else:
+        # TODO
+        raise HTTPBadRequest
+
+    # Push everyone else forwards by 2
+    (
+        session.query(GalleryFolder)
+        .filter(GalleryFolder.left >= left)
+        .update({
+            GalleryFolder.left: GalleryFolder.left + 2,
+            GalleryFolder.right: GalleryFolder.right + 2,
+        }, synchronize_session=False)
+    )
+
+    # Create the new folder
+    # TODO title has to be unique, non-blank, or somethin
+    session.add(GalleryFolder(
+        title=request.POST['title'],
+        left=left,
+        right=left + 1,
+        # TODO temporary hack until i get rid of comics entirely
+        comic_id=folder.comic_id,
+    ))
 
     return HTTPSeeOther(
         location=request.route_url('comic.admin') + '#manage-folders')

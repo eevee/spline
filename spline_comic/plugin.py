@@ -232,6 +232,7 @@ def configure_comic(self, config):
     config.add_route('comic.save-queue', '/@@admin/queue', factory=DumbAdminPermissionHack)
     config.add_route('comic.upload', '/@@admin/upload', factory=DumbAdminPermissionHack)
     config.add_route('comic.admin.folders', '/@@admin/folders', factory=DumbAdminPermissionHack)
+    config.add_route('comic.admin.folders.new', '/@@admin/folders/new', factory=DumbAdminPermissionHack)
 
     # TODO so where does this go, if anywhere?  really only existed to replace
     # the front page...
