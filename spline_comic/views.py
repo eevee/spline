@@ -545,7 +545,7 @@ def comic_admin_folders_do(request):
         # Move the folder rightwards, so that its new "left" is one more than its current "right"
         diff = (folder.right + 1) - folder.left
     else:
-        continue
+        raise HTTPBadRequest
 
     # TODO this assumes one direction only...  or does it?
     (
