@@ -21,6 +21,7 @@ Use apt or your favorite package installer to get these:
 - git
 - imagemagick
 - libgit2-22 (Warning: this is in unstable in Debian, do not install libgit2-21 instead, pygit2 will fail to install if you do)
+- libgit2-dev
 - libffi-dev
 - libxslt1-dev
 - libxml2-dev
@@ -44,7 +45,7 @@ source bin/activate
 
 ### Spline
 
-```git clone https://github.com/Epithumia/spline```
+```git clone https://github.com/eevee/spline```
 
 ### Floraverse
 
@@ -58,7 +59,7 @@ We'll start with a skin so you have something to look at
 ## Prep the DB
 
 First we'll create a new user
-```sudo adduser splineuser```
+```sudo adduser splineuser --shell /usr/sbin/nologin ```
 Set his password (I'll use 'splinepw' for this example)
 
 Next, we'll create a corresponding role in postgre (use "splinepw" when prompted for the new role)
@@ -73,10 +74,10 @@ createdb -O splineuser splinedb
 Now ```exit``` to come back to your virtual environment
 ```
 cd spline
-../bin/pip install -e .
-../bin/pip install colorama markdown pygit2 psycopg2
+pip install -e .
+pip install colorama markdown pygit2 psycopg2
 cd ../floraverse_com
-../bin/pip install -e .
+pip install -e .
 cd ../spline
 ```
 
@@ -84,23 +85,23 @@ cd ../spline
 
 We're almost ready. We need to create the database and populate it. You may want to change some parameters before running it, check them with
 ```
-../bin/python -m spline -h
+python -m spline -h
 ```
 We'll go with the defaults here
 ```
-../bin/python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com init-db
+python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com init-db
 ```
 
-Then you can create a new user:
-
-    ../bin/python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb create-user
-
+Then you can create a new user. Add them to the admin group.
+````
+python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb create-user
+````
 ## Run, Forr-- Spline, run !
 
 Woo.
 Now, start the server with
 ```
-../bin/python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com run --data-dir data 0.0.0.0:6543
+python -m spline --db postgresql+psycopg2://splineuser:splinepw@localhost/splinedb -P spline_comic:comic -P spline_wiki:wiki -P floraverse_com:floraverse_com run --data-dir data 0.0.0.0:6543
 ```
 
 ### Adding an image
