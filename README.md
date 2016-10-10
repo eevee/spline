@@ -15,8 +15,8 @@ As a secondary goal, it should be easy to spin up a trivial new website, without
 
 Use apt or your favorite package installer to get these:
 
-- Python3 (I assume 3.4)
-- Python3-dev
+- python3 (I assume 3.4)
+- python3-dev
 - gcc
 - git
 - imagemagick
