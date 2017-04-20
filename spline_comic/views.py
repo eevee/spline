@@ -585,22 +585,26 @@ def comic_admin_folders_new_do(request):
         # New folder's left should immediately follow the target folder's right
         left = folder.right + 1
     elif where == 'child':
-        # Target folder needs to widen by 2, then the new folder should go just
-        # before its right -- in case there are already children, this puts the
-        # new folder last
-        folder.right += 2
-        session.flush()
-        left = folder.right - 2
+        # New folder should go where its parents' current right is -- in case
+        # there are already children, this puts the new folder last
+        left = folder.right
     else:
         # TODO
         raise HTTPBadRequest
 
-    # Push everyone else forwards by 2
+    # Shift any endpoints after the new left ahead by 2.  This will cover both
+    # ancestors and unrelated folders that are further along
     (
         session.query(GalleryFolder)
         .filter(GalleryFolder.left >= left)
         .update({
             GalleryFolder.left: GalleryFolder.left + 2,
+        }, synchronize_session=False)
+    )
+    (
+        session.query(GalleryFolder)
+        .filter(GalleryFolder.right >= left)
+        .update({
             GalleryFolder.right: GalleryFolder.right + 2,
         }, synchronize_session=False)
     )
