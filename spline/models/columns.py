@@ -60,6 +60,7 @@ class DeferredAttribute(declared_attr):
         self.f = f
         self.args = args
         self.kwargs = kwargs
+        self._cascading = False
 
         set_creation_order(self)
 
