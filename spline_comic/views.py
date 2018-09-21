@@ -35,7 +35,7 @@ from spline_comic.models import XXX_HARDCODED_QUEUE
 from spline_comic.models import XXX_HARDCODED_TIMEZONE
 from spline_comic.models import get_current_publication_date
 
-FOLDER_PREVIEW_PAGE_COUNT = 7
+FOLDER_PREVIEW_PAGE_COUNT = 11
 
 
 @view_config(
