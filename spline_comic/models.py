@@ -171,7 +171,7 @@ folder_parentage = view(
             ),
         )
     )
-    .order_by(_folder_child.c.id, _folder_parent.c.left)
+    .order_by(_folder_child.c.id, _folder_parent.c.left.desc())
     .distinct(_folder_child.c.id)
 )
 GalleryFolder.parent = relationship(
