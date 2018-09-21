@@ -9,6 +9,7 @@ import os.path
 import re
 import subprocess
 
+from sqlalchemy import and_
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import joinedload
@@ -197,16 +198,21 @@ def _comic_archive_shared(parent_folder, request):
 
     first_page_by_folder = {}
     if child_folder_ids:
+        GalleryFolder_descendants = aliased(GalleryFolder)
         recent_page_q = (
-            session.query(GalleryItem)
-            .filter(GalleryItem.folder_id.in_(child_folder_ids))
-            .filter(queued_clause)
-            .order_by(GalleryItem.folder_id, GalleryItem.order.asc())
-            .distinct(GalleryItem.folder_id)
+            session.query(GalleryFolder, GalleryItem)
+            .join((GalleryFolder_descendants, and_(
+                GalleryFolder.left <= GalleryFolder_descendants.left,
+                GalleryFolder.right >= GalleryFolder_descendants.right,
+            )))
+            .join((GalleryItem, GalleryFolder_descendants.pages))
+            .filter(GalleryFolder.id.in_(child_folder_ids))
+            .order_by(GalleryFolder.id, GalleryItem.order.asc())
+            .distinct(GalleryFolder.id)
         )
         first_page_by_folder = {
-            page.folder: page
-            for page in recent_page_q
+            folder: page
+            for (folder, page) in recent_page_q
         }
         all_seen_items.update(first_page_by_folder.values())
 
